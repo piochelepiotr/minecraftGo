@@ -1,4 +1,4 @@
-package main
+package renderEngine
 import (
 	"fmt"
 	"runtime"
@@ -13,11 +13,11 @@ func init() {
 }
 
 type DisplayManager struct {
-    window *glfw.Window
-    windowWidth, windowHeight int
+    Window *glfw.Window
+    WindowWidth, WindowHeight int
 }
 
-func (d *DisplayManager) createDisplay() {
+func (d *DisplayManager) CreateDisplay() {
     var err error
 	if err := glfw.Init(); err != nil {
 		log.Fatalln("failed to initialize glfw:", err)
@@ -28,11 +28,11 @@ func (d *DisplayManager) createDisplay() {
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-    d.window, err = glfw.CreateWindow(d.windowWidth, d.windowHeight, "Cube", nil, nil)
+    d.Window, err = glfw.CreateWindow(d.WindowWidth, d.WindowHeight, "Minecraft", nil, nil)
 	if err != nil {
 		panic(err)
 	}
-	d.window.MakeContextCurrent()
+	d.Window.MakeContextCurrent()
 
 	// Initialize Glow
 	if err := gl.Init(); err != nil {
@@ -43,13 +43,12 @@ func (d *DisplayManager) createDisplay() {
 	fmt.Println("OpenGL version", version)
 }
 
-func (d *DisplayManager) updateDisplay() {
-    gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-    d.window.SwapBuffers()
+func (d *DisplayManager) UpdateDisplay() {
+    d.Window.SwapBuffers()
     glfw.PollEvents()
 }
 
-func (d *DisplayManager) closeDisplay() {
+func (d *DisplayManager) CloseDisplay() {
 	glfw.Terminate()
 }
 
