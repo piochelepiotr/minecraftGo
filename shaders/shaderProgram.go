@@ -13,13 +13,14 @@ type ShaderProgram struct {
     FragmentShaderId uint32
 }
 
-func CreateShader(vertexShader string, fragmentShader string) ShaderProgram {
+func CreateShader(vertexShader string, fragmentShader string, bindAttributes func(ShaderProgram)) ShaderProgram{
     s := ShaderProgram{}
     s.VertexShaderId = loadShader(vertexShader, gl.VERTEX_SHADER)
     s.FragmentShaderId = loadShader(fragmentShader, gl.FRAGMENT_SHADER)
     s.ProgramID = gl.CreateProgram()
     gl.AttachShader(s.ProgramID, s.VertexShaderId)
     gl.AttachShader(s.ProgramID, s.FragmentShaderId)
+    bindAttributes(s)
     gl.LinkProgram(s.ProgramID)
     gl.ValidateProgram(s.ProgramID)
     return s

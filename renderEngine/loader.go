@@ -87,7 +87,7 @@ func storeDataInAttributeList(attributeNumber uint32, size int32, data []float32
     vbos = append(vbos, vboID)
     gl.BindBuffer(gl.ARRAY_BUFFER, vboID)
     gl.BufferData(gl.ARRAY_BUFFER, 4*len(data), gl.Ptr(data), gl.STATIC_DRAW)
-    gl.BufferSubData(gl.ARRAY_BUFFER, 0, 4*len(data), gl.Ptr(data))
+    //gl.BufferSubData(gl.ARRAY_BUFFER, 0, 4*len(data), gl.Ptr(data))
     gl.VertexAttribPointer(attributeNumber, size, gl.FLOAT, false, 0, gl.PtrOffset(0))
     gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
