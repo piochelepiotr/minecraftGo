@@ -2,6 +2,7 @@ package shaders
 import (
     "fmt"
 	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
     "os"
     "io/ioutil"
     "strings"
@@ -26,15 +27,15 @@ func CreateShader(vertexShader string, fragmentShader string, bindAttributes fun
     return s
 }
 
-func (s ShaderProgram) Start() {
+func (s *ShaderProgram) Start() {
     gl.UseProgram(s.ProgramID)
 }
 
-func (s ShaderProgram) Stop() {
+func (s *ShaderProgram) Stop() {
     gl.UseProgram(0)
 }
 
-func (s ShaderProgram) CleanUp() {
+func (s *ShaderProgram) CleanUp() {
     s.Stop()
     gl.DetachShader(s.ProgramID, s.VertexShaderId)
     gl.DetachShader(s.ProgramID, s.FragmentShaderId)
@@ -43,7 +44,7 @@ func (s ShaderProgram) CleanUp() {
     gl.DeleteProgram(s.ProgramID)
 }
 
-func (s ShaderProgram) bindAttribute(attribute uint32, variableName string) {
+func (s *ShaderProgram) bindAttribute(attribute uint32, variableName string) {
     gl.BindAttribLocation(s.ProgramID, attribute, gl.Str(variableName))
 }
 
@@ -74,4 +75,30 @@ func loadShader (file string, shaderType uint32) uint32 {
 		return 0
 	}
     return shaderID
+}
+
+func (s *ShaderProgram) GetUniformLocation(name string) int32 {
+    return gl.GetUniformLocation(s.ProgramID, gl.Str(name))
+}
+
+func (s *ShaderProgram) LoadFloat(location int32, value float32) {
+    gl.Uniform1f(location, value)
+}
+
+func (s *ShaderProgram) LoadVector(location int32, value mgl32.Vec3) {
+    gl.Uniform3f(location, value.X(), value.Y(), value.Z())
+}
+
+func (s *ShaderProgram) LoadBoolean(location int32, value bool) {
+    var v float32
+    if value {
+        v = 1
+    } else {
+        v = 0
+    }
+    gl.Uniform1f(location, v)
+}
+
+func (s *ShaderProgram) LoadMatrix4(location int32, value mgl32.Mat4) {
+    gl.UniformMatrix4fv(location, 1, false, &value[0])
 }

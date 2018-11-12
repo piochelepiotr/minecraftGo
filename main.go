@@ -5,6 +5,8 @@ import (
     "github.com/piochelepiotr/minecraftGo/renderEngine"
     "github.com/piochelepiotr/minecraftGo/textures"
     "github.com/piochelepiotr/minecraftGo/models"
+    "github.com/piochelepiotr/minecraftGo/entities"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 const windowWidth = 800
@@ -40,15 +42,24 @@ func main() {
     }
     t := textures.ModelTexture{Id:textureID}
     texturedModel := models.TexturedModel{ModelTexture:t, RawModel:model}
+    entity := entities.Entity{
+        Position: mgl32.Vec3{0, 0, -5},
+        Rotation: mgl32.Vec3{0, 0, 0},
+    }
+    player := entities.Player{
+        Entity: entity,
+        TexturedModel: texturedModel,
+    }
 
 	for !d.Window.ShouldClose() {
         renderEngine.Prepare()
-        s.Start()
-        renderEngine.Render(texturedModel)
-        s.Stop()
+        s.Program.Start()
+        renderEngine.Render(player, s)
+        s.Program.Stop()
         d.UpdateDisplay()
+        player.Entity.IncreaseRotation(0.01, 0.01, 0.01)
 	}
-    s.CleanUp()
+    s.Program.CleanUp()
     renderEngine.CleanUp()
 }
 
