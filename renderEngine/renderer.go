@@ -10,7 +10,7 @@ import (
 
 const fov = 45.0
 const near_plane = 0.1
-const far_plane = 10.0
+const far_plane = 100.0
 var projectionMatrix mgl32.Mat4
 
 func init() {
@@ -18,19 +18,22 @@ func init() {
 }
 
 func Prepare() {
+    gl.Enable(gl.DEPTH_TEST)
     gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     gl.ClearColor(0.5, 0.5, 0, 1)
 }
 
-func Render(player entities.Player, shader shaders.StaticShader) {
+func Render(player entities.Player, camera entities.Camera, shader shaders.StaticShader) {
     texturedModel := player.TexturedModel
     model := texturedModel.RawModel
     gl.BindVertexArray(model.VaoID)
     gl.EnableVertexAttribArray(0)
     gl.EnableVertexAttribArray(1)
     transformationMatrix := toolbox.CreateTransformationMatrix(player.Entity.Position, player.Entity.Rotation, 1)
+    viewMatrix := toolbox.CreateViewMatrix(camera.Entity.Position, camera.Entity.Rotation)
     shader.LoadTransformationMatrix(transformationMatrix)
-    shader.LoadProjectionMatrix(projectionMatrix)
+    shader.LoadProjectionMatrix(projectionMatrix)//don't load it every time
+    shader.LoadViewMatrix(viewMatrix)
     gl.ActiveTexture(gl.TEXTURE0)
     gl.BindTexture(gl.TEXTURE_2D, texturedModel.ModelTexture.Id)
     gl.DrawElements(gl.TRIANGLES, model.VertexCount, gl.UNSIGNED_INT, gl.PtrOffset(0))

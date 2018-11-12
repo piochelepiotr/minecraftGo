@@ -6,8 +6,9 @@ import (
 
 type StaticShader struct {
     Program ShaderProgram
-    TransformationMatrixLocation int32
-    ProjectionMatrixLocation int32
+    transformationMatrixLocation int32
+    projectionMatrixLocation int32
+    viewMatrixLocation int32
 }
 
 func CreateStaticShader() StaticShader {
@@ -22,14 +23,19 @@ func CreateStaticShader() StaticShader {
 
 
 func (s *StaticShader) getAllUniformLocations() {
-    s.TransformationMatrixLocation = s.Program.GetUniformLocation("transformationMatrix\x00")
-    s.ProjectionMatrixLocation = s.Program.GetUniformLocation("projectionMatrix\x00")
+    s.transformationMatrixLocation = s.Program.GetUniformLocation("transformationMatrix\x00")
+    s.projectionMatrixLocation = s.Program.GetUniformLocation("projectionMatrix\x00")
+    s.viewMatrixLocation = s.Program.GetUniformLocation("viewMatrix\x00")
 }
 
 func (s *StaticShader) LoadTransformationMatrix(mat mgl32.Mat4) {
-    s.Program.LoadMatrix4(s.TransformationMatrixLocation, mat)
+    s.Program.LoadMatrix4(s.transformationMatrixLocation, mat)
 }
 
 func (s *StaticShader) LoadProjectionMatrix(mat mgl32.Mat4) {
-    s.Program.LoadMatrix4(s.ProjectionMatrixLocation, mat)
+    s.Program.LoadMatrix4(s.projectionMatrixLocation, mat)
+}
+
+func (s *StaticShader) LoadViewMatrix(mat mgl32.Mat4) {
+    s.Program.LoadMatrix4(s.viewMatrixLocation, mat)
 }

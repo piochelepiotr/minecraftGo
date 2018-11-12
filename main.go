@@ -13,17 +13,88 @@ const windowWidth = 800
 const windowHeight = 600
 
 func main() {
+    //var vertices = []float32{
+    //    -0.5, 0.5, 0,//top left
+    //    -0.5, -0.5, 0,//bottom left
+    //    0.5, -0.5, 0,//bottom right
+    //    0.5, 0.5, 0,//top right
+    //}
+    //var indices = []uint32{
+    //    0, 1, 3,
+    //    3, 1, 2,
+    //}
+    //var textureCoord = []float32{
+    //    0,0,
+    //    0,1,
+    //    1,1,
+    //    1,0,
+    //}
     var vertices = []float32{
-        -0.5, 0.5, 0,//top left
-        -0.5, -0.5, 0,//bottom left
-        0.5, -0.5, 0,//bottom right
-        0.5, 0.5, 0,//top right
+        -0.5,0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        0.5,-0.5,-0.5,
+        0.5,0.5,-0.5,
+
+        -0.5,0.5,0.5,
+        -0.5,-0.5,0.5,
+        0.5,-0.5,0.5,
+        0.5,0.5,0.5,
+
+        0.5,0.5,-0.5,
+        0.5,-0.5,-0.5,
+        0.5,-0.5,0.5,
+        0.5,0.5,0.5,
+
+        -0.5,0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5,0.5,
+        -0.5,0.5,0.5,
+
+        -0.5,0.5,0.5,
+        -0.5,0.5,-0.5,
+        0.5,0.5,-0.5,
+        0.5,0.5,0.5,
+
+        -0.5,-0.5,0.5,
+        -0.5,-0.5,-0.5,
+        0.5,-0.5,-0.5,
+        0.5,-0.5,0.5,
     }
     var indices = []uint32{
-        0, 1, 3,
-        3, 1, 2,
+        0,1,3,
+        3,1,2,
+        4,5,7,
+        7,5,6,
+        8,9,11,
+        11,9,10,
+        12,13,15,
+        15,13,14,
+        16,17,19,
+        19,17,18,
+        20,21,23,
+        23,21,22,
     }
     var textureCoord = []float32{
+        0,0,
+        0,1,
+        1,1,
+        1,0,
+        0,0,
+        0,1,
+        1,1,
+        1,0,
+        0,0,
+        0,1,
+        1,1,
+        1,0,
+        0,0,
+        0,1,
+        1,1,
+        1,0,
+        0,0,
+        0,1,
+        1,1,
+        1,0,
         0,0,
         0,1,
         1,1,
@@ -50,11 +121,12 @@ func main() {
         Entity: entity,
         TexturedModel: texturedModel,
     }
+    camera := entities.CreateCamera(0, 0, 1)
 
 	for !d.Window.ShouldClose() {
         renderEngine.Prepare()
         s.Program.Start()
-        renderEngine.Render(player, s)
+        renderEngine.Render(player, camera, s)
         s.Program.Stop()
         d.UpdateDisplay()
         player.Entity.IncreaseRotation(0.01, 0.01, 0.01)
