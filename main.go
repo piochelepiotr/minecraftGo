@@ -123,15 +123,15 @@ func main() {
     }
     camera := entities.CreateCamera(0, 0, 1)
 
-    camera.LockOnPlayer(player)
 
 	for !d.Window.ShouldClose() {
+        camera.LockOnPlayer(player)
         renderEngine.Prepare()
         s.Program.Start()
         renderEngine.Render(player, camera, s)
         s.Program.Stop()
         d.UpdateDisplay()
-        player.Entity.IncreaseRotation(0.0, 0.01, 0.0)
+        player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
 	}
     s.Program.CleanUp()
     renderEngine.CleanUp()

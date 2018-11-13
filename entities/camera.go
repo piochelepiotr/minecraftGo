@@ -19,17 +19,20 @@ func CreateCamera(x, y, z float32) Camera {
     return Camera{Entity:e}
 }
 
-func (c *Camera) lockOnPlayer(player Player) {
-    c.Height = 1.8
-    c.FollowDistance = -5
-   m := mgl32.Ident4()
+func (c *Camera) LockOnPlayer(player Player) {
+   c.Height = 1.8
+   c.FollowDistance = 10
    rotY := mgl32.Rotate3DY(player.Entity.Rotation.Y())
    cameraShift := mgl32.Vec3{0, 0, c.FollowDistance}
    movement := rotY.Mul3x1(cameraShift)
-   c.Position = mgl32.Vec3{
-       player.Entity.X() + movement.X(),
-       player.Entity.Y() + c.Height,
-       player.Entity.Z() + movement.Z(),
+   c.Entity.Position = mgl32.Vec3{
+       player.Entity.Position.X() + movement.X(),
+       player.Entity.Position.Y() + c.Height,
+       player.Entity.Position.Z() + movement.Z(),
    }
-   c.Entity.Rotation.Elem(c.Entity.Rotation.X(), -player.Entity.Rotation.Y(), c.Entity.Rotation.Z())
+   c.Entity.Rotation = mgl32.Vec3{
+       0,
+       -player.Entity.Rotation.Y(),
+       0,
+   }
 }

@@ -9,7 +9,7 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
 void main(void) {
-    gl_Position = viewMatrix * projectionMatrix * transformationMatrix * vec4(position.x, position.y, position.z, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * transformationMatrix * vec4(position.x, position.y, position.z, 1.0);
     //gl_Position = vec4(position.x, position.y, position.z, 1.0);
     pass_textureCoords = textureCoords;
 }

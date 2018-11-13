@@ -8,7 +8,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-const fov = 45.0
+const fov = 70.0
 const near_plane = 0.1
 const far_plane = 100.0
 var projectionMatrix mgl32.Mat4
