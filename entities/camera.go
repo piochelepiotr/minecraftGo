@@ -21,7 +21,7 @@ func CreateCamera(x, y, z float32) Camera {
 
 func (c *Camera) LockOnPlayer(player Player) {
    c.Height = 1.8
-   c.FollowDistance = 10
+   c.FollowDistance = 5
    rotY := mgl32.Rotate3DY(player.Entity.Rotation.Y())
    cameraShift := mgl32.Vec3{0, 0, c.FollowDistance}
    movement := rotY.Mul3x1(cameraShift)
