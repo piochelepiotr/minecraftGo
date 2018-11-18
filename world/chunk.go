@@ -36,6 +36,15 @@ func (c *Chunk) GetBlock(x, y, z int) Block {
     return c.blocks[x*ChunkSize2 + y*ChunkSize + z]
 }
 
+func (c *Chunk) GetHeight(x, z int) int {
+    for y := ChunkSize - 1; y >= 0; y-- {
+        if c.GetBlock(x, y, z) != Air {
+            return y + 1
+        }
+    }
+    return 0
+}
+
 func (c *Chunk) buildFaces() {
     vertices := make([]mgl32.Vec3, 0)
     textures := make([]mgl32.Vec2, 0)

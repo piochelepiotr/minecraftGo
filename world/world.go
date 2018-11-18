@@ -4,11 +4,18 @@ import (
     "github.com/piochelepiotr/minecraftGo/textures"
     "github.com/piochelepiotr/minecraftGo/models"
 	"github.com/go-gl/mathgl/mgl32"
+    "math"
 )
+
+const WordHeight int = ChunkSize * 10
 
 type World struct {
     chunks map[Point] Chunk
     modelTexture textures.ModelTexture
+}
+
+func getChunk(x int) int {
+    return int(math.Floor(float64(x)/float64(ChunkSize)))
 }
 
 func CreateWorld(modelTexture textures.ModelTexture) World {
@@ -46,4 +53,15 @@ func (w *World) LoadChunk(x, y, z int) {
         Z: z,
     }
     w.chunks[p] = CreateChunk(x, y, z, w.modelTexture)
+}
+
+func (w *World) GetHeight(x, z int) int {
+    chunkX := getChunk(x)
+    chunkZ := getChunk(z)
+    for chunkY := WordHeight - ChunkSize; chunkY >= 0; chunkY -= ChunkSize {
+        if chunk, ok := w.chunks[Point{X:chunkX, Y:chunkY, Z:chunkZ}]; ok {
+            return chunkY + chunk.GetHeight(x, z)
+        }
+    }
+    return 0
 }

@@ -17,3 +17,6 @@ func (e *Entity) IncreaseRotation(dx, dy, dz float32) {
     e.Rotation = e.Rotation.Add(mgl32.Vec3{dx, dy, dz})
 }
 
+func (e *Entity) IncreasePosition(dx, dy, dz float32) {
+    e.Position = e.Position.Add(mgl32.Vec3{dx, dy, dz})
+}
