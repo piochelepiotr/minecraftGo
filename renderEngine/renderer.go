@@ -5,42 +5,67 @@ import (
 	"github.com/piochelepiotr/minecraftGo/toolbox"
 	"github.com/piochelepiotr/minecraftGo/shaders"
 	"github.com/piochelepiotr/minecraftGo/entities"
+	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 const fov = 70.0
 const near_plane = 0.1
-const far_plane = 100.0
-var projectionMatrix mgl32.Mat4
+const far_plane = 1000
 
-func init() {
-    projectionMatrix = mgl32.Perspective(mgl32.DegToRad(fov), float32(800.0)/600.0, 0.1, 10.0)
+type Renderer struct {
+    projectionMatrix mgl32.Mat4
+    shader shaders.StaticShader
 }
 
-func Prepare() {
+func CreateRenderer(shader shaders.StaticShader) Renderer {
+    var r Renderer
+    //gl.Enable(gl.CULL_FACE)
+    //gl.CullFace(gl.BACK)
+    r.projectionMatrix = mgl32.Perspective(mgl32.DegToRad(fov), float32(800.0)/600.0, near_plane, far_plane)
+    r.shader = shader
+    shader.Program.Start()
+    shader.LoadProjectionMatrix(r.projectionMatrix)
+    shader.Program.Stop()
+    return r
+}
+
+func (r *Renderer) Prepare() {
     gl.Enable(gl.DEPTH_TEST)
     gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     gl.ClearColor(0.5, 0.5, 0, 1)
 }
 
-func Render(player entities.Player, camera entities.Camera, shader shaders.StaticShader) {
-    texturedModel := player.TexturedModel
-    model := texturedModel.RawModel
-    gl.BindVertexArray(model.VaoID)
+func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
+    gl.BindVertexArray(model.RawModel.VaoID)
     gl.EnableVertexAttribArray(0)
     gl.EnableVertexAttribArray(1)
     gl.EnableVertexAttribArray(2)
-    transformationMatrix := toolbox.CreateTransformationMatrix(player.Entity.Position, player.Entity.Rotation, 1)
-    viewMatrix := toolbox.CreateViewMatrix(camera.Entity.Position, camera.Entity.Rotation)
-    shader.LoadTransformationMatrix(transformationMatrix)
-    shader.LoadProjectionMatrix(projectionMatrix)//don't load it every time
-    shader.LoadViewMatrix(viewMatrix)
-    shader.LoadShineVariables(texturedModel.ModelTexture.ShineDamper, texturedModel.ModelTexture.Reflectivity)
+    r.shader.LoadShineVariables(model.ModelTexture.ShineDamper, model.ModelTexture.Reflectivity)
     gl.ActiveTexture(gl.TEXTURE0)
-    gl.BindTexture(gl.TEXTURE_2D, texturedModel.ModelTexture.Id)
-    gl.DrawElements(gl.TRIANGLES, model.VertexCount, gl.UNSIGNED_INT, gl.PtrOffset(0))
+    gl.BindTexture(gl.TEXTURE_2D, model.ModelTexture.Id)
+}
+
+func (r *Renderer) unbindTexturedModel() {
     gl.DisableVertexAttribArray(0)
     gl.DisableVertexAttribArray(1)
     gl.DisableVertexAttribArray(2)
     gl.BindVertexArray(0)
 }
+
+func (r *Renderer) prepareEntity(entity entities.Entity) {
+    transformationMatrix := toolbox.CreateTransformationMatrix(entity.Position, entity.Rotation, 1)
+    r.shader.LoadTransformationMatrix(transformationMatrix)
+}
+
+func (r *Renderer) Render(allEntities map[models.TexturedModel] []entities.Entity) {
+    for model := range allEntities {
+        r.prepareTexturedModel(model)
+        for _, entity := range allEntities[model] {
+            r.prepareEntity(entity)
+            gl.DrawElements(gl.TRIANGLES, model.RawModel.VertexCount, gl.UNSIGNED_INT, gl.PtrOffset(0))
+        }
+        r.unbindTexturedModel()
+    }
+}
+

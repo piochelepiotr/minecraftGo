@@ -3,6 +3,7 @@ package shaders
 import (
 	"github.com/go-gl/mathgl/mgl32"
     "github.com/piochelepiotr/minecraftGo/entities"
+    "github.com/piochelepiotr/minecraftGo/toolbox"
 )
 
 type StaticShader struct {
@@ -46,8 +47,9 @@ func (s *StaticShader) LoadProjectionMatrix(mat mgl32.Mat4) {
     s.Program.LoadMatrix4(s.projectionMatrixLocation, mat)
 }
 
-func (s *StaticShader) LoadViewMatrix(mat mgl32.Mat4) {
-    s.Program.LoadMatrix4(s.viewMatrixLocation, mat)
+func (s *StaticShader) LoadViewMatrix(camera entities.Camera) {
+    viewMatrix := toolbox.CreateViewMatrix(camera.Position, camera.Rotation)
+    s.Program.LoadMatrix4(s.viewMatrixLocation, viewMatrix)
 }
 
 func (s *StaticShader) LoadLight(light entities.Light) {
@@ -58,4 +60,8 @@ func (s *StaticShader) LoadLight(light entities.Light) {
 func (s *StaticShader) LoadShineVariables(shineDamper float32, reflectivity float32) {
     s.Program.LoadFloat(s.shineDamperLocation, shineDamper)
     s.Program.LoadFloat(s.reflectivityLocation, reflectivity)
+}
+
+func (s *StaticShader) CleanUp() {
+    s.Program.CleanUp()
 }

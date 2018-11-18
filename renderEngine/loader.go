@@ -2,6 +2,7 @@ package renderEngine
 import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/piochelepiotr/minecraftGo/models"
+	texturesPackage "github.com/piochelepiotr/minecraftGo/textures"
 	"image"
 	"image/draw"
 	_ "image/png"
@@ -26,7 +27,7 @@ func LoadToVAO(positions []float32, textureCoord []float32, indices []uint32, no
     }
 }
 
-func LoadTexture(file string) (uint32, error) {
+func loadTexture(file string) (uint32, error) {
 	imgFile, err := os.Open(file)
 	if err != nil {
 		return 0, fmt.Errorf("texture %q not found on disk: %v", file, err)
@@ -63,6 +64,19 @@ func LoadTexture(file string) (uint32, error) {
 		gl.Ptr(rgba.Pix))
 
 	return texture, nil
+}
+
+func LoadTexture(file string) texturesPackage.ModelTexture {
+    textureID, err := loadTexture(file)
+    if err != nil {
+        panic(err)
+    }
+    return texturesPackage.ModelTexture{
+        Id:textureID,
+        Reflectivity: 1,
+        ShineDamper: 10,
+        NumberOfRows: 1,
+    }
 }
 
 func createVAO() uint32 {
