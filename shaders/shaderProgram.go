@@ -89,6 +89,10 @@ func (s *ShaderProgram) LoadVector(location int32, value mgl32.Vec3) {
     gl.Uniform3f(location, value.X(), value.Y(), value.Z())
 }
 
+func (s *ShaderProgram) Load2DVector(location int32, value mgl32.Vec2) {
+    gl.Uniform2f(location, value.X(), value.Y())
+}
+
 func (s *ShaderProgram) LoadBoolean(location int32, value bool) {
     var v float32
     if value {

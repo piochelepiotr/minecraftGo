@@ -2,12 +2,16 @@ package renderEngine
 import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/piochelepiotr/minecraftGo/models"
+    "github.com/piochelepiotr/minecraftGo/fontMeshCreator"
+	"github.com/piochelepiotr/minecraftGo/guis"
+	"github.com/piochelepiotr/minecraftGo/shaders"
 	texturesPackage "github.com/piochelepiotr/minecraftGo/textures"
 	"image"
 	"image/draw"
 	_ "image/png"
     "os"
     "fmt"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 var vaos = make([]uint32, 0)
@@ -25,6 +29,55 @@ func LoadToVAO(positions []float32, textureCoord []float32, indices []uint32, no
         VaoID:vaoID,
         VertexCount: int32(len(indices)),
     }
+}
+
+func LoadTexToVAO(positions []float32) models.RawModel {
+    vaoID := createVAO()
+    storeDataInAttributeList(0, 2, positions)
+    defer unbindVAO()
+    return models.RawModel{
+        VaoID: vaoID,
+        VertexCount: int32(len(positions)/2),
+    }
+}
+
+func LoadFontVAO(positions []float32, textureCoord []float32) models.RawModel {
+    vaoID := createVAO()
+    storeDataInAttributeList(0, 2, positions)
+    storeDataInAttributeList(1, 2, textureCoord)
+    defer unbindVAO()
+    return vaoID
+}
+
+func LoadFont(fontTexture, fontFile string) fontMeshCreator.FontType {
+    textureID, err := loadTexture(fontTexture)
+    if err != nil {
+        panic(err)
+    }
+    return fontMeshCreator.CreateFontType(textureID, fontFile)
+
+}
+
+func CreateGuiRenderer() guis.GuiRenderer {
+    positions := []float32{
+        -1, 1,
+        -1, -1,
+        1, 1,
+        1, -1,
+    }
+    return guis.GuiRenderer{
+        Quad: LoadTexToVAO(positions),
+        Shader: shaders.CreateGuiShader(),
+    }
+}
+
+func LoadText(text fontMeshCreator.GUIText) fontMeshCreator.GUIText {
+    font := text.Font
+    data := font.LoadText(text)
+    vao := LoadFontVAO(data.VertexesPositions, data.TexturesPositions)
+    text.VaoID = vao
+    text.VertexCount = data.VertexCount
+    return text
 }
 
 func loadTexture(file string) (uint32, error) {
@@ -48,6 +101,7 @@ func loadTexture(file string) (uint32, error) {
     textures = append(textures, texture)
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, texture)
+    gl.GenerateMipmap(gl.TEXTURE_2D)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -66,7 +120,7 @@ func loadTexture(file string) (uint32, error) {
 	return texture, nil
 }
 
-func LoadTexture(file string) texturesPackage.ModelTexture {
+func LoadModelTexture(file string) texturesPackage.ModelTexture {
     textureID, err := loadTexture(file)
     if err != nil {
         panic(err)
@@ -78,6 +132,19 @@ func LoadTexture(file string) texturesPackage.ModelTexture {
         NumberOfRows: 1,
     }
 }
+
+func LoadGuiTexture(file string, position, scale mgl32.Vec2) guis.GuiTexture {
+    textureID, err := loadTexture(file)
+    if err != nil {
+        panic(err)
+    }
+    return guis.GuiTexture{
+        Id:textureID,
+        Position: position,
+        Scale: scale,
+    }
+}
+
 
 func createVAO() uint32 {
     var vaoID uint32
