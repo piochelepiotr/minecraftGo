@@ -1,19 +1,17 @@
-package fontMeshCreator;
+package fontMeshCreator
 
 type FontType struct {
 	TextureAtlas uint32
-	Loader TextMeshCreator
+	Loader       TextMeshCreator
 }
 
-func CreateFontType(textureAtlas uint32, fontFile string) FontType {
-    return FontType {
-        TextureAtlas : textureAtlas,
-        Loader : CreateTextMeshCreator(fontFile),
-    }
+func CreateFontType(textureAtlas uint32, fontFile string, aspectRatio float32) FontType {
+	return FontType{
+		TextureAtlas: textureAtlas,
+		Loader:       CreateTextMeshCreator(fontFile, aspectRatio),
+	}
 }
 
-func (ft *FontType)  LoadText(text string) TextMeshData {
-	return ft.Loader.createTextMesh(text);
+func (ft *FontType) LoadText(text GUIText) TextMeshData {
+	return ft.Loader.createTextMesh(text)
 }
-
-

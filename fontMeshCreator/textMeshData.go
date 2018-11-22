@@ -1,12 +1,10 @@
 package fontMeshCreator
 
 type TextMeshData struct {
-	vertexPositions []float32
-	textureCoords []float32
+	VertexPositions []float32
+	TextureCoords   []float32
 }
 
-
-func (t *TextMeshData) GetVertexCount() int{
-	return len(t.vertexPositions)/2
+func (t *TextMeshData) GetVertexCount() int32 {
+	return int32(len(t.VertexPositions) / 2)
 }
-
