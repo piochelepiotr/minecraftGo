@@ -50,7 +50,7 @@ func LoadFontVAO(positions []float32, textureCoord []float32) uint32 {
 	return vaoID
 }
 
-func LoadFont(fontTexture, fontFile string, aspectRatio float32) fontMeshCreator.FontType {
+func LoadFont(fontTexture, fontFile string, aspectRatio float32) *fontMeshCreator.FontType {
 	textureID, err := loadTexture(fontTexture)
 	if err != nil {
 		panic(err)

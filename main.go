@@ -4,7 +4,6 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
-	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
 	"github.com/piochelepiotr/minecraftGo/fontRendering"
 	pguis "github.com/piochelepiotr/minecraftGo/guis"
 	pmenu "github.com/piochelepiotr/minecraftGo/menu"
@@ -28,9 +27,6 @@ func main() {
 	defer r.CleanUp()
 	fontRenderer := fontRendering.CreateFontRenderer()
 	defer fontRenderer.CleanUp()
-	font := renderEngine.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio)
-	text := fontMeshCreator.CreateGUIText("test", 1, &font, mgl32.Vec2{0, 0}, 1, true)
-	fontRenderer.LoadText(text)
 	t := renderEngine.LoadModelTexture("textures/skin.png")
 	cubeTexture := renderEngine.LoadModelTexture("textures/textures.png")
 	cubeTexture.NumberOfRows = 2
@@ -87,11 +83,12 @@ func main() {
 	guis := make([]pguis.GuiTexture, 0)
 	guis = append(guis, renderEngine.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}))
 
-	menu := pmenu.CreateMenu()
+	menu := pmenu.CreateMenu(aspectRatio)
 	menu.Opened = true
-	menu.AddItem("Salut Tetelle")
-	menu.AddItem("Salut PiouPiou")
+	menu.AddItem("Resume game")
+	menu.AddItem("Exit game")
 	guis = append(guis, menu.GetMenuItems()...)
+	fontRenderer.LoadTexts(menu.GetMenuTexts())
 
 	guiRenderer := renderEngine.CreateGuiRenderer()
 	defer guiRenderer.CleanUp()

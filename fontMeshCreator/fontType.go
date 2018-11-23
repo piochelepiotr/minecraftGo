@@ -5,8 +5,8 @@ type FontType struct {
 	Loader       TextMeshCreator
 }
 
-func CreateFontType(textureAtlas uint32, fontFile string, aspectRatio float32) FontType {
-	return FontType{
+func CreateFontType(textureAtlas uint32, fontFile string, aspectRatio float32) *FontType {
+	return &FontType{
 		TextureAtlas: textureAtlas,
 		Loader:       CreateTextMeshCreator(fontFile, aspectRatio),
 	}

@@ -34,6 +34,7 @@ func CreateMetaFile(file string, aspectRatio float32) MetaFile {
 	mf := MetaFile{
 		aspectRatio: aspectRatio,
 	}
+	mf.metaData = make(map[int]Character)
 	mf.readFile(file)
 	mf.loadPaddingData()
 	mf.loadLineSizes()
@@ -53,6 +54,9 @@ func (mf *MetaFile) processNextLine() bool {
 	}
 	line := mf.data[mf.lineNumber]
 	mf.lineNumber++
+	if line == "" {
+		return false
+	}
 	mf.values = make(map[string]string)
 	for _, part := range strings.Split(line, SPLITTER) {
 		valuePairs := strings.Split(part, "=")
@@ -86,7 +90,7 @@ func (mf *MetaFile) readFile(file string) {
 	if err != nil {
 		panic(err)
 	}
-	mf.data = strings.Split(string(dat), "/n")
+	mf.data = strings.Split(string(dat), "\n")
 	mf.lineNumber = 0
 }
 

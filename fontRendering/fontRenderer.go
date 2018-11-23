@@ -34,6 +34,12 @@ func (r *FontRenderer) LoadText(text fontMeshCreator.GUIText) {
 	r.texts[font] = append(r.texts[font], text)
 }
 
+func (r *FontRenderer) LoadTexts(texts []fontMeshCreator.GUIText) {
+	for _, text := range texts {
+		r.LoadText(text)
+	}
+}
+
 func (r *FontRenderer) RemoveText(text fontMeshCreator.GUIText) {
 	l := r.texts[text.Font]
 	l2 := make([]fontMeshCreator.GUIText, 0)
