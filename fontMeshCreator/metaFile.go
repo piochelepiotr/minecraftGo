@@ -1,7 +1,6 @@
 package fontMeshCreator
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -105,7 +104,6 @@ func (mf *MetaFile) loadPaddingData() {
 func (mf *MetaFile) loadLineSizes() {
 	mf.processNextLine()
 	lineHeightPixels := mf.getValueOfVariable("lineHeight") - mf.paddingHeight
-	fmt.Println("Line Height ", lineHeightPixels)
 	mf.verticalPerPixelSize = LINE_HEIGHT / float32(lineHeightPixels)
 	mf.horizontalPerPixelSize = mf.verticalPerPixelSize / mf.aspectRatio
 }

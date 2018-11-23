@@ -4,7 +4,8 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
 	"github.com/piochelepiotr/minecraftGo/guis"
-	"github.com/piochelepiotr/minecraftGo/renderEngine"
+	"github.com/piochelepiotr/minecraftGo/loader"
+	"math"
 )
 
 const (
@@ -22,10 +23,10 @@ type MenuItem struct {
 
 func CreateMenuItem(text string, index int, font *fontMeshCreator.FontType) *MenuItem {
 	return &MenuItem{
-		text:            renderEngine.LoadText(fontMeshCreator.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
+		text:            loader.LoadText(fontMeshCreator.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
 		index:           index,
-		guiTexture:      renderEngine.LoadGuiTexture("textures/stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
-		selectedTexture: renderEngine.LoadGuiTexture("textures/grass.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
+		guiTexture:      loader.LoadGuiTexture("textures/stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
+		selectedTexture: loader.LoadGuiTexture("textures/grass.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
 	}
 }
 
@@ -38,7 +39,10 @@ func blockSize() float32 {
 	return ItemHeight + MenuSpacing
 }
 
-func itemIndex(y float32, numberOfItems int) int {
+func itemIndex(x, y float32, numberOfItems int) int {
+	if math.Abs(float64(x)) > float64(ItemWidth/2) {
+		return -1
+	}
 	y = y - getStartMenu(numberOfItems)
 	if y < 0 {
 		return -1

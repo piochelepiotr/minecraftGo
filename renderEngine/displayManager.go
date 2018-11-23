@@ -52,3 +52,11 @@ func (d *DisplayManager) UpdateDisplay() {
 func (d *DisplayManager) CloseDisplay() {
 	glfw.Terminate()
 }
+
+func (d *DisplayManager) GLPos(x, y float64) (float32, float32) {
+	xpos := float32(x) / float32(d.WindowWidth)
+	ypos := float32(y) / float32(d.WindowHeight)
+	xpos = xpos - 0.5
+	ypos = ypos - 0.5
+	return xpos, ypos
+}

@@ -19,7 +19,8 @@ func CreateFontRenderer() FontRenderer {
 	}
 }
 
-func (r *FontRenderer) Render() {
+func (r *FontRenderer) Render(texts []fontMeshCreator.GUIText) {
+	r.LoadTexts(texts)
 	r.Prepare()
 	for font, texts := range r.texts {
 		gl.ActiveTexture(gl.TEXTURE0)
@@ -28,6 +29,7 @@ func (r *FontRenderer) Render() {
 			r.renderText(text)
 		}
 	}
+	r.endRendering()
 }
 
 func (r *FontRenderer) LoadText(text fontMeshCreator.GUIText) {
@@ -41,26 +43,27 @@ func (r *FontRenderer) LoadTexts(texts []fontMeshCreator.GUIText) {
 	}
 }
 
-func (r *FontRenderer) RemoveText(text fontMeshCreator.GUIText) {
-	l := r.texts[text.Font]
-	l2 := make([]fontMeshCreator.GUIText, 0)
-	for _, e := range l {
-		if e != text {
-			l2 = append(l2, e)
-		}
-	}
-	if len(l2) > 0 {
-		r.texts[text.Font] = l2
-	} else {
-		delete(r.texts, text.Font)
-	}
-}
+//func (r *FontRenderer) RemoveText(text fontMeshCreator.GUIText) {
+//	l := r.texts[text.Font]
+//	l2 := make([]fontMeshCreator.GUIText, 0)
+//	for _, e := range l {
+//		if e != text {
+//			l2 = append(l2, e)
+//		}
+//	}
+//	if len(l2) > 0 {
+//		r.texts[text.Font] = l2
+//	} else {
+//		delete(r.texts, text.Font)
+//	}
+//}
 
 func (r *FontRenderer) CleanUp() {
 	r.shader.CleanUp()
 }
 
 func (r *FontRenderer) Prepare() {
+
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.Disable(gl.DEPTH_TEST)
@@ -84,4 +87,5 @@ func (r *FontRenderer) endRendering() {
 	r.shader.Program.Stop()
 	gl.Disable(gl.BLEND)
 	gl.Enable(gl.DEPTH_TEST)
+	r.texts = make(map[*fontMeshCreator.FontType][]fontMeshCreator.GUIText)
 }

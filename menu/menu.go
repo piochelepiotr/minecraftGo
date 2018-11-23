@@ -3,7 +3,7 @@ package menu
 import (
 	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
 	"github.com/piochelepiotr/minecraftGo/guis"
-	"github.com/piochelepiotr/minecraftGo/renderEngine"
+	"github.com/piochelepiotr/minecraftGo/loader"
 )
 
 type Menu struct {
@@ -17,7 +17,7 @@ func CreateMenu(aspectRatio float32) Menu {
 	return Menu{
 		Opened:       false,
 		MenuItems:    make([]*MenuItem, 0),
-		font:         renderEngine.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
+		font:         loader.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
 		SelectedItem: -1,
 	}
 }
@@ -49,6 +49,6 @@ func (m *Menu) GetMenuTexts() []fontMeshCreator.GUIText {
 	return texts
 }
 
-func (m *Menu) ComputeSelectedItem(x, y float64) {
-	m.SelectedItem = itemIndex(float32(y), len(m.MenuItems))
+func (m *Menu) ComputeSelectedItem(x, y float32) {
+	m.SelectedItem = itemIndex(x, y, len(m.MenuItems))
 }

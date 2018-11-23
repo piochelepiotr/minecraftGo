@@ -4,12 +4,12 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
-	"github.com/piochelepiotr/minecraftGo/fontRendering"
-	pguis "github.com/piochelepiotr/minecraftGo/guis"
+	"github.com/piochelepiotr/minecraftGo/loader"
 	pmenu "github.com/piochelepiotr/minecraftGo/menu"
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/renderEngine"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
+	"os"
 )
 
 const windowWidth = 800
@@ -21,14 +21,12 @@ func main() {
 	defer d.CloseDisplay()
 	d.CreateDisplay()
 
-	model := renderEngine.LoadObjModel("objects/steve.obj")
-	defer renderEngine.CleanUp()
+	model := loader.LoadObjModel("objects/steve.obj")
+	defer loader.CleanUp()
 	r := renderEngine.CreateMasterRenderer()
 	defer r.CleanUp()
-	fontRenderer := fontRendering.CreateFontRenderer()
-	defer fontRenderer.CleanUp()
-	t := renderEngine.LoadModelTexture("textures/skin.png")
-	cubeTexture := renderEngine.LoadModelTexture("textures/textures.png")
+	t := loader.LoadModelTexture("textures/skin.png")
+	cubeTexture := loader.LoadModelTexture("textures/textures.png")
 	cubeTexture.NumberOfRows = 2
 	texturedModel := models.TexturedModel{
 		ModelTexture: t,
@@ -58,25 +56,20 @@ func main() {
 		Entity: entity,
 	}
 
-	guis := make([]pguis.GuiTexture, 0)
-	cursor := renderEngine.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03})
-	guis = append(guis, cursor)
+	cursor := loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03})
 
 	menu := pmenu.CreateMenu(aspectRatio)
-	menu.Opened = true
+	menu.Opened = false
 	menu.AddItem("Resume game")
 	menu.AddItem("Exit game")
 	menu.AddItem("Watch YouTube")
 	menu.AddItem("Go to Website")
-	guis = append(guis, menu.GetMenuItems()...)
-	fontRenderer.LoadTexts(menu.GetMenuTexts())
-
-	guiRenderer := renderEngine.CreateGuiRenderer()
-	defer guiRenderer.CleanUp()
 
 	movePlayer := func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		if !menu.Opened {
-			if key == glfw.KeyD {
+			if key == glfw.KeyEscape {
+				menu.Opened = true
+			} else if key == glfw.KeyD {
 				player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
 			} else if key == glfw.KeyA {
 				player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
@@ -97,24 +90,33 @@ func main() {
 	}
 
 	menuSelectItem := func(w *glfw.Window, xpos float64, ypos float64) {
-		xpos = xpos / float64(d.WindowWidth)
-		ypos = ypos / float64(d.WindowHeight)
-		xpos = xpos - 0.5
-		ypos = ypos - 0.5
-		menu.ComputeSelectedItem(xpos, ypos)
+		x, y := d.GLPos(xpos, ypos)
+		menu.ComputeSelectedItem(x, y)
+	}
+
+	menuClick := func(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
+		if menu.Opened {
+			if button == glfw.MouseButtonLeft {
+				if menu.SelectedItem == 0 {
+					menu.Opened = false
+				} else if menu.SelectedItem == 1 {
+					os.Exit(0)
+				}
+			}
+		}
 	}
 
 	d.Window.SetKeyCallback(movePlayer)
 	d.Window.SetCursorPosCallback(menuSelectItem)
+	d.Window.SetMouseButtonCallback(menuClick)
 
 	for !d.Window.ShouldClose() {
 		camera.LockOnPlayer(player)
 		r.ProcessEntity(player.Entity)
 		r.ProcessEntities(world.GetChunks())
-		guis = append(guis[:1], menu.GetMenuItems()...)
+		r.ProcessGui(cursor)
+		r.ProcessMenu(menu)
 		r.Render(light, camera)
-		guiRenderer.Render(guis)
-		fontRenderer.Render()
 		d.UpdateDisplay()
 		//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
 		glfw.PollEvents()

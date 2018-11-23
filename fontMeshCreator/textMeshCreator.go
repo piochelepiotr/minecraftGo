@@ -1,9 +1,5 @@
 package fontMeshCreator
 
-import (
-	"fmt"
-)
-
 const (
 	LINE_HEIGHT float32 = 0.05
 	SPACE_ASCII int     = 32
@@ -66,11 +62,7 @@ func (tmc *TextMeshCreator) createQuadVertices(text GUIText, lines []Line) TextM
 	textureCoords := make([]float32, 0)
 	if text.VCenterText {
 		textHeight := LINE_HEIGHT / 2 * text.FontSize * float32(len(lines))
-		fmt.Println("Text height is: ", textHeight)
-		fmt.Println("max text height is", text.MaxTextHeight)
 		curserY = (text.MaxTextHeight - textHeight) / 2.0
-		fmt.Println("cursor pos:", curserY)
-		//curserY = 0
 	}
 	for _, line := range lines {
 		if text.CenterText {
@@ -100,7 +92,6 @@ func (tmc *TextMeshCreator) createQuadVertices(text GUIText, lines []Line) TextM
 func addVerticesForCharacter(curserX, curserY float32, character Character, fontSize float32, vertices *[]float32) {
 	x := curserX + (character.XOffset * fontSize)
 	y := curserY + (character.YOffset * fontSize)
-	fmt.Println("y:", y)
 	maxX := x + (character.SizeX * fontSize)
 	maxY := y + (character.SizeY * fontSize)
 	properX := (2 * x) - 1

@@ -1,4 +1,4 @@
-package renderEngine
+package loader
 
 import (
 	"fmt"
