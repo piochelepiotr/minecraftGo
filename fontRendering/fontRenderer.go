@@ -2,6 +2,7 @@ package fontRendering
 
 import (
 	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
 	"github.com/piochelepiotr/minecraftGo/shaders"
 )
@@ -71,7 +72,8 @@ func (r *FontRenderer) renderText(text fontMeshCreator.GUIText) {
 	gl.EnableVertexAttribArray(0)
 	gl.EnableVertexAttribArray(1)
 	r.shader.LoadColour(text.Colour)
-	r.shader.LoadTranslation(text.Position)
+	//r.shader.LoadTranslation(text.Position)
+	r.shader.LoadTranslation(text.Position.Add(mgl32.Vec2{0, -text.GetLineHeight() / 2}))
 	gl.DrawArrays(gl.TRIANGLES, 0, text.VertexCount)
 	gl.DisableVertexAttribArray(0)
 	gl.DisableVertexAttribArray(1)

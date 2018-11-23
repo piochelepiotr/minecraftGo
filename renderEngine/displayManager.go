@@ -1,10 +1,11 @@
 package renderEngine
+
 import (
 	"fmt"
-	"runtime"
-    "log"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"log"
+	"runtime"
 )
 
 func init() {
@@ -13,22 +14,22 @@ func init() {
 }
 
 type DisplayManager struct {
-    Window *glfw.Window
-    WindowWidth, WindowHeight int
+	Window                    *glfw.Window
+	WindowWidth, WindowHeight int
 }
 
 func (d *DisplayManager) CreateDisplay() {
-    var err error
+	var err error
 	if err := glfw.Init(); err != nil {
 		log.Fatalln("failed to initialize glfw:", err)
 	}
 
-	glfw.WindowHint(glfw.Resizable, glfw.False)
+	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-    d.Window, err = glfw.CreateWindow(d.WindowWidth, d.WindowHeight, "Minecraft", nil, nil)
+	d.Window, err = glfw.CreateWindow(d.WindowWidth, d.WindowHeight, "Minecraft", nil, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -44,11 +45,10 @@ func (d *DisplayManager) CreateDisplay() {
 }
 
 func (d *DisplayManager) UpdateDisplay() {
-    d.Window.SwapBuffers()
-    glfw.PollEvents()
+	d.Window.SwapBuffers()
+	glfw.PollEvents()
 }
 
 func (d *DisplayManager) CloseDisplay() {
 	glfw.Terminate()
 }
-

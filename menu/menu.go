@@ -7,16 +7,18 @@ import (
 )
 
 type Menu struct {
-	Opened    bool
-	MenuItems []*MenuItem
-	font      *fontMeshCreator.FontType
+	Opened       bool
+	MenuItems    []*MenuItem
+	font         *fontMeshCreator.FontType
+	SelectedItem int
 }
 
 func CreateMenu(aspectRatio float32) Menu {
 	return Menu{
-		Opened:    false,
-		MenuItems: make([]*MenuItem, 0),
-		font:      renderEngine.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
+		Opened:       false,
+		MenuItems:    make([]*MenuItem, 0),
+		font:         renderEngine.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
+		SelectedItem: -1,
 	}
 }
 
@@ -29,8 +31,12 @@ func (m *Menu) AddItem(text string) {
 
 func (m *Menu) GetMenuItems() []guis.GuiTexture {
 	guis := make([]guis.GuiTexture, 0)
-	for _, item := range m.MenuItems {
-		guis = append(guis, item.guiTexture)
+	for index, item := range m.MenuItems {
+		if m.SelectedItem == index {
+			guis = append(guis, item.guiTexture)
+		} else {
+			guis = append(guis, item.selectedTexture)
+		}
 	}
 	return guis
 }
@@ -41,4 +47,8 @@ func (m *Menu) GetMenuTexts() []fontMeshCreator.GUIText {
 		texts = append(texts, item.text)
 	}
 	return texts
+}
+
+func (m *Menu) ComputeSelectedItem(x, y float64) {
+	m.SelectedItem = itemIndex(float32(y), len(m.MenuItems))
 }

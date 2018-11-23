@@ -58,45 +58,60 @@ func main() {
 		Entity: entity,
 	}
 
-	movePlayer := func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		if key == glfw.KeyD {
-			player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
-		} else if key == glfw.KeyA {
-			player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
-		} else if key == glfw.KeyW {
-			player.Entity.IncreasePosition(0.0, 0.1, 0.0)
-		} else if key == glfw.KeyS {
-			player.Entity.IncreasePosition(0.0, -0.1, 0.0)
-		} else if key == glfw.KeyJ {
-			player.Entity.IncreasePosition(0.1, 0.0, 0.0)
-		} else if key == glfw.KeyL {
-			player.Entity.IncreasePosition(-0.1, 0.0, 0.0)
-		} else if key == glfw.KeyI {
-			player.Entity.IncreasePosition(0.0, 0.0, 0.1)
-		} else if key == glfw.KeyK {
-			player.Entity.IncreasePosition(0.0, 0.0, -0.1)
-		}
-	}
-
-	d.Window.SetKeyCallback(movePlayer)
-
 	guis := make([]pguis.GuiTexture, 0)
-	guis = append(guis, renderEngine.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}))
+	cursor := renderEngine.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03})
+	guis = append(guis, cursor)
 
 	menu := pmenu.CreateMenu(aspectRatio)
 	menu.Opened = true
 	menu.AddItem("Resume game")
 	menu.AddItem("Exit game")
+	menu.AddItem("Watch YouTube")
+	menu.AddItem("Go to Website")
 	guis = append(guis, menu.GetMenuItems()...)
 	fontRenderer.LoadTexts(menu.GetMenuTexts())
 
 	guiRenderer := renderEngine.CreateGuiRenderer()
 	defer guiRenderer.CleanUp()
 
+	movePlayer := func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if !menu.Opened {
+			if key == glfw.KeyD {
+				player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
+			} else if key == glfw.KeyA {
+				player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
+			} else if key == glfw.KeyW {
+				player.Entity.IncreasePosition(0.0, 0.1, 0.0)
+			} else if key == glfw.KeyS {
+				player.Entity.IncreasePosition(0.0, -0.1, 0.0)
+			} else if key == glfw.KeyJ {
+				player.Entity.IncreasePosition(0.1, 0.0, 0.0)
+			} else if key == glfw.KeyL {
+				player.Entity.IncreasePosition(-0.1, 0.0, 0.0)
+			} else if key == glfw.KeyI {
+				player.Entity.IncreasePosition(0.0, 0.0, 0.1)
+			} else if key == glfw.KeyK {
+				player.Entity.IncreasePosition(0.0, 0.0, -0.1)
+			}
+		}
+	}
+
+	menuSelectItem := func(w *glfw.Window, xpos float64, ypos float64) {
+		xpos = xpos / float64(d.WindowWidth)
+		ypos = ypos / float64(d.WindowHeight)
+		xpos = xpos - 0.5
+		ypos = ypos - 0.5
+		menu.ComputeSelectedItem(xpos, ypos)
+	}
+
+	d.Window.SetKeyCallback(movePlayer)
+	d.Window.SetCursorPosCallback(menuSelectItem)
+
 	for !d.Window.ShouldClose() {
 		camera.LockOnPlayer(player)
 		r.ProcessEntity(player.Entity)
 		r.ProcessEntities(world.GetChunks())
+		guis = append(guis[:1], menu.GetMenuItems()...)
 		r.Render(light, camera)
 		guiRenderer.Render(guis)
 		fontRenderer.Render()

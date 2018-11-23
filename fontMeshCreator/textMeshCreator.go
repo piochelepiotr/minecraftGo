@@ -1,7 +1,11 @@
 package fontMeshCreator
 
+import (
+	"fmt"
+)
+
 const (
-	LINE_HEIGHT float32 = 0.03
+	LINE_HEIGHT float32 = 0.05
 	SPACE_ASCII int     = 32
 )
 
@@ -23,7 +27,7 @@ func (tmc *TextMeshCreator) createTextMesh(text GUIText) TextMeshData {
 
 func (tmc *TextMeshCreator) createStructure(text GUIText) []Line {
 	lines := make([]Line, 0)
-	currentLine := CreateLine(tmc.metaData.spaceWidth, text.FontSize, text.LineMaxSize)
+	currentLine := CreateLine(tmc.metaData.spaceWidth, text.FontSize, text.MaxLineSize)
 	currentWord := CreateWord(text.FontSize)
 	for _, c := range text.TextString {
 		char := int(c)
@@ -31,7 +35,7 @@ func (tmc *TextMeshCreator) createStructure(text GUIText) []Line {
 			added := currentLine.AttemptToAddWord(currentWord)
 			if !added {
 				lines = append(lines, currentLine)
-				currentLine = CreateLine(tmc.metaData.spaceWidth, text.FontSize, text.LineMaxSize)
+				currentLine = CreateLine(tmc.metaData.spaceWidth, text.FontSize, text.MaxLineSize)
 				currentLine.AttemptToAddWord(currentWord)
 			}
 			currentWord = CreateWord(text.FontSize)
@@ -48,7 +52,7 @@ func (tmc *TextMeshCreator) completeStructure(lines *[]Line, currentLine Line, c
 	added := currentLine.AttemptToAddWord(currentWord)
 	if !added {
 		*lines = append(*lines, currentLine)
-		currentLine = CreateLine(tmc.metaData.spaceWidth, text.FontSize, text.LineMaxSize)
+		currentLine = CreateLine(tmc.metaData.spaceWidth, text.FontSize, text.MaxLineSize)
 		currentLine.AttemptToAddWord(currentWord)
 	}
 	*lines = append(*lines, currentLine)
@@ -60,6 +64,14 @@ func (tmc *TextMeshCreator) createQuadVertices(text GUIText, lines []Line) TextM
 	curserY := float32(0)
 	vertices := make([]float32, 0)
 	textureCoords := make([]float32, 0)
+	if text.VCenterText {
+		textHeight := LINE_HEIGHT / 2 * text.FontSize * float32(len(lines))
+		fmt.Println("Text height is: ", textHeight)
+		fmt.Println("max text height is", text.MaxTextHeight)
+		curserY = (text.MaxTextHeight - textHeight) / 2.0
+		fmt.Println("cursor pos:", curserY)
+		//curserY = 0
+	}
 	for _, line := range lines {
 		if text.CenterText {
 			curserX = (line.MaxLength - line.CurrentLineLength) / 2.0
@@ -81,9 +93,14 @@ func (tmc *TextMeshCreator) createQuadVertices(text GUIText, lines []Line) TextM
 	}
 }
 
+//func (tmc *TextMeshCreator) GetLineHeight(windowHeight int) float32 {
+//	return tmc.metaData.verticalPerPixelSize
+//}
+
 func addVerticesForCharacter(curserX, curserY float32, character Character, fontSize float32, vertices *[]float32) {
 	x := curserX + (character.XOffset * fontSize)
 	y := curserY + (character.YOffset * fontSize)
+	fmt.Println("y:", y)
 	maxX := x + (character.SizeX * fontSize)
 	maxY := y + (character.SizeY * fontSize)
 	properX := (2 * x) - 1
