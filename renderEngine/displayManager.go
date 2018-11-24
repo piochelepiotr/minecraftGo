@@ -42,6 +42,7 @@ func (d *DisplayManager) CreateDisplay() {
 
 	version := gl.GoStr(gl.GetString(gl.VERSION))
 	fmt.Println("OpenGL version", version)
+	d.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 }
 
 func (d *DisplayManager) UpdateDisplay() {

@@ -69,29 +69,38 @@ func main() {
 		if !menu.Opened {
 			if key == glfw.KeyEscape {
 				menu.Opened = true
-			} else if key == glfw.KeyD {
-				player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
-			} else if key == glfw.KeyA {
-				player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
+				d.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 			} else if key == glfw.KeyW {
-				player.Entity.IncreasePosition(0.0, 0.1, 0.0)
+				player.MoveForward(0.1)
 			} else if key == glfw.KeyS {
-				player.Entity.IncreasePosition(0.0, -0.1, 0.0)
-			} else if key == glfw.KeyJ {
-				player.Entity.IncreasePosition(0.1, 0.0, 0.0)
-			} else if key == glfw.KeyL {
-				player.Entity.IncreasePosition(-0.1, 0.0, 0.0)
-			} else if key == glfw.KeyI {
-				player.Entity.IncreasePosition(0.0, 0.0, 0.1)
-			} else if key == glfw.KeyK {
-				player.Entity.IncreasePosition(0.0, 0.0, -0.1)
+				player.MoveForward(-0.1)
 			}
+			//else if key == glfw.KeyA {
+			//	player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
+			//} else if key == glfw.KeyW {
+			//	player.Entity.IncreasePosition(0.0, 0.1, 0.0)
+			//} else if key == glfw.KeyS {
+			//	player.Entity.IncreasePosition(0.0, -0.1, 0.0)
+			//} else if key == glfw.KeyJ {
+			//	player.Entity.IncreasePosition(0.1, 0.0, 0.0)
+			//} else if key == glfw.KeyL {
+			//	player.Entity.IncreasePosition(-0.1, 0.0, 0.0)
+			//} else if key == glfw.KeyI {
+			//	player.Entity.IncreasePosition(0.0, 0.0, 0.1)
+			//} else if key == glfw.KeyK {
+			//	player.Entity.IncreasePosition(0.0, 0.0, -0.1)
+			//}
 		}
 	}
 
 	menuSelectItem := func(w *glfw.Window, xpos float64, ypos float64) {
 		x, y := d.GLPos(xpos, ypos)
-		menu.ComputeSelectedItem(x, y)
+		if menu.Opened {
+			menu.ComputeSelectedItem(x, y)
+		} else {
+			player.Entity.Rotation = mgl32.Vec3{0, -x, 0}
+			camera.Rotation = mgl32.Vec3{y, camera.Rotation.Y(), camera.Rotation.Z()}
+		}
 	}
 
 	menuClick := func(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
@@ -99,6 +108,7 @@ func main() {
 			if button == glfw.MouseButtonLeft {
 				if menu.SelectedItem == 0 {
 					menu.Opened = false
+					d.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 				} else if menu.SelectedItem == 1 {
 					os.Exit(0)
 				}
