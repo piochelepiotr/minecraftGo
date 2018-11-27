@@ -1,4 +1,4 @@
-package fontMeshCreator
+package font
 
 import (
 	"io/ioutil"

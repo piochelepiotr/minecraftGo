@@ -1,4 +1,4 @@
-package fontMeshCreator
+package font
 
 type TextMeshData struct {
 	VertexPositions []float32

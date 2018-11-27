@@ -1,4 +1,4 @@
-package fontMeshCreator
+package font
 
 type Character struct {
 	Id               int

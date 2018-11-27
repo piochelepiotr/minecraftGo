@@ -1,4 +1,4 @@
-package fontMeshCreator
+package font
 
 type Line struct {
 	MaxLength         float32

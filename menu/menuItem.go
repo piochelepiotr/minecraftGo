@@ -1,11 +1,13 @@
 package menu
 
 import (
+	"math"
+
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
+	"github.com/piochelepiotr/minecraftGo/font"
+	pfont "github.com/piochelepiotr/minecraftGo/font"
 	"github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/loader"
-	"math"
 )
 
 const (
@@ -15,15 +17,15 @@ const (
 )
 
 type MenuItem struct {
-	text            fontMeshCreator.GUIText
+	text            font.GUIText
 	guiTexture      guis.GuiTexture
 	selectedTexture guis.GuiTexture
 	index           int
 }
 
-func CreateMenuItem(text string, index int, font *fontMeshCreator.FontType) *MenuItem {
+func CreateMenuItem(text string, index int, font *pfont.FontType) *MenuItem {
 	return &MenuItem{
-		text:            loader.LoadText(fontMeshCreator.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
+		text:            loader.LoadText(pfont.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
 		index:           index,
 		guiTexture:      loader.LoadGuiTexture("textures/stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
 		selectedTexture: loader.LoadGuiTexture("textures/grass.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),

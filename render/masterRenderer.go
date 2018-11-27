@@ -1,9 +1,8 @@
-package renderEngine
+package render
 
 import (
 	"github.com/piochelepiotr/minecraftGo/entities"
-	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
-	"github.com/piochelepiotr/minecraftGo/fontRendering"
+	"github.com/piochelepiotr/minecraftGo/font"
 	pguis "github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/menu"
@@ -14,22 +13,22 @@ import (
 type MasterRenderer struct {
 	shader       shaders.StaticShader
 	renderer     Renderer
-	fontRenderer fontRendering.FontRenderer
+	fontRenderer FontRenderer
 	guiRenderer  pguis.GuiRenderer
 	entities     map[models.TexturedModel][]entities.Entity //keep an eye on the key
 	guis         []pguis.GuiTexture
-	texts        []fontMeshCreator.GUIText
+	texts        []font.GUIText
 }
 
 func CreateMasterRenderer() MasterRenderer {
 	var r MasterRenderer
-	r.fontRenderer = fontRendering.CreateFontRenderer()
+	r.fontRenderer = CreateFontRenderer()
 	r.guiRenderer = loader.CreateGuiRenderer()
 	r.shader = shaders.CreateStaticShader()
 	r.renderer = CreateRenderer(r.shader)
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
 	r.guis = make([]pguis.GuiTexture, 0)
-	r.texts = make([]fontMeshCreator.GUIText, 0)
+	r.texts = make([]font.GUIText, 0)
 	return r
 }
 
@@ -46,7 +45,7 @@ func (r *MasterRenderer) Render(sun entities.Light, camera entities.Camera) {
 		delete(r.entities, model)
 	}
 	r.guis = make([]pguis.GuiTexture, 0)
-	r.texts = make([]fontMeshCreator.GUIText, 0)
+	r.texts = make([]font.GUIText, 0)
 }
 
 func (r *MasterRenderer) ProcessEntity(entity entities.Entity) {
@@ -74,11 +73,11 @@ func (r *MasterRenderer) ProcessMenu(menu menu.Menu) {
 	}
 }
 
-func (r *MasterRenderer) ProcessText(text fontMeshCreator.GUIText) {
+func (r *MasterRenderer) ProcessText(text font.GUIText) {
 	r.texts = append(r.texts, text)
 }
 
-func (r *MasterRenderer) ProcessTexts(texts []fontMeshCreator.GUIText) {
+func (r *MasterRenderer) ProcessTexts(texts []font.GUIText) {
 	r.texts = append(r.texts, texts...)
 }
 

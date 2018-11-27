@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
+	"github.com/piochelepiotr/minecraftGo/font"
 	"github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/shaders"
@@ -51,12 +51,12 @@ func LoadFontVAO(positions []float32, textureCoord []float32) uint32 {
 	return vaoID
 }
 
-func LoadFont(fontTexture, fontFile string, aspectRatio float32) *fontMeshCreator.FontType {
+func LoadFont(fontTexture, fontFile string, aspectRatio float32) *font.FontType {
 	textureID, err := loadTexture(fontTexture)
 	if err != nil {
 		panic(err)
 	}
-	return fontMeshCreator.CreateFontType(textureID, fontFile, aspectRatio)
+	return font.CreateFontType(textureID, fontFile, aspectRatio)
 
 }
 
@@ -73,7 +73,7 @@ func CreateGuiRenderer() guis.GuiRenderer {
 	}
 }
 
-func LoadText(text fontMeshCreator.GUIText) fontMeshCreator.GUIText {
+func LoadText(text font.GUIText) font.GUIText {
 	font := text.Font
 	data := font.LoadText(text)
 	vao := LoadFontVAO(data.VertexPositions, data.TextureCoords)

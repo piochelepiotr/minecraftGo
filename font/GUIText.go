@@ -1,4 +1,4 @@
-package fontMeshCreator
+package font
 
 import (
 	"github.com/go-gl/mathgl/mgl32"

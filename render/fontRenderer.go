@@ -1,25 +1,25 @@
-package fontRendering
+package render
 
 import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
+	"github.com/piochelepiotr/minecraftGo/font"
 	"github.com/piochelepiotr/minecraftGo/shaders"
 )
 
 type FontRenderer struct {
 	shader shaders.FontShader
-	texts  map[*fontMeshCreator.FontType][]fontMeshCreator.GUIText
+	texts  map[*font.FontType][]font.GUIText
 }
 
 func CreateFontRenderer() FontRenderer {
 	return FontRenderer{
 		shader: shaders.CreateFontShader(),
-		texts:  make(map[*fontMeshCreator.FontType][]fontMeshCreator.GUIText),
+		texts:  make(map[*font.FontType][]font.GUIText),
 	}
 }
 
-func (r *FontRenderer) Render(texts []fontMeshCreator.GUIText) {
+func (r *FontRenderer) Render(texts []font.GUIText) {
 	r.LoadTexts(texts)
 	r.Prepare()
 	for font, texts := range r.texts {
@@ -32,20 +32,20 @@ func (r *FontRenderer) Render(texts []fontMeshCreator.GUIText) {
 	r.endRendering()
 }
 
-func (r *FontRenderer) LoadText(text fontMeshCreator.GUIText) {
+func (r *FontRenderer) LoadText(text font.GUIText) {
 	font := text.Font
 	r.texts[font] = append(r.texts[font], text)
 }
 
-func (r *FontRenderer) LoadTexts(texts []fontMeshCreator.GUIText) {
+func (r *FontRenderer) LoadTexts(texts []font.GUIText) {
 	for _, text := range texts {
 		r.LoadText(text)
 	}
 }
 
-//func (r *FontRenderer) RemoveText(text fontMeshCreator.GUIText) {
+//func (r *FontRenderer) RemoveText(text font.GUIText) {
 //	l := r.texts[text.Font]
-//	l2 := make([]fontMeshCreator.GUIText, 0)
+//	l2 := make([]font.GUIText, 0)
 //	for _, e := range l {
 //		if e != text {
 //			l2 = append(l2, e)
@@ -70,7 +70,7 @@ func (r *FontRenderer) Prepare() {
 	r.shader.Program.Start()
 }
 
-func (r *FontRenderer) renderText(text fontMeshCreator.GUIText) {
+func (r *FontRenderer) renderText(text font.GUIText) {
 	gl.BindVertexArray(text.TextMeshVao)
 	gl.EnableVertexAttribArray(0)
 	gl.EnableVertexAttribArray(1)
@@ -87,5 +87,5 @@ func (r *FontRenderer) endRendering() {
 	r.shader.Program.Stop()
 	gl.Disable(gl.BLEND)
 	gl.Enable(gl.DEPTH_TEST)
-	r.texts = make(map[*fontMeshCreator.FontType][]fontMeshCreator.GUIText)
+	r.texts = make(map[*font.FontType][]font.GUIText)
 }

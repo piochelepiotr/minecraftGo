@@ -1,4 +1,4 @@
-package fontMeshCreator
+package font
 
 type FontType struct {
 	TextureAtlas uint32

@@ -9,7 +9,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/loader"
 	pmenu "github.com/piochelepiotr/minecraftGo/menu"
 	"github.com/piochelepiotr/minecraftGo/models"
-	"github.com/piochelepiotr/minecraftGo/renderEngine"
+	"github.com/piochelepiotr/minecraftGo/render"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
 )
 
@@ -18,13 +18,13 @@ const windowHeight = 600
 const aspectRatio = windowWidth / windowHeight
 
 func main() {
-	d := renderEngine.DisplayManager{WindowWidth: windowWidth, WindowHeight: windowHeight}
+	d := render.DisplayManager{WindowWidth: windowWidth, WindowHeight: windowHeight}
 	defer d.CloseDisplay()
 	d.CreateDisplay()
 
 	model := loader.LoadObjModel("objects/steve.obj")
 	defer loader.CleanUp()
-	r := renderEngine.CreateMasterRenderer()
+	r := render.CreateMasterRenderer()
 	defer r.CleanUp()
 	t := loader.LoadModelTexture("textures/skin.png")
 	cubeTexture := loader.LoadModelTexture("textures/textures.png")

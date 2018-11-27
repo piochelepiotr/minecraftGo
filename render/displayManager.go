@@ -1,11 +1,12 @@
-package renderEngine
+package render
 
 import (
 	"fmt"
-	"github.com/go-gl/gl/v4.1-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
 	"log"
 	"runtime"
+
+	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 func init() {

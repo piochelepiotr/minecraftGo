@@ -1,7 +1,7 @@
 package menu
 
 import (
-	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
+	"github.com/piochelepiotr/minecraftGo/font"
 	"github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/loader"
 )
@@ -9,7 +9,7 @@ import (
 type Menu struct {
 	Opened       bool
 	MenuItems    []*MenuItem
-	font         *fontMeshCreator.FontType
+	font         *font.FontType
 	SelectedItem int
 }
 
@@ -41,8 +41,8 @@ func (m *Menu) GetMenuItems() []guis.GuiTexture {
 	return guis
 }
 
-func (m *Menu) GetMenuTexts() []fontMeshCreator.GUIText {
-	texts := make([]fontMeshCreator.GUIText, 0)
+func (m *Menu) GetMenuTexts() []font.GUIText {
+	texts := make([]font.GUIText, 0)
 	for _, item := range m.MenuItems {
 		texts = append(texts, item.text)
 	}

@@ -1,4 +1,4 @@
-package fontMeshCreator
+package font
 
 const (
 	LINE_HEIGHT float32 = 0.05
