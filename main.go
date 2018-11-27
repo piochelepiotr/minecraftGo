@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
@@ -9,7 +11,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/renderEngine"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
-	"os"
 )
 
 const windowWidth = 800
@@ -33,10 +34,13 @@ func main() {
 		RawModel:     model,
 	}
 	world := pworld.CreateWorld(cubeTexture)
-	world.LoadChunk(0, 0, 0)
-	world.LoadChunk(-pworld.ChunkSize, 0, 0)
-	world.LoadChunk(0, 0, -pworld.ChunkSize)
-	world.LoadChunk(-pworld.ChunkSize, 0, -pworld.ChunkSize)
+	for x := -1; x < 2; x++ {
+		for y := 0; y < 2; y++ {
+			for z := -1; z < 2; z++ {
+				world.LoadChunk(x*pworld.ChunkSize, y*pworld.ChunkSize, z*pworld.ChunkSize)
+			}
+		}
+	}
 	camera := entities.CreateCamera(-50, 30, -50, -0.5, 1.8)
 	camera.Rotation = mgl32.Vec3{0, 0, 0}
 
@@ -45,10 +49,8 @@ func main() {
 		Colour:   mgl32.Vec3{1, 1, 1},
 	}
 
-	camera.IncreaseRotation(0, 2, 0)
-
 	entity := entities.Entity{
-		Position:      mgl32.Vec3{0, float32(world.GetHeight(int(0), int(0))), 0},
+		Position:      mgl32.Vec3{0, float32(world.GetHeight(int(0), int(0))) + 10, 0},
 		Rotation:      mgl32.Vec3{0, 0, 0},
 		TexturedModel: texturedModel,
 	}
@@ -71,9 +73,9 @@ func main() {
 				menu.Opened = true
 				d.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 			} else if key == glfw.KeyW {
-				player.MoveForward(0.1)
+				player.MoveForward(0.4)
 			} else if key == glfw.KeyS {
-				player.MoveForward(-0.1)
+				player.MoveForward(-0.4)
 			}
 			//else if key == glfw.KeyA {
 			//	player.Entity.IncreaseRotation(0.0, -0.1, 0.0)

@@ -1,29 +1,60 @@
 package world
 
 import (
+	"github.com/aquilax/go-perlin"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/textures"
 )
 
+// Chunk is set cube of blocks
 type Chunk struct {
 	Model  models.RawModel
 	blocks []Block
+	perlin *perlin.Perlin
 }
 
+// NumberRowsTextures is the number number of rows on the texture image
 const NumberRowsTextures int = 2
-const ChunkSize int = 16
-const ChunkSize2 int = ChunkSize * ChunkSize
-const ChunkSize3 int = ChunkSize2 * ChunkSize
 
-func CreateChunk(startX int, startY int, startZ int, modelTexture textures.ModelTexture) Chunk {
+// ChunkSize is the size of a chunk in blocks
+const ChunkSize int = 16
+
+// ChunkSize2 is the area of a chunk in blocks
+const ChunkSize2 int = ChunkSize * ChunkSize
+
+// ChunkSize3 is the volume of a chunk in blocks
+const ChunkSize3 int = ChunkSize2 * ChunkSize
+const alpha float64 = 2
+const beta float64 = 2
+const perlinN int = 3
+const perlinScale float64 = 20
+
+// WorldHeight is the height of the world in blocks
+const WorldHeight int = ChunkSize * 2
+
+// CreateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
+func CreateChunk(startX int, startY int, startZ int, modelTexture textures.ModelTexture, perlin *perlin.Perlin) Chunk {
 	var chunk Chunk
 	chunk.blocks = make([]Block, ChunkSize3)
+	chunk.perlin = perlin
+	halfWorldHeight := WorldHeight / 2
 	for x := 0; x < ChunkSize; x++ {
-		for y := 0; y < ChunkSize; y++ {
-			for z := 0; z < ChunkSize; z++ {
+		for z := 0; z < ChunkSize; z++ {
+			height := halfWorldHeight + int(float64(halfWorldHeight)*chunk.perlin.Noise2D(float64(startX+x)/perlinScale, float64(startZ+z)/perlinScale)) - startY
+			positiveHeight := height
+			if positiveHeight < 0 {
+				positiveHeight = 0
+			}
+			for y := 0; y < positiveHeight && y < ChunkSize; y++ {
 				chunk.SetBlock(x, y, z, Dirt)
+			}
+			for y := positiveHeight; y < ChunkSize; y++ {
+				chunk.SetBlock(x, y, z, Air)
+			}
+			if 0 <= height && height < ChunkSize {
+				chunk.SetBlock(x, height, z, Grass)
 			}
 		}
 	}
@@ -31,14 +62,17 @@ func CreateChunk(startX int, startY int, startZ int, modelTexture textures.Model
 	return chunk
 }
 
+// SetBlock sets a block in a chunk, it doesn't refresh the display
 func (c *Chunk) SetBlock(x, y, z int, b Block) {
 	c.blocks[x*ChunkSize2+y*ChunkSize+z] = b
 }
 
+// GetBlock gets the block of a chunk
 func (c *Chunk) GetBlock(x, y, z int) Block {
 	return c.blocks[x*ChunkSize2+y*ChunkSize+z]
 }
 
+// GetHeight gets the height of the chunk in blocks (not including air)
 func (c *Chunk) GetHeight(x, z int) int {
 	for y := ChunkSize - 1; y >= 0; y-- {
 		if c.GetBlock(x, y, z) != Air {
@@ -69,61 +103,61 @@ func (c *Chunk) buildFaces() {
 				 * 0 point is : bottom, left, back
 				 */
 				//up
-				x_f := float32(x)
-				y_f := float32(y)
-				z_f := float32(z)
+				xF := float32(x)
+				yF := float32(y)
+				zF := float32(z)
 				if !(b == a || (y+1 < ChunkSize && c.GetBlock(x, y+1, z) != a)) {
 					n := mgl32.Vec3{0, 1, 0}
-					p1 := mgl32.Vec3{x_f, y_f + 1, z_f}
-					p2 := mgl32.Vec3{x_f + 1, y_f + 1, z_f}
-					p3 := mgl32.Vec3{x_f + 1, y_f + 1, z_f + 1}
-					p4 := mgl32.Vec3{x_f, y_f + 1, z_f + 1}
-					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, b)
+					p1 := mgl32.Vec3{xF, yF + 1, zF}
+					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
+					p3 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
+					p4 := mgl32.Vec3{xF, yF + 1, zF + 1}
+					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, BlockSides[b]["top"])
 				}
 				//bottom
 				if !(b == a || (y-1 > 0 && c.GetBlock(x, y-1, z) != a)) {
 					n := mgl32.Vec3{0, -1, 0}
-					p1 := mgl32.Vec3{x_f, y_f, (z_f)}
-					p2 := mgl32.Vec3{x_f + 1, y_f, (z_f)}
-					p3 := mgl32.Vec3{x_f + 1, y_f, (z_f + 1)}
-					p4 := mgl32.Vec3{x_f, y_f, (z_f + 1)}
-					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, b)
+					p1 := mgl32.Vec3{xF, yF, (zF)}
+					p2 := mgl32.Vec3{xF + 1, yF, (zF)}
+					p3 := mgl32.Vec3{xF + 1, yF, (zF + 1)}
+					p4 := mgl32.Vec3{xF, yF, (zF + 1)}
+					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, BlockSides[b]["bottom"])
 				}
 				//right
 				if !(b == a || (x+1 < ChunkSize && c.GetBlock(x+1, y, z) != a)) {
 					n := mgl32.Vec3{1, 0, 0}
-					p1 := mgl32.Vec3{(x_f + 1), (y_f + 1), (z_f + 1)}
-					p2 := mgl32.Vec3{(x_f + 1), (y_f + 1), (z_f)}
-					p3 := mgl32.Vec3{(x_f + 1), (y_f), (z_f)}
-					p4 := mgl32.Vec3{(x_f + 1), (y_f), (z_f + 1)}
-					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, b)
+					p1 := mgl32.Vec3{(xF + 1), (yF + 1), (zF + 1)}
+					p2 := mgl32.Vec3{(xF + 1), (yF + 1), (zF)}
+					p3 := mgl32.Vec3{(xF + 1), (yF), (zF)}
+					p4 := mgl32.Vec3{(xF + 1), (yF), (zF + 1)}
+					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, BlockSides[b]["side"])
 				}
 				//left
 				if !(b == a || (x-1 > 0 && c.GetBlock(x-1, y, z) != a)) {
 					n := mgl32.Vec3{-1, 0, 0}
-					p1 := mgl32.Vec3{(x_f), (y_f + 1), (z_f)}
-					p2 := mgl32.Vec3{(x_f), (y_f + 1), (z_f + 1)}
-					p3 := mgl32.Vec3{(x_f), (y_f), (z_f + 1)}
-					p4 := mgl32.Vec3{(x_f), (y_f), (z_f)}
-					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, b)
+					p1 := mgl32.Vec3{(xF), (yF + 1), (zF)}
+					p2 := mgl32.Vec3{(xF), (yF + 1), (zF + 1)}
+					p3 := mgl32.Vec3{(xF), (yF), (zF + 1)}
+					p4 := mgl32.Vec3{(xF), (yF), (zF)}
+					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, BlockSides[b]["side"])
 				}
 				//front
 				if !(b == a || (z+1 < ChunkSize && c.GetBlock(x, y, z+1) != a)) {
 					n := mgl32.Vec3{0, 0, 1}
-					p1 := mgl32.Vec3{(x_f), (y_f + 1), (z_f + 1)}
-					p2 := mgl32.Vec3{(x_f + 1), (y_f + 1), (z_f + 1)}
-					p3 := mgl32.Vec3{(x_f + 1), (y_f), (z_f + 1)}
-					p4 := mgl32.Vec3{(x_f), (y_f), (z_f + 1)}
-					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, b)
+					p1 := mgl32.Vec3{(xF), (yF + 1), (zF + 1)}
+					p2 := mgl32.Vec3{(xF + 1), (yF + 1), (zF + 1)}
+					p3 := mgl32.Vec3{(xF + 1), (yF), (zF + 1)}
+					p4 := mgl32.Vec3{(xF), (yF), (zF + 1)}
+					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, BlockSides[b]["side"])
 				}
 				//back
 				if !(b == a || (z-1 > 0 && c.GetBlock(x, y, z-1) != a)) {
 					n := mgl32.Vec3{0, 0, -1}
-					p1 := mgl32.Vec3{(x_f + 1), (y_f + 1), (z_f)}
-					p2 := mgl32.Vec3{(x_f), (y_f + 1), (z_f)}
-					p3 := mgl32.Vec3{(x_f), (y_f), (z_f)}
-					p4 := mgl32.Vec3{(x_f + 1), (y_f), (z_f)}
-					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, b)
+					p1 := mgl32.Vec3{(xF + 1), (yF + 1), (zF)}
+					p2 := mgl32.Vec3{(xF), (yF + 1), (zF)}
+					p3 := mgl32.Vec3{(xF), (yF), (zF)}
+					p4 := mgl32.Vec3{(xF + 1), (yF), (zF)}
+					c.addFace(&vertices, &textures, &normals, &indexes, p1, p2, p3, p4, n, BlockSides[b]["side"])
 				}
 			}
 		}
@@ -164,17 +198,17 @@ func (c *Chunk) addFace(vertices *[]mgl32.Vec3, textures *[]mgl32.Vec2, normals 
 	*textures = append(*textures, t2)
 	*textures = append(*textures, t3)
 	*textures = append(*textures, t4)
-	start_index := uint32(0)
+	startIndex := uint32(0)
 	if len(*indexes) > 0 {
-		start_index = (*indexes)[len(*indexes)-1] + 1
+		startIndex = (*indexes)[len(*indexes)-1] + 1
 	}
-	*indexes = append(*indexes, start_index)
-	*indexes = append(*indexes, start_index+1)
-	*indexes = append(*indexes, start_index+2)
+	*indexes = append(*indexes, startIndex)
+	*indexes = append(*indexes, startIndex+1)
+	*indexes = append(*indexes, startIndex+2)
 
-	*indexes = append(*indexes, start_index)
-	*indexes = append(*indexes, start_index+2)
-	*indexes = append(*indexes, start_index+3)
+	*indexes = append(*indexes, startIndex)
+	*indexes = append(*indexes, startIndex+2)
+	*indexes = append(*indexes, startIndex+3)
 }
 
 func (c *Chunk) buildRawModel(vertices []mgl32.Vec3, textures []mgl32.Vec2, normals []mgl32.Vec3, indexes []uint32) {
@@ -192,5 +226,9 @@ func (c *Chunk) buildRawModel(vertices []mgl32.Vec3, textures []mgl32.Vec2, norm
 		normalsArray[3*i+1] = normals[i].Y()
 		normalsArray[3*i+2] = normals[i].Z()
 	}
-	c.Model = loader.LoadToVAO(verticesArray, texturesArray, indexes, normalsArray)
+	if len(indexes) == 0 {
+		c.Model.VertexCount = 0
+	} else {
+		c.Model = loader.LoadToVAO(verticesArray, texturesArray, indexes, normalsArray)
+	}
 }

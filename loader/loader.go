@@ -2,6 +2,11 @@ package loader
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
+	_ "image/png"
+	"os"
+
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/fontMeshCreator"
@@ -9,10 +14,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/shaders"
 	texturesPackage "github.com/piochelepiotr/minecraftGo/textures"
-	"image"
-	"image/draw"
-	_ "image/png"
-	"os"
 )
 
 var vaos = make([]uint32, 0)
