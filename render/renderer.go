@@ -33,7 +33,7 @@ func CreateRenderer(shader shaders.StaticShader) Renderer {
 func (r *Renderer) Prepare() {
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.ClearColor(0.5, 0.5, 0, 1)
+	gl.ClearColor(0.12, 0.56, 1, 1)
 }
 
 func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {

@@ -118,9 +118,14 @@ func main() {
 		}
 	}
 
+	resizeWindow := func(w *glfw.Window, width int, height int) {
+		d.Resize(width, height)
+	}
+
 	d.Window.SetKeyCallback(movePlayer)
 	d.Window.SetCursorPosCallback(menuSelectItem)
 	d.Window.SetMouseButtonCallback(menuClick)
+	d.Window.SetSizeCallback(resizeWindow)
 
 	for !d.Window.ShouldClose() {
 		camera.LockOnPlayer(player)

@@ -11,24 +11,29 @@ import (
 )
 
 const (
-	ItemHeight  float32 = 0.1
+	//ItemHeight is the height of one menu item
+	ItemHeight float32 = 0.1
+	//MenuSpacing is the spacing between two items
 	MenuSpacing float32 = 0.05
-	ItemWidth   float32 = 0.9
+	//ItemWidth is the width of a menu item
+	ItemWidth float32 = 0.9
 )
 
-type MenuItem struct {
+// Item is an item in the menu
+type Item struct {
 	text            font.GUIText
 	guiTexture      guis.GuiTexture
 	selectedTexture guis.GuiTexture
 	index           int
 }
 
-func CreateMenuItem(text string, index int, font *pfont.FontType) *MenuItem {
-	return &MenuItem{
+// CreateItem creates text and gui for menu item
+func CreateItem(text string, index int, font *pfont.FontType) *Item {
+	return &Item{
 		text:            loader.LoadText(pfont.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
 		index:           index,
 		guiTexture:      loader.LoadGuiTexture("textures/stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
-		selectedTexture: loader.LoadGuiTexture("textures/grass.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
+		selectedTexture: loader.LoadGuiTexture("textures/dark_stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
 	}
 }
 
@@ -59,7 +64,7 @@ func itemIndex(x, y float32, numberOfItems int) int {
 	return index
 }
 
-func (i *MenuItem) computeYPos(numberOfItems int) {
+func (i *Item) computeYPos(numberOfItems int) {
 	yPos := getStartMenu(numberOfItems) + float32(i.index)*blockSize()
 	yPos = 2 * yPos
 	//yPos = -0.5

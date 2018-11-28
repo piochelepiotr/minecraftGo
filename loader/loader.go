@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
+
+	// only support png images
 	_ "image/png"
+
 	"os"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -20,6 +23,7 @@ var vaos = make([]uint32, 0)
 var vbos = make([]uint32, 0)
 var textures = make([]uint32, 0)
 
+// LoadToVAO loads vertices into a vao
 func LoadToVAO(positions []float32, textureCoord []float32, indices []uint32, normals []float32) models.RawModel {
 	vaoID := createVAO()
 	bindIndicesBuffer(indices)
@@ -33,6 +37,7 @@ func LoadToVAO(positions []float32, textureCoord []float32, indices []uint32, no
 	}
 }
 
+// LoadTexToVAO loads a texture (2D coords) into a VAO
 func LoadTexToVAO(positions []float32) models.RawModel {
 	vaoID := createVAO()
 	storeDataInAttributeList(0, 2, positions)
@@ -43,6 +48,7 @@ func LoadTexToVAO(positions []float32) models.RawModel {
 	}
 }
 
+// LoadFontVAO loads a font into a VAO
 func LoadFontVAO(positions []float32, textureCoord []float32) uint32 {
 	vaoID := createVAO()
 	storeDataInAttributeList(0, 2, positions)
@@ -51,6 +57,7 @@ func LoadFontVAO(positions []float32, textureCoord []float32) uint32 {
 	return vaoID
 }
 
+// LoadFont create a font
 func LoadFont(fontTexture, fontFile string, aspectRatio float32) *font.FontType {
 	textureID, err := loadTexture(fontTexture)
 	if err != nil {
@@ -60,6 +67,7 @@ func LoadFont(fontTexture, fontFile string, aspectRatio float32) *font.FontType 
 
 }
 
+// CreateGuiRenderer returns a gui renderer
 func CreateGuiRenderer() guis.GuiRenderer {
 	positions := []float32{
 		-1, 1,
@@ -73,6 +81,7 @@ func CreateGuiRenderer() guis.GuiRenderer {
 	}
 }
 
+// LoadText loads a text into a VAO
 func LoadText(text font.GUIText) font.GUIText {
 	font := text.Font
 	data := font.LoadText(text)
@@ -122,6 +131,7 @@ func loadTexture(file string) (uint32, error) {
 	return texture, nil
 }
 
+// LoadModelTexture gets a texture from a file and loads it
 func LoadModelTexture(file string) texturesPackage.ModelTexture {
 	textureID, err := loadTexture(file)
 	if err != nil {
@@ -135,6 +145,7 @@ func LoadModelTexture(file string) texturesPackage.ModelTexture {
 	}
 }
 
+//LoadGuiTexture loads a texture into a VAO
 func LoadGuiTexture(file string, position, scale mgl32.Vec2) guis.GuiTexture {
 	textureID, err := loadTexture(file)
 	if err != nil {
@@ -173,6 +184,7 @@ func storeDataInAttributeList(attributeNumber uint32, size int32, data []float32
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
 
+// CleanUp clears all VAOs and VBOs
 func CleanUp() {
 	for i := 0; i < len(vaos); i++ {
 		gl.DeleteVertexArrays(1, &vaos[i])

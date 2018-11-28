@@ -6,32 +6,36 @@ import (
 	"github.com/piochelepiotr/minecraftGo/loader"
 )
 
+// Menu is the menu of the game
 type Menu struct {
 	Opened       bool
-	MenuItems    []*MenuItem
+	Items        []*Item
 	font         *font.FontType
 	SelectedItem int
 }
 
+// CreateMenu creates the menu of the game
 func CreateMenu(aspectRatio float32) Menu {
 	return Menu{
 		Opened:       false,
-		MenuItems:    make([]*MenuItem, 0),
+		Items:        make([]*Item, 0),
 		font:         loader.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
 		SelectedItem: -1,
 	}
 }
 
+// AddItem adds item to the game menu
 func (m *Menu) AddItem(text string) {
-	m.MenuItems = append(m.MenuItems, CreateMenuItem(text, len(m.MenuItems), m.font))
-	for _, item := range m.MenuItems {
-		item.computeYPos(len(m.MenuItems))
+	m.Items = append(m.Items, CreateItem(text, len(m.Items), m.font))
+	for _, item := range m.Items {
+		item.computeYPos(len(m.Items))
 	}
 }
 
-func (m *Menu) GetMenuItems() []guis.GuiTexture {
+// GetItems gets all guis of the menu
+func (m *Menu) GetItems() []guis.GuiTexture {
 	guis := make([]guis.GuiTexture, 0)
-	for index, item := range m.MenuItems {
+	for index, item := range m.Items {
 		if m.SelectedItem == index {
 			guis = append(guis, item.guiTexture)
 		} else {
@@ -41,14 +45,16 @@ func (m *Menu) GetMenuItems() []guis.GuiTexture {
 	return guis
 }
 
+// GetMenuTexts gets all texts of the menu
 func (m *Menu) GetMenuTexts() []font.GUIText {
 	texts := make([]font.GUIText, 0)
-	for _, item := range m.MenuItems {
+	for _, item := range m.Items {
 		texts = append(texts, item.text)
 	}
 	return texts
 }
 
+// ComputeSelectedItem returns the index of the item under the cursor
 func (m *Menu) ComputeSelectedItem(x, y float32) {
-	m.SelectedItem = itemIndex(x, y, len(m.MenuItems))
+	m.SelectedItem = itemIndex(x, y, len(m.Items))
 }

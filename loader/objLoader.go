@@ -1,11 +1,12 @@
 package loader
 
 import (
-	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/models"
 	"io/ioutil"
 	"strconv"
 	"strings"
+
+	"github.com/go-gl/mathgl/mgl32"
+	"github.com/piochelepiotr/minecraftGo/models"
 )
 
 func toFloat(s string) float32 {
@@ -24,6 +25,7 @@ func toInt(s string) uint32 {
 	return uint32(value)
 }
 
+// LoadObjModel loads a model exported from a 3D modeling tool
 func LoadObjModel(file string) models.RawModel {
 	dat, err := ioutil.ReadFile(file)
 	if err != nil {

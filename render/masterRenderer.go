@@ -10,6 +10,8 @@ import (
 	"github.com/piochelepiotr/minecraftGo/shaders"
 )
 
+// MasterRenderer is the main renderer that will render
+// everything on the screen
 type MasterRenderer struct {
 	shader       shaders.StaticShader
 	renderer     Renderer
@@ -20,6 +22,7 @@ type MasterRenderer struct {
 	texts        []font.GUIText
 }
 
+// CreateMasterRenderer creates a MasterRenderer class
 func CreateMasterRenderer() MasterRenderer {
 	var r MasterRenderer
 	r.fontRenderer = CreateFontRenderer()
@@ -32,6 +35,7 @@ func CreateMasterRenderer() MasterRenderer {
 	return r
 }
 
+// Render renders everything on the screen
 func (r *MasterRenderer) Render(sun entities.Light, camera entities.Camera) {
 	r.renderer.Prepare()
 	r.shader.Program.Start()
@@ -48,39 +52,48 @@ func (r *MasterRenderer) Render(sun entities.Light, camera entities.Camera) {
 	r.texts = make([]font.GUIText, 0)
 }
 
+// ProcessEntity adds entity to the list of entities to render
 func (r *MasterRenderer) ProcessEntity(entity entities.Entity) {
 	r.entities[entity.TexturedModel] = append(r.entities[entity.TexturedModel], entity)
 }
 
+// ProcessEntities adds entities to the list of entities to render
 func (r *MasterRenderer) ProcessEntities(entities []entities.Entity) {
 	for _, entity := range entities {
 		r.ProcessEntity(entity)
 	}
 }
 
+// ProcessGui adds gui to the list of guis to render
 func (r *MasterRenderer) ProcessGui(gui pguis.GuiTexture) {
 	r.guis = append(r.guis, gui)
 }
 
+// ProcessGuis adds guis to the list of guis to render
 func (r *MasterRenderer) ProcessGuis(guis []pguis.GuiTexture) {
 	r.guis = append(r.guis, guis...)
 }
 
+// ProcessMenu adds guis and text from menu to the
+// list of elements to render
 func (r *MasterRenderer) ProcessMenu(menu menu.Menu) {
 	if menu.Opened {
-		r.ProcessGuis(menu.GetMenuItems())
+		r.ProcessGuis(menu.GetItems())
 		r.ProcessTexts(menu.GetMenuTexts())
 	}
 }
 
+// ProcessText adds text to the list of texts to render
 func (r *MasterRenderer) ProcessText(text font.GUIText) {
 	r.texts = append(r.texts, text)
 }
 
+// ProcessTexts adds texts to the list of texts to render
 func (r *MasterRenderer) ProcessTexts(texts []font.GUIText) {
 	r.texts = append(r.texts, texts...)
 }
 
+// CleanUp frees memory for the shader and the renderers
 func (r *MasterRenderer) CleanUp() {
 	r.shader.CleanUp()
 	r.fontRenderer.CleanUp()
