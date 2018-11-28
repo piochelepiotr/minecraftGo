@@ -73,9 +73,9 @@ func main() {
 				menu.Opened = true
 				d.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 			} else if key == glfw.KeyW {
-				player.MoveForward(0.4)
+				player.Accelerate(4)
 			} else if key == glfw.KeyS {
-				player.MoveForward(-0.4)
+				player.Accelerate(-4)
 			}
 			//else if key == glfw.KeyA {
 			//	player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
@@ -136,6 +136,7 @@ func main() {
 		r.Render(light, camera)
 		d.UpdateDisplay()
 		//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
+		player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press)
 		glfw.PollEvents()
 	}
 }
