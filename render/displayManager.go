@@ -18,6 +18,8 @@ func init() {
 type DisplayManager struct {
 	Window                    *glfw.Window
 	WindowWidth, WindowHeight int
+	MouseX                    float32
+	MouseY                    float32
 }
 
 // CreateDisplay create a glfw window
@@ -65,6 +67,8 @@ func (d *DisplayManager) GLPos(x, y float64) (float32, float32) {
 	ypos := float32(y) / float32(d.WindowHeight)
 	xpos = xpos - 0.5
 	ypos = ypos - 0.5
+	d.MouseX = xpos
+	d.MouseY = ypos
 	return xpos, ypos
 }
 

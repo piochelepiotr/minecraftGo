@@ -50,7 +50,7 @@ func main() {
 	}
 
 	entity := entities.Entity{
-		Position:      mgl32.Vec3{0, float32(world.GetHeight(int(0), int(0))) + 20, 0},
+		Position:      mgl32.Vec3{0, float32(world.GetHeight(int(0), int(0))), 0},
 		Rotation:      mgl32.Vec3{0, 0, 0},
 		TexturedModel: texturedModel,
 	}
@@ -121,6 +121,10 @@ func main() {
 				} else if menu.SelectedItem == 1 {
 					os.Exit(0)
 				}
+			}
+		} else {
+			if button == glfw.MouseButtonLeft && action == glfw.Press {
+				world.ClickOnBlock(&camera)
 			}
 		}
 	}

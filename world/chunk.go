@@ -1,6 +1,8 @@
 package world
 
 import (
+	"fmt"
+
 	"github.com/aquilax/go-perlin"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/loader"
@@ -54,13 +56,13 @@ func CreateChunk(startX int, startY int, startZ int, modelTexture textures.Model
 				positiveHeight = 0
 			}
 			for y := 0; y < positiveHeight && y < ChunkSize; y++ {
-				chunk.SetBlock(x, y, z, Dirt)
+				chunk.setBlockNoUpdate(x, y, z, Dirt)
 			}
 			for y := positiveHeight; y < ChunkSize; y++ {
-				chunk.SetBlock(x, y, z, Air)
+				chunk.setBlockNoUpdate(x, y, z, Air)
 			}
 			if 0 <= height && height < ChunkSize {
-				chunk.SetBlock(x, height, z, Grass)
+				chunk.setBlockNoUpdate(x, height, z, Grass)
 			}
 		}
 	}
@@ -68,9 +70,17 @@ func CreateChunk(startX int, startY int, startZ int, modelTexture textures.Model
 	return chunk
 }
 
-// SetBlock sets a block in a chunk, it doesn't refresh the display
+// setBlockNoUpdate sets a block in a chunk, it doesn't refresh the display
+func (c *Chunk) setBlockNoUpdate(x, y, z int, b Block) {
+	c.blocks[x*ChunkSize2+y*ChunkSize+z] = b
+}
+
+// SetBlock sets a block in a chunk and refreshes the model
 func (c *Chunk) SetBlock(x, y, z int, b Block) {
 	c.blocks[x*ChunkSize2+y*ChunkSize+z] = b
+	c.buildFaces()
+	//fmt.Println("hello")
+	//c.Model.VertexCount = 0
 }
 
 // GetBlock gets the block of a chunk
@@ -217,6 +227,9 @@ func (c *Chunk) addFace(vertices *[]mgl32.Vec3, textures *[]mgl32.Vec2, normals 
 	*indexes = append(*indexes, startIndex+3)
 }
 
+func (c *Chunk) freeModel() {
+}
+
 func (c *Chunk) buildRawModel(vertices []mgl32.Vec3, textures []mgl32.Vec2, normals []mgl32.Vec3, indexes []uint32) {
 	size := len(vertices)
 	verticesArray := make([]float32, size*3)
@@ -235,6 +248,9 @@ func (c *Chunk) buildRawModel(vertices []mgl32.Vec3, textures []mgl32.Vec2, norm
 	if len(indexes) == 0 {
 		c.Model.VertexCount = 0
 	} else {
+		fmt.Println("building!!!")
+		fmt.Println(c.Model.VaoID)
 		c.Model = loader.LoadToVAO(verticesArray, texturesArray, indexes, normalsArray)
+		fmt.Println(c.Model.VaoID)
 	}
 }

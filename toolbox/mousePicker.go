@@ -96,3 +96,13 @@ func GetNextBlock(xIn, yIn, zIn *float32, dir mgl32.Vec3, x, y, z *int) float32 
 	//fmt.Println("problem : no face to get out of the cube")
 	return 0
 }
+
+//ComputeCameraRay computes the camera ray
+func ComputeCameraRay(cameraRotation mgl32.Vec3) mgl32.Vec3 {
+	rotY := mgl32.HomogRotate3DY(cameraRotation.Y())
+	rotX := mgl32.HomogRotate3DX(cameraRotation.X())
+	xray := mgl32.Vec4{0, 0, -1, 1}
+	xray = rotX.Mul4x1(xray)
+	xray = rotY.Mul4x1(xray)
+	return mgl32.Vec3{-xray.X(), -xray.Y(), xray.Z()}
+}

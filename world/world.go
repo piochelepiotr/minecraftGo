@@ -15,7 +15,7 @@ import (
 
 // World contains all the blocks of the world in chunks that load around the player
 type World struct {
-	chunks       map[Point]Chunk
+	chunks       map[Point]*Chunk
 	modelTexture textures.ModelTexture
 	perlin       *perlin.Perlin
 }
@@ -26,7 +26,7 @@ func getChunk(x int) int {
 
 // CreateWorld initiate the world
 func CreateWorld(modelTexture textures.ModelTexture) World {
-	chunks := make(map[Point]Chunk)
+	chunks := make(map[Point]*Chunk)
 	return World{
 		chunks:       chunks,
 		modelTexture: modelTexture,
@@ -66,7 +66,8 @@ func (w *World) LoadChunk(x, y, z int) {
 		Y: y,
 		Z: z,
 	}
-	w.chunks[p] = CreateChunk(x, y, z, w.modelTexture, w.perlin)
+	chunk := CreateChunk(x, y, z, w.modelTexture, w.perlin)
+	w.chunks[p] = &chunk
 }
 
 // GetHeight returns height of the world in blocks at a x,z position
@@ -96,8 +97,25 @@ func (w *World) GetBlock(x, y, z int) Block {
 	return Air
 }
 
+//SetBlock sets a block and update the chunk
+func (w *World) SetBlock(x, y, z int, b Block) {
+	chunkX := getChunk(x)
+	chunkY := getChunk(y)
+	chunkZ := getChunk(z)
+	p := Point{
+		X: chunkX,
+		Y: chunkY,
+		Z: chunkZ,
+	}
+	if chunk, ok := w.chunks[p]; ok {
+		chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, Air)
+	} else {
+		fmt.Println("ERROR when setting block in chunk ", p)
+	}
+}
+
 //PlaceInFront returns place in front of the player
-func (w *World) PlaceInFront(px, py, pz float32, dir mgl32.Vec3) float32 {
+func (w *World) PlaceInFront(px, py, pz float32, dir mgl32.Vec3) (float32, Point) {
 	dist := float32(0)
 	x := int(math.Floor(float64(px)))
 	y := int(math.Floor(float64(py)))
@@ -105,11 +123,11 @@ func (w *World) PlaceInFront(px, py, pz float32, dir mgl32.Vec3) float32 {
 	for i := 0; i < 10; i++ {
 		//fmt.Println("POS: ", x, ";", y, ";", z)
 		if w.GetBlock(x, y, z) != Air {
-			return dist
+			return dist, Point{x, y, z}
 		}
 		dist += toolbox.GetNextBlock(&px, &py, &pz, dir, &x, &y, &z)
 	}
-	return dist
+	return dist, Point{0, 0, 0}
 }
 
 func factForward(x, y, z, place float32) float32 {
@@ -125,7 +143,8 @@ func factForward(x, y, z, place float32) float32 {
 
 func (w *World) touchesGround(player *entities.Player) bool {
 	p := player.Entity.Position
-	return w.PlaceInFront(p.X(), p.Y(), p.Z(), mgl32.Vec3{0, -1, 0}) == 0
+	place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), mgl32.Vec3{0, -1, 0})
+	return place == 0
 }
 
 // MovePlayer moves the player inside the world
@@ -141,7 +160,7 @@ func (w *World) MovePlayer(player *entities.Player) {
 			//forward := mgl32.Vec3{0, -1, 0}
 			forward := player.Forward()
 			p := player.PosPlus(0.01)
-			place := w.PlaceInFront(p.X(), p.Y(), p.Z(), forward)
+			place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), forward)
 			//fmt.Println("place : ", place)
 			f := factForward(moveX, moveY, moveZ, place)
 			if f < 1 {
@@ -161,4 +180,13 @@ func (w *World) MovePlayer(player *entities.Player) {
 		player.Speed = entities.Forces(player.Speed, secDiff, touchGround)
 	}
 	player.LastMove = now
+}
+
+// ClickOnBlock removes or adds a block
+func (w *World) ClickOnBlock(camera *entities.Camera) {
+	xray := toolbox.ComputeCameraRay(camera.Rotation)
+	p := camera.Position
+	place, block := w.PlaceInFront(p.X(), p.Y(), p.Z(), xray)
+	fmt.Println(place)
+	w.SetBlock(block.X, block.Y, block.Z, Air)
 }
