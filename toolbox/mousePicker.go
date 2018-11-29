@@ -1,7 +1,6 @@
 package toolbox
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -11,7 +10,8 @@ func distance(x, y, z, x2, y2, z2 float32) float32 {
 	return float32(math.Sqrt(math.Pow(float64(x-x2), 2) + math.Pow(float64(y-y2), 2) + math.Pow(float64(z-z2), 2)))
 }
 
-func getNextBlock(xIn, yIn, zIn *float32, dir mgl32.Vec3, x, y, z *int) float32 {
+//GetNextBlock returns the next block in the direction dir
+func GetNextBlock(xIn, yIn, zIn *float32, dir mgl32.Vec3, x, y, z *int) float32 {
 	xS := *xIn
 	yS := *yIn
 	zS := *zIn
@@ -28,7 +28,6 @@ func getNextBlock(xIn, yIn, zIn *float32, dir mgl32.Vec3, x, y, z *int) float32 
 		*xIn = xS + t*dir.X()
 		*zIn = zS + t*dir.Z()
 		if *zIn >= zB && *zIn <= zE && *xIn >= xB && *xIn <= xE {
-			//std::cout << "TOP" << std::endl
 			//fmt.Println("BACK")
 			(*y)++
 			return distance(*xIn, *yIn, *zIn, xS, yS, zS)
@@ -94,6 +93,6 @@ func getNextBlock(xIn, yIn, zIn *float32, dir mgl32.Vec3, x, y, z *int) float32 
 			return distance(*xIn, *yIn, *zIn, xS, yS, zS)
 		}
 	}
-	fmt.Println("problem : no face to get out of the cube")
+	//fmt.Println("problem : no face to get out of the cube")
 	return 0
 }

@@ -1,13 +1,16 @@
 package world
 
 import (
+	"fmt"
 	"math"
+	"time"
 
 	"github.com/aquilax/go-perlin"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/textures"
+	"github.com/piochelepiotr/minecraftGo/toolbox"
 )
 
 // World contains all the blocks of the world in chunks that load around the player
@@ -18,7 +21,7 @@ type World struct {
 }
 
 func getChunk(x int) int {
-	return int(math.Floor(float64(x) / float64(ChunkSize)))
+	return int(math.Floor(float64(x)/float64(ChunkSize))) * ChunkSize
 }
 
 // CreateWorld initiate the world
@@ -34,7 +37,7 @@ func CreateWorld(modelTexture textures.ModelTexture) World {
 //GetChunks returns all chunks that are going to be rendered
 func (w *World) GetChunks() []entities.Entity {
 	chunks := make([]entities.Entity, 0)
-	for p, chunk := range w.chunks {
+	for _, chunk := range w.chunks {
 		model := chunk.Model
 		if model.VertexCount == 0 {
 			continue
@@ -46,9 +49,9 @@ func (w *World) GetChunks() []entities.Entity {
 		e := entities.Entity{
 			TexturedModel: t,
 			Position: mgl32.Vec3{
-				float32(p.X),
-				float32(p.Y),
-				float32(p.Z),
+				float32(chunk.Start.X),
+				float32(chunk.Start.Y),
+				float32(chunk.Start.Z),
 			},
 		}
 		chunks = append(chunks, e)
@@ -68,12 +71,94 @@ func (w *World) LoadChunk(x, y, z int) {
 
 // GetHeight returns height of the world in blocks at a x,z position
 func (w *World) GetHeight(x, z int) int {
-	chunkX := getChunk(x)
-	chunkZ := getChunk(z)
-	for chunkY := WorldHeight - ChunkSize; chunkY >= 0; chunkY -= ChunkSize {
-		if chunk, ok := w.chunks[Point{X: chunkX, Y: chunkY, Z: chunkZ}]; ok {
-			return chunkY + chunk.GetHeight(x, z)
+	for y := WorldHeight - 1; y >= 0; y-- {
+		if w.GetBlock(x, y, z) != Air {
+			return y + 1
 		}
 	}
 	return 0
+}
+
+//GetBlock returns block x,y,z
+func (w *World) GetBlock(x, y, z int) Block {
+	chunkX := getChunk(x)
+	chunkY := getChunk(y)
+	chunkZ := getChunk(z)
+	p := Point{
+		X: chunkX,
+		Y: chunkY,
+		Z: chunkZ,
+	}
+	if chunk, ok := w.chunks[p]; ok {
+		return chunk.GetBlock(x-chunkX, y-chunkY, z-chunkZ)
+	}
+	fmt.Println("ERROR when getting block in chunk ", p)
+	return Air
+}
+
+//PlaceInFront returns place in front of the player
+func (w *World) PlaceInFront(px, py, pz float32, dir mgl32.Vec3) float32 {
+	dist := float32(0)
+	x := int(math.Floor(float64(px)))
+	y := int(math.Floor(float64(py)))
+	z := int(math.Floor(float64(pz)))
+	for i := 0; i < 10; i++ {
+		//fmt.Println("POS: ", x, ";", y, ";", z)
+		if w.GetBlock(x, y, z) != Air {
+			return dist
+		}
+		dist += toolbox.GetNextBlock(&px, &py, &pz, dir, &x, &y, &z)
+	}
+	return dist
+}
+
+func factForward(x, y, z, place float32) float32 {
+	move := float32(math.Sqrt(math.Pow(float64(x), 2) + math.Pow(float64(y), 2) + math.Pow(float64(z), 2)))
+	if move == 0 {
+		return 0
+	}
+	if place > move {
+		return 1
+	}
+	return place / move
+}
+
+func (w *World) touchesGround(player *entities.Player) bool {
+	p := player.Entity.Position
+	return w.PlaceInFront(p.X(), p.Y(), p.Z(), mgl32.Vec3{0, -1, 0}) == 0
+}
+
+// MovePlayer moves the player inside the world
+func (w *World) MovePlayer(player *entities.Player) {
+	now := time.Now().UnixNano()
+	if player.LastMove != 0 {
+		diff := now - player.LastMove
+		secDiff := float32(diff) / 1e9
+		if player.Speed.Len() > 0 {
+			moveX := player.Speed.X() * secDiff
+			moveY := player.Speed.Y() * secDiff
+			moveZ := player.Speed.Z() * secDiff
+			//forward := mgl32.Vec3{0, -1, 0}
+			forward := player.Forward()
+			p := player.PosPlus(0.01)
+			place := w.PlaceInFront(p.X(), p.Y(), p.Z(), forward)
+			//fmt.Println("place : ", place)
+			f := factForward(moveX, moveY, moveZ, place)
+			if f < 1 {
+				player.Speed = mgl32.Vec3{0, 0, 0}
+			}
+			moveX *= f
+			moveY *= f
+			moveZ *= f
+			player.Entity.Position = player.Entity.Position.Add(
+				mgl32.Vec3{
+					moveX,
+					moveY,
+					moveZ,
+				})
+		}
+		touchGround := w.touchesGround(player)
+		player.Speed = entities.Forces(player.Speed, secDiff, touchGround)
+	}
+	player.LastMove = now
 }

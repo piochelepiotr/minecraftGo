@@ -13,6 +13,7 @@ type Chunk struct {
 	Model  models.RawModel
 	blocks []Block
 	perlin *perlin.Perlin
+	Start  Point
 }
 
 // NumberRowsTextures is the number number of rows on the texture image
@@ -37,6 +38,11 @@ const WorldHeight int = ChunkSize * 2
 // CreateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
 func CreateChunk(startX int, startY int, startZ int, modelTexture textures.ModelTexture, perlin *perlin.Perlin) Chunk {
 	var chunk Chunk
+	chunk.Start = Point{
+		X: startX,
+		Y: startY,
+		Z: startZ,
+	}
 	chunk.blocks = make([]Block, ChunkSize3)
 	chunk.perlin = perlin
 	halfWorldHeight := WorldHeight / 2

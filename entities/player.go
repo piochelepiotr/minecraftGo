@@ -2,7 +2,6 @@ package entities
 
 import (
 	"math"
-	"time"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -10,15 +9,18 @@ import (
 const (
 	//TopSpeed in m/s
 	TopSpeed float32 = 20
+	//JumpSpeed is the vertical speed when jumping
+	JumpSpeed float32 = 5
 )
 
-var acceleration = mgl32.Vec3{5, 0, 5}
+// Acceleration is the player acceleration in m/s2
+var acceleration = mgl32.Vec3{5, -10, 5}
 
 //Player is the player of the game
 type Player struct {
 	Entity   Entity
-	speed    mgl32.Vec3
-	lastMove int64
+	Speed    mgl32.Vec3
+	LastMove int64
 }
 
 func limitSpeed(speed mgl32.Vec3) mgl32.Vec3 {
@@ -40,13 +42,16 @@ func limitSpeed(speed mgl32.Vec3) mgl32.Vec3 {
 	}
 }
 
-// Accelerate increases the speed forward
-func (p *Player) Accelerate(dist float32) {
+func (p *Player) facingDir(dist float32) mgl32.Vec3 {
 	mat := mgl32.HomogRotate3DY(p.Entity.Rotation.Y())
 	forward := mgl32.Vec4{0, 0, -dist, 1}
 	forward = mat.Mul4x1(forward)
-	//p.Entity.Position = p.Entity.Position.Add(forward.Vec3())
-	p.speed = limitSpeed(p.speed.Add(forward.Vec3()))
+	return forward.Vec3()
+}
+
+// Accelerate increases the speed forward
+func (p *Player) Accelerate(dist float32) {
+	p.Speed = limitSpeed(p.Speed.Add(p.facingDir(dist)))
 }
 
 // speed in m/s, acc in m/s2, t in s
@@ -69,30 +74,35 @@ func gravity(speed float32, acc float32, t float32) float32 {
 	return speed
 }
 
-func forces(speed mgl32.Vec3, t float32) mgl32.Vec3 {
+// Forces returns the new speed after applying forces to player
+func Forces(speed mgl32.Vec3, t float32, touchGround bool) mgl32.Vec3 {
 	d := friction(speed.X(), speed.Z(), acceleration.X(), t)
+	ySpeed := float32(0)
+	if !touchGround {
+		ySpeed = gravity(speed.Y(), acceleration.Y(), t)
+	}
 	return mgl32.Vec3{
 		speed.X() * d,
-		gravity(speed.Y(), acceleration.Y(), t),
+		ySpeed,
 		speed.Z() * d,
 	}
 }
 
-// Move moves player at its speed
-func (p *Player) Move(moves bool) {
-	now := time.Now().UnixNano()
-	if p.lastMove != 0 {
-		diff := now - p.lastMove
-		secDiff := float32(diff) / 1e9
-		p.Entity.Position = p.Entity.Position.Add(
-			mgl32.Vec3{
-				p.speed.X() * secDiff,
-				p.speed.Y() * secDiff,
-				p.speed.Z() * secDiff,
-			})
-		if !moves {
-			p.speed = forces(p.speed, secDiff)
-		}
+// Forward returns the forward direction of the player
+func (p *Player) Forward() mgl32.Vec3 {
+	return p.Speed
+}
+
+// Jump makes the player jump
+func (p *Player) Jump() {
+	p.Speed = mgl32.Vec3{
+		p.Speed.X(),
+		JumpSpeed,
+		p.Speed.Z(),
 	}
-	p.lastMove = now
+}
+
+//PosPlus returns a point a little bit forward of the player
+func (p *Player) PosPlus(e float32) mgl32.Vec3 {
+	return p.Entity.Position.Add(p.facingDir(e))
 }

@@ -50,7 +50,7 @@ func main() {
 	}
 
 	entity := entities.Entity{
-		Position:      mgl32.Vec3{0, float32(world.GetHeight(int(0), int(0))) + 10, 0},
+		Position:      mgl32.Vec3{0, float32(world.GetHeight(int(0), int(0))) + 20, 0},
 		Rotation:      mgl32.Vec3{0, 0, 0},
 		TexturedModel: texturedModel,
 	}
@@ -76,7 +76,14 @@ func main() {
 				player.Accelerate(4)
 			} else if key == glfw.KeyS {
 				player.Accelerate(-4)
+			} else if key == glfw.KeyD {
+				player.Entity.IncreasePosition(0, -0.1, 0)
+			} else if key == glfw.KeyU {
+				player.Entity.IncreasePosition(0, 0.1, 0)
+			} else if key == glfw.KeySpace {
+				player.Jump()
 			}
+
 			//else if key == glfw.KeyA {
 			//	player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
 			//} else if key == glfw.KeyW {
@@ -136,7 +143,9 @@ func main() {
 		r.Render(light, camera)
 		d.UpdateDisplay()
 		//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
-		player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press)
+		//player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press, move)
+		world.MovePlayer(&player)
 		glfw.PollEvents()
+		//time.Sleep(1e6)
 	}
 }
