@@ -73,15 +73,15 @@ func main() {
 				menu.Opened = true
 				d.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 			} else if key == glfw.KeyW {
-				player.Accelerate(4)
+				//player.Accelerate(4)
 			} else if key == glfw.KeyS {
-				player.Accelerate(-4)
+				//player.Accelerate(-4)
 			} else if key == glfw.KeyD {
-				player.Entity.IncreasePosition(0, -0.1, 0)
+				//player.Entity.IncreasePosition(0, -0.1, 0)
 			} else if key == glfw.KeyU {
-				player.Entity.IncreasePosition(0, 0.1, 0)
+				//player.Entity.IncreasePosition(0, 0.1, 0)
 			} else if key == glfw.KeySpace {
-				player.Jump()
+				//player.Jump()
 			}
 
 			//else if key == glfw.KeyA {
@@ -150,9 +150,13 @@ func main() {
 		r.ProcessMenu(menu)
 		r.Render(light, camera)
 		d.UpdateDisplay()
+		forward := d.Window.GetKey(glfw.KeyW) == glfw.Press
+		backward := d.Window.GetKey(glfw.KeyS) == glfw.Press
+		jump := d.Window.GetKey(glfw.KeySpace) == glfw.Press
 		//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
 		//player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press, move)
-		world.MovePlayer(&player)
+		player.Move(forward, backward, jump)
+		world.MovePlayer(&player, forward, backward, jump)
 		glfw.PollEvents()
 		//time.Sleep(1e6)
 	}

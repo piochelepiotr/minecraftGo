@@ -107,7 +107,7 @@ func (w *World) GetBlock(x, y, z int) Block {
 	if chunk, ok := w.chunks[p]; ok {
 		return chunk.GetBlock(x-chunkX, y-chunkY, z-chunkZ)
 	}
-	fmt.Println("ERROR when getting block in chunk ", p)
+	//fmt.Println("ERROR when getting block in chunk ", p)
 	return Air
 }
 
@@ -124,7 +124,7 @@ func (w *World) SetBlock(x, y, z int, b Block) {
 	if chunk, ok := w.chunks[p]; ok {
 		chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, Air)
 	} else {
-		fmt.Println("ERROR when setting block in chunk ", p)
+		//fmt.Println("ERROR when setting block in chunk ", p)
 	}
 }
 
@@ -162,7 +162,7 @@ func (w *World) touchesGround(player *entities.Player) bool {
 }
 
 // MovePlayer moves the player inside the world
-func (w *World) MovePlayer(player *entities.Player) {
+func (w *World) MovePlayer(player *entities.Player, forward, backward, jump bool) {
 	now := time.Now().UnixNano()
 	if player.LastMove != 0 {
 		diff := now - player.LastMove
@@ -191,7 +191,9 @@ func (w *World) MovePlayer(player *entities.Player) {
 				})
 		}
 		touchGround := w.touchesGround(player)
-		player.Speed = entities.Forces(player.Speed, secDiff, touchGround)
+		if !(forward || backward || jump) {
+			player.Speed = entities.Forces(player.Speed, secDiff, touchGround)
+		}
 	}
 	player.LastMove = now
 }

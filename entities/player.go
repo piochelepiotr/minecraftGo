@@ -14,7 +14,7 @@ const (
 )
 
 // Acceleration is the player acceleration in m/s2
-var acceleration = mgl32.Vec3{5, -10, 5}
+var acceleration = mgl32.Vec3{10, -10, 10}
 
 //Player is the player of the game
 type Player struct {
@@ -30,9 +30,9 @@ func limitSpeed(speed mgl32.Vec3) mgl32.Vec3 {
 	if v2 > 0 {
 		v := float32(math.Sqrt(v2))
 		if v > TopSpeed {
-			d := float32(math.Sqrt(v2 / float64(TopSpeed)))
-			x = x / d
-			z = z / d
+			d := TopSpeed / v
+			x = x * d
+			z = z * d
 		}
 	}
 	return mgl32.Vec3{
@@ -105,4 +105,17 @@ func (p *Player) Jump() {
 //PosPlus returns a point a little bit forward of the player
 func (p *Player) PosPlus(e float32) mgl32.Vec3 {
 	return p.Entity.Position.Add(p.facingDir(e))
+}
+
+//Move updates the player's speed according to pressed keys
+func (p *Player) Move(forward, backward, jump bool) {
+	if forward {
+		p.Accelerate(0.5)
+	}
+	if backward {
+		p.Accelerate(-0.5)
+	}
+	if jump {
+		p.Jump()
+	}
 }

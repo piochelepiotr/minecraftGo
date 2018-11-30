@@ -1,8 +1,6 @@
 package world
 
 import (
-	"fmt"
-
 	"github.com/aquilax/go-perlin"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/loader"
@@ -248,9 +246,6 @@ func (c *Chunk) buildRawModel(vertices []mgl32.Vec3, textures []mgl32.Vec2, norm
 	if len(indexes) == 0 {
 		c.Model.VertexCount = 0
 	} else {
-		fmt.Println("building!!!")
-		fmt.Println(c.Model.VaoID)
 		c.Model = loader.LoadToVAO(verticesArray, texturesArray, indexes, normalsArray)
-		fmt.Println(c.Model.VaoID)
 	}
 }
