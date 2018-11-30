@@ -138,7 +138,11 @@ func main() {
 	d.Window.SetMouseButtonCallback(menuClick)
 	d.Window.SetSizeCallback(resizeWindow)
 
+	//go world.LoadAllChunks(player.Entity.Position)
+	world.LoadChunks2(player.Entity.Position)
+
 	for !d.Window.ShouldClose() {
+		//world.LoadChunks(player.Entity.Position)
 		camera.LockOnPlayer(player)
 		r.ProcessEntity(player.Entity)
 		r.ProcessEntities(world.GetChunks())

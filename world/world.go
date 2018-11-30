@@ -13,6 +13,12 @@ import (
 	"github.com/piochelepiotr/minecraftGo/toolbox"
 )
 
+const (
+	deleteChunkDistance  float32 = 130
+	loadChunkDistance    float32 = 100
+	chunkMaxLoadDistance int     = 10
+)
+
 // World contains all the blocks of the world in chunks that load around the player
 type World struct {
 	chunks       map[Point]*Chunk
@@ -68,6 +74,14 @@ func (w *World) LoadChunk(x, y, z int) {
 	}
 	chunk := CreateChunk(x, y, z, w.modelTexture, w.perlin)
 	w.chunks[p] = &chunk
+}
+
+func (w *World) loadChunkIfNotLoaded(x, y, z int) bool {
+	if _, ok := w.chunks[Point{x, y, z}]; !ok {
+		w.LoadChunk(x, y, z)
+		return true
+	}
+	return false
 }
 
 // GetHeight returns height of the world in blocks at a x,z position
@@ -189,4 +203,116 @@ func (w *World) ClickOnBlock(camera *entities.Camera) {
 	place, block := w.PlaceInFront(p.X(), p.Y(), p.Z(), xray)
 	fmt.Println(place)
 	w.SetBlock(block.X, block.Y, block.Z, Air)
+}
+
+func (w *World) deleteChunks(playerPos mgl32.Vec3) {
+	for p, chunk := range w.chunks {
+		if chunk.Start.DistanceTo(playerPos) > deleteChunkDistance {
+			delete(w.chunks, p)
+		}
+	}
+}
+
+//LoadAllChunks loads one chunk per second
+func (w *World) LoadAllChunks(playerPos mgl32.Vec3) {
+	for {
+		time.Sleep(1e9)
+		w.LoadChunks(playerPos)
+	}
+}
+
+//LoadChunks load chunks around the player, for now, only load one chunk per frame
+func (w *World) LoadChunks(playerPos mgl32.Vec3) {
+	xPlayer := int(playerPos.X())
+	zPlayer := int(playerPos.Z())
+	chunkX := getChunk(xPlayer)
+	chunkZ := getChunk(zPlayer)
+	for i := 0; i < chunkMaxLoadDistance; i++ {
+		p := Point{i * ChunkSize, 0, i * ChunkSize}
+		if p.DistanceTo(playerPos) > loadChunkDistance {
+			return
+		}
+		z := -i
+		for x := -i; x <= i; x++ {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+				return
+			}
+		}
+		x := i
+		for z := -i + 1; z < i; z++ {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+				return
+			}
+		}
+		z = i
+		for x := i; x >= -i; x-- {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+				return
+			}
+		}
+		x = -i
+		for z := i - 1; z > -i; z-- {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+				return
+			}
+		}
+	}
+}
+
+//LoadChunks2 load chunks around the player, for now, only load one chunk per frame
+func (w *World) LoadChunks2(playerPos mgl32.Vec3) {
+	xPlayer := int(playerPos.X())
+	zPlayer := int(playerPos.Z())
+	chunkX := getChunk(xPlayer)
+	chunkZ := getChunk(zPlayer)
+	for i := 0; i < chunkMaxLoadDistance; i++ {
+		p := Point{i * ChunkSize, 0, i * ChunkSize}
+		if p.DistanceTo(playerPos) > loadChunkDistance {
+			return
+		}
+		z := -i
+		for x := -i; x <= i; x++ {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+			}
+		}
+		x := i
+		for z := -i + 1; z < i; z++ {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+			}
+		}
+		z = i
+		for x := i; x >= -i; x-- {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+			}
+		}
+		x = -i
+		for z := i - 1; z > -i; z-- {
+			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
+				for y := 1; y < WorldHeight/ChunkSize; y++ {
+					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+				}
+			}
+		}
+	}
 }

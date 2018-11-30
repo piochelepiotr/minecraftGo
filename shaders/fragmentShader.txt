@@ -36,7 +36,7 @@ void main(void) {
     }
     else if(dot(unitNormal, vec3(0,-1,0)) > 0.8)
     {
-        l = 0.2;
+        l = 0.4;
     }
 
     out_Color = l* texture(textureSampler, pass_textureCoords);
