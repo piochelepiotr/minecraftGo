@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -10,7 +11,7 @@ const (
 	//TopSpeed in m/s
 	TopSpeed float32 = 20
 	//JumpSpeed is the vertical speed when jumping
-	JumpSpeed float32 = 5
+	JumpSpeed float32 = 6
 )
 
 // Acceleration is the player acceleration in m/s2
@@ -65,26 +66,32 @@ func friction(x float32, z float32, acc float32, t float32) float32 {
 	return float32(math.Sqrt(math.Pow(float64(speed), 2) / v2))
 }
 
-// speed in m/s, acc in m/s2, t in s
-func gravity(speed float32, acc float32, t float32) float32 {
-	speed += acc * t
-	if speed < -TopSpeed {
-		speed = -TopSpeed
-	}
-	return speed
-}
-
-// Forces returns the new speed after applying forces to player
-func Forces(speed mgl32.Vec3, t float32, touchGround bool) mgl32.Vec3 {
+// Friction returns new speed after friction has been applied
+func Friction(speed mgl32.Vec3, t float32) mgl32.Vec3 {
 	d := friction(speed.X(), speed.Z(), acceleration.X(), t)
-	ySpeed := float32(0)
-	if !touchGround {
-		ySpeed = gravity(speed.Y(), acceleration.Y(), t)
-	}
 	return mgl32.Vec3{
 		speed.X() * d,
-		ySpeed,
+		speed.Y(),
 		speed.Z() * d,
+	}
+}
+
+// Gravity returns new speed after grabity has been applied
+//speed in m/s, acc in m/s2, t in s
+func Gravity(speed mgl32.Vec3, t float32, touchGround bool) mgl32.Vec3 {
+	vSpeed := float32(speed.Y())
+	fmt.Println(t)
+	fmt.Println(vSpeed)
+	if !touchGround {
+		vSpeed = speed.Y() + acceleration.Y()*t
+		if vSpeed < -TopSpeed {
+			vSpeed = -TopSpeed
+		}
+	}
+	return mgl32.Vec3{
+		speed.X(),
+		vSpeed,
+		speed.Z(),
 	}
 }
 
@@ -108,14 +115,15 @@ func (p *Player) PosPlus(e float32) mgl32.Vec3 {
 }
 
 //Move updates the player's speed according to pressed keys
-func (p *Player) Move(forward, backward, jump bool) {
-	if forward {
+func (p *Player) Move(forward, backward, jump, touchGround bool) {
+	if forward && touchGround {
 		p.Accelerate(0.5)
 	}
-	if backward {
+	if backward && touchGround {
 		p.Accelerate(-0.5)
 	}
-	if jump {
+	if jump && touchGround {
+		fmt.Println("jump")
 		p.Jump()
 	}
 }

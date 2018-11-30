@@ -15,7 +15,7 @@ import (
 
 const (
 	deleteChunkDistance  float32 = 130
-	loadChunkDistance    float32 = 100
+	loadChunkDistance    float32 = 40
 	chunkMaxLoadDistance int     = 10
 )
 
@@ -155,14 +155,15 @@ func factForward(x, y, z, place float32) float32 {
 	return place / move
 }
 
-func (w *World) touchesGround(player *entities.Player) bool {
+// TouchesGround returns true if the player touches the ground
+func (w *World) TouchesGround(player *entities.Player) bool {
 	p := player.Entity.Position
 	place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), mgl32.Vec3{0, -1, 0})
 	return place == 0
 }
 
 // MovePlayer moves the player inside the world
-func (w *World) MovePlayer(player *entities.Player, forward, backward, jump bool) {
+func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, touchGround bool) {
 	now := time.Now().UnixNano()
 	if player.LastMove != 0 {
 		diff := now - player.LastMove
@@ -190,10 +191,10 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump bool
 					moveZ,
 				})
 		}
-		touchGround := w.touchesGround(player)
-		if !(forward || backward || jump) {
-			player.Speed = entities.Forces(player.Speed, secDiff, touchGround)
+		if !(forward || backward) || !touchGround {
+			player.Speed = entities.Friction(player.Speed, secDiff)
 		}
+		player.Speed = entities.Gravity(player.Speed, secDiff, touchGround)
 	}
 	player.LastMove = now
 }
