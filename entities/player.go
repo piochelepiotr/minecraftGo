@@ -10,9 +10,10 @@ import (
 
 const (
 	//TopSpeed in m/s
-	TopSpeed float32 = 20
+	TopSpeed float32 = 5
+	vTopSpeed float32 = 20
 	JumpHeight float32 = 1.1
-	G = 20
+	G = 50
 	BreakingAcceleration = 100
 )
 
@@ -27,6 +28,10 @@ type Player struct {
 	Entity   Entity
 	Speed    mgl32.Vec3
 	LastMove time.Time
+}
+
+func (p *Player) HSpeed() mgl32.Vec3 {
+	return mgl32.Vec3{p.Speed.X(), 0, p.Speed.Z()}
 }
 
 func limitSpeed(speed mgl32.Vec3) mgl32.Vec3 {
@@ -48,16 +53,23 @@ func limitSpeed(speed mgl32.Vec3) mgl32.Vec3 {
 	}
 }
 
-func (p *Player) facingDir(dist float32) mgl32.Vec3 {
+func (p *Player) FacingDir(dist float32) mgl32.Vec3 {
 	mat := mgl32.HomogRotate3DY(p.Entity.Rotation.Y())
 	forward := mgl32.Vec4{0, 0, -dist, 1}
 	forward = mat.Mul4x1(forward)
 	return forward.Vec3()
 }
 
+func (p *Player) SideFacingDir(dist float32) mgl32.Vec3 {
+	mat := mgl32.HomogRotate3DY(p.Entity.Rotation.Y())
+	side := mgl32.Vec4{-dist, 0, 0, 1}
+	side = mat.Mul4x1(side)
+	return side.Vec3()
+}
+
 // Accelerate increases the speed forward
 func (p *Player) Accelerate(dist float32) {
-	p.Speed = limitSpeed(p.Speed.Add(p.facingDir(dist)))
+	p.Speed = limitSpeed(p.Speed.Add(p.FacingDir(dist)))
 }
 
 // speed in m/s, acc in m/s2, t in s
@@ -87,8 +99,8 @@ func Gravity(speed mgl32.Vec3, t float32, touchGround bool) mgl32.Vec3 {
 	vSpeed := float32(speed.Y())
 	if !touchGround {
 		vSpeed = speed.Y() + acceleration.Y()*t
-		if vSpeed < -TopSpeed {
-			vSpeed = -TopSpeed
+		if vSpeed < -vTopSpeed {
+			vSpeed = -vTopSpeed
 		}
 	}
 	return mgl32.Vec3{
@@ -114,19 +126,19 @@ func (p *Player) Jump() {
 
 //PosPlus returns a point a little bit forward of the player
 func (p *Player) PosPlus(e float32) mgl32.Vec3 {
-	return p.Entity.Position.Add(p.facingDir(e))
+	return p.Entity.Position.Add(p.FacingDir(e))
 }
 
 //Move updates the player's speed according to pressed keys
-func (p *Player) Move(forward, backward, jump, touchGround bool) {
+func (p *Player) Move(forward, backward, jump, ground bool) {
 	if forward {
 		p.Accelerate(0.5)
-		fmt.Printf("speed is %f\n", p.Speed.Len())
+		// fmt.Printf("speed is %f\n", p.Speed.Len())
 	}
 	if backward {
 		p.Accelerate(-0.5)
 	}
-	if jump && touchGround {
+	if jump && ground {
 		fmt.Println("jump")
 		p.Jump()
 	}

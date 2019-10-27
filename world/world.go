@@ -17,6 +17,9 @@ const (
 	deleteChunkDistance  float32 = 130
 	loadChunkDistance    float32 = 40
 	chunkMaxLoadDistance int     = 10
+	maxWallJump float32 = 0.4
+	playerWidth float32 = 0.4
+	playerVWidth = playerWidth/1.5
 )
 
 // World contains all the blocks of the world in chunks that load around the player
@@ -128,9 +131,38 @@ func (w *World) SetBlock(x, y, z int, b Block) {
 	}
 }
 
+
+// even if the point is a bit inside a wall, this is going to return
+func (w *World) PlaceInFrontWithJumps(edges []mgl32.Vec3, dir mgl32.Vec3) float32 {
+	min := float32(1000)
+	for _, p := range edges {
+		place := w.PlaceInFrontWithJumpsOnePoint(p, dir)
+		if place < min {
+			min = place
+		}
+	}
+	return min
+}
+
+// even if the point is a bit inside a wall, this is going to return
+func (w *World) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Vec3) float32 {
+	place, _ := w.PlaceInFront(p, dir)
+	if place > 0 {
+		return place
+	}
+	placeWithJump, _ := w.PlaceInFront(p.Add(dir.Mul(maxWallJump/dir.Len())), dir)
+	if placeWithJump > 0 {
+		return placeWithJump + maxWallJump
+	}
+	return 0
+}
+
 //PlaceInFront returns place in front of the player
-func (w *World) PlaceInFront(px, py, pz float32, dir mgl32.Vec3) (float32, Point) {
+func (w *World) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, Point) {
 	dist := float32(0)
+	px := p.X()
+	py := p.Y()
+	pz := p.Z()
 	x := int(math.Floor(float64(px)))
 	y := int(math.Floor(float64(py)))
 	z := int(math.Floor(float64(pz)))
@@ -139,6 +171,7 @@ func (w *World) PlaceInFront(px, py, pz float32, dir mgl32.Vec3) (float32, Point
 		if w.GetBlock(x, y, z) != Air {
 			return dist, Point{x, y, z}
 		}
+		// TODO don't use pointers here
 		dist += toolbox.GetNextBlock(&px, &py, &pz, dir, &x, &y, &z)
 	}
 	return dist, Point{0, 0, 0}
@@ -154,9 +187,42 @@ func truncateMovement(move mgl32.Vec3, place float32) mgl32.Vec3 {
 
 // TouchesGround returns true if the player touches the ground
 func (w *World) TouchesGround(player *entities.Player) bool {
-	p := player.Entity.Position
-	place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), mgl32.Vec3{0, -1, 0})
-	return place == 0
+	return w.PlaceInFrontWithJumps(returnPlayerVerticalEdges(player), mgl32.Vec3{0, -1, 0}) == 0
+}
+
+
+func returnPlayerEdges(player *entities.Player) []mgl32.Vec3 {
+	forward := player.FacingDir(playerWidth)
+	backward := forward.Mul(-1)
+	side1 := player.SideFacingDir(playerWidth)
+	side2 := side1.Mul(-1)
+	up := mgl32.Vec3{0, 1.8, 0}
+	edges := make([]mgl32.Vec3,0, 8)
+	edges = append(edges, player.Entity.Position.Add(forward).Add(side1))
+	edges = append(edges, player.Entity.Position.Add(forward).Add(side2))
+	edges = append(edges, player.Entity.Position.Add(backward).Add(side1))
+	edges = append(edges, player.Entity.Position.Add(backward).Add(side2))
+	for i := 0; i < 4; i++ {
+		edges = append(edges, edges[i].Add(up))
+	}
+	return edges
+}
+
+func returnPlayerVerticalEdges(player *entities.Player) []mgl32.Vec3 {
+	forward := player.FacingDir(playerVWidth)
+	backward := forward.Mul(-1)
+	side1 := player.SideFacingDir(playerVWidth)
+	side2 := side1.Mul(-1)
+	up := mgl32.Vec3{0, 1.8, 0}
+	edges := make([]mgl32.Vec3,0, 8)
+	edges = append(edges, player.Entity.Position.Add(forward).Add(side1))
+	edges = append(edges, player.Entity.Position.Add(forward).Add(side2))
+	edges = append(edges, player.Entity.Position.Add(backward).Add(side1))
+	edges = append(edges, player.Entity.Position.Add(backward).Add(side2))
+	for i := 0; i < 4; i++ {
+		edges = append(edges, edges[i].Add(up))
+	}
+	return edges
 }
 
 // MovePlayer moves the player inside the world
@@ -169,18 +235,22 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 		if player.Speed.Y() != 0 {
 			y := player.Speed.Y() * dt
 			dir := float32(-1)
+			edges := returnPlayerVerticalEdges(player)
 			if y > 0 {
 				dir = 1
+				edges = edges[4:]
+			} else {
+				edges = edges[:4]
 			}
-			place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), mgl32.Vec3{0, dir, 0})
-			fmt.Printf("Speed y is %f\n", player.Speed.Y())
+			place := w.PlaceInFrontWithJumps(edges, mgl32.Vec3{0, dir, 0})
+			// fmt.Printf("Speed y is %f\n", player.Speed.Y())
 			if toolbox.Abs(y) > place {
 				player.Speed = mgl32.Vec3{player.Speed.X(), 0, player.Speed.Z()}
 				player.Entity.Position = mgl32.Vec3{p.X(), float32(math.Floor(float64(dir*place+player.Entity.Position.Y()))), p.Z()}
 			} else {
 				player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{0, y, 0})
 			}
-			fmt.Printf("Pos y is %f\n", player.Entity.Position.Y())
+			// fmt.Printf("Pos y is %f\n", player.Entity.Position.Y())
 		}
 
 		hSpeed := mgl32.Vec3{player.Speed.X(), 0, player.Speed.Z()}
@@ -192,7 +262,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 			//forward := mgl32.Vec3{0, -1, 0}
 			forward := hSpeed
 			// first, go as far as we can in the forward direction
-			place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), forward)
+			place := w.PlaceInFrontWithJumps(returnPlayerEdges(player), forward)
 			firstMove := truncateMovement(move, place)
 			// fmt.Printf("first move is %f\n", firstMove.Len())
 			player.Entity.Position = player.Entity.Position.Add(firstMove)
@@ -202,7 +272,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 				}
 			}
 		}
-		if !(forward || backward) || !touchGround {
+		if !(forward || backward) {
 			player.Speed = entities.Friction(player.Speed, dt)
 		}
 		player.Speed = entities.Gravity(player.Speed, dt, touchGround)
@@ -214,7 +284,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 func (w *World) ClickOnBlock(camera *entities.Camera) {
 	xray := toolbox.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
-	place, block := w.PlaceInFront(p.X(), p.Y(), p.Z(), xray)
+	place, block := w.PlaceInFront(p, xray)
 	fmt.Println(place)
 	w.SetBlock(block.X, block.Y, block.Z, Air)
 }
