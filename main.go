@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -155,7 +154,6 @@ func main() {
 		backward := d.Window.GetKey(glfw.KeyS) == glfw.Press
 		jump := d.Window.GetKey(glfw.KeySpace) == glfw.Press
 		touchGround := world.TouchesGround(&player)
-		fmt.Println(touchGround)
 		//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
 		//player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press, move)
 		player.Move(forward, backward, jump, touchGround)

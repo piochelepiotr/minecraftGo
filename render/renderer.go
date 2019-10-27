@@ -9,7 +9,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/toolbox"
 )
 
-const fov = 70.0
+const fov = 120.0
 const nearPlane = 0.1
 const farPlane = 1000
 

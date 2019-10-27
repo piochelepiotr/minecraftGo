@@ -1,2 +1,4 @@
 minecraftGo
 .DS_Store
+.idea
+*.iml

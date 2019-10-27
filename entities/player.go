@@ -3,6 +3,7 @@ package entities
 import (
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -10,18 +11,22 @@ import (
 const (
 	//TopSpeed in m/s
 	TopSpeed float32 = 20
-	//JumpSpeed is the vertical speed when jumping
-	JumpSpeed float32 = 6
+	JumpHeight float32 = 1.1
+	G = 20
+	BreakingAcceleration = 100
 )
 
+//JumpSpeed is the vertical speed when jumping
+var JumpSpeed = float32(math.Sqrt(float64(2*G*JumpHeight)))
+
 // Acceleration is the player acceleration in m/s2
-var acceleration = mgl32.Vec3{10, -10, 10}
+var acceleration = mgl32.Vec3{10, -G, 10}
 
 //Player is the player of the game
 type Player struct {
 	Entity   Entity
 	Speed    mgl32.Vec3
-	LastMove int64
+	LastMove time.Time
 }
 
 func limitSpeed(speed mgl32.Vec3) mgl32.Vec3 {
@@ -56,10 +61,10 @@ func (p *Player) Accelerate(dist float32) {
 }
 
 // speed in m/s, acc in m/s2, t in s
-func friction(x float32, z float32, acc float32, t float32) float32 {
+func friction(x float32, z float32, t float32) float32 {
 	v2 := math.Pow(float64(x), 2) + math.Pow(float64(z), 2)
 	speed := float32(math.Sqrt(v2))
-	speed -= acc * t
+	speed -= BreakingAcceleration * t
 	if speed <= 0 {
 		return 0
 	}
@@ -68,7 +73,7 @@ func friction(x float32, z float32, acc float32, t float32) float32 {
 
 // Friction returns new speed after friction has been applied
 func Friction(speed mgl32.Vec3, t float32) mgl32.Vec3 {
-	d := friction(speed.X(), speed.Z(), acceleration.X(), t)
+	d := friction(speed.X(), speed.Z(), t)
 	return mgl32.Vec3{
 		speed.X() * d,
 		speed.Y(),
@@ -80,8 +85,6 @@ func Friction(speed mgl32.Vec3, t float32) mgl32.Vec3 {
 //speed in m/s, acc in m/s2, t in s
 func Gravity(speed mgl32.Vec3, t float32, touchGround bool) mgl32.Vec3 {
 	vSpeed := float32(speed.Y())
-	fmt.Println(t)
-	fmt.Println(vSpeed)
 	if !touchGround {
 		vSpeed = speed.Y() + acceleration.Y()*t
 		if vSpeed < -TopSpeed {
@@ -116,10 +119,11 @@ func (p *Player) PosPlus(e float32) mgl32.Vec3 {
 
 //Move updates the player's speed according to pressed keys
 func (p *Player) Move(forward, backward, jump, touchGround bool) {
-	if forward && touchGround {
+	if forward {
 		p.Accelerate(0.5)
+		fmt.Printf("speed is %f\n", p.Speed.Len())
 	}
-	if backward && touchGround {
+	if backward {
 		p.Accelerate(-0.5)
 	}
 	if jump && touchGround {

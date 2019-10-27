@@ -31,3 +31,10 @@ func CreateViewMatrix(translation mgl32.Vec3, rotation mgl32.Vec3) mgl32.Mat4 {
 	scaleM := mgl32.Scale3D(scale, scale, scale)
 	return rotX.Mul4(rotY.Mul4(rotZ.Mul4(scaleM.Mul4(translate.Mul4(m)))))
 }
+
+func Abs(x float32) float32 {
+	if x > 0 {
+		return x
+	}
+	return -x
+}

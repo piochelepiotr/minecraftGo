@@ -144,15 +144,12 @@ func (w *World) PlaceInFront(px, py, pz float32, dir mgl32.Vec3) (float32, Point
 	return dist, Point{0, 0, 0}
 }
 
-func factForward(x, y, z, place float32) float32 {
-	move := float32(math.Sqrt(math.Pow(float64(x), 2) + math.Pow(float64(y), 2) + math.Pow(float64(z), 2)))
-	if move == 0 {
-		return 0
+func truncateMovement(move mgl32.Vec3, place float32) mgl32.Vec3 {
+	if move.Len() > place {
+		return move.Mul(place / move.Len())
 	}
-	if place > move {
-		return 1
-	}
-	return place / move
+	// mul * 1 to make a copy
+	return move.Mul(1)
 }
 
 // TouchesGround returns true if the player touches the ground
@@ -164,37 +161,51 @@ func (w *World) TouchesGround(player *entities.Player) bool {
 
 // MovePlayer moves the player inside the world
 func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, touchGround bool) {
-	now := time.Now().UnixNano()
-	if player.LastMove != 0 {
-		diff := now - player.LastMove
-		secDiff := float32(diff) / 1e9
-		if player.Speed.Len() > 0 {
-			moveX := player.Speed.X() * secDiff
-			moveY := player.Speed.Y() * secDiff
-			moveZ := player.Speed.Z() * secDiff
-			//forward := mgl32.Vec3{0, -1, 0}
-			forward := player.Forward()
-			p := player.PosPlus(0.01)
-			place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), forward)
-			//fmt.Println("place : ", place)
-			f := factForward(moveX, moveY, moveZ, place)
-			if f < 1 {
-				player.Speed = mgl32.Vec3{0, 0, 0}
+	now := time.Now()
+	if !player.LastMove.IsZero() {
+		dt := float32(float64(now.Sub(player.LastMove)) / float64(time.Second))
+		p := player.Entity.Position
+		// vertical movement first
+		if player.Speed.Y() != 0 {
+			y := player.Speed.Y() * dt
+			dir := float32(-1)
+			if y > 0 {
+				dir = 1
 			}
-			moveX *= f
-			moveY *= f
-			moveZ *= f
-			player.Entity.Position = player.Entity.Position.Add(
-				mgl32.Vec3{
-					moveX,
-					moveY,
-					moveZ,
-				})
+			place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), mgl32.Vec3{0, dir, 0})
+			fmt.Printf("Speed y is %f\n", player.Speed.Y())
+			if toolbox.Abs(y) > place {
+				player.Speed = mgl32.Vec3{player.Speed.X(), 0, player.Speed.Z()}
+				player.Entity.Position = mgl32.Vec3{p.X(), float32(math.Floor(float64(dir*place+player.Entity.Position.Y()))), p.Z()}
+			} else {
+				player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{0, y, 0})
+			}
+			fmt.Printf("Pos y is %f\n", player.Entity.Position.Y())
+		}
+
+		hSpeed := mgl32.Vec3{player.Speed.X(), 0, player.Speed.Z()}
+
+		// horizontal movement second
+		if hSpeed.Len() > 0 {
+			move := hSpeed.Mul(dt)
+			// fmt.Printf("Move is %f\n", move.Len())
+			//forward := mgl32.Vec3{0, -1, 0}
+			forward := hSpeed
+			// first, go as far as we can in the forward direction
+			place, _ := w.PlaceInFront(p.X(), p.Y(), p.Z(), forward)
+			firstMove := truncateMovement(move, place)
+			// fmt.Printf("first move is %f\n", firstMove.Len())
+			player.Entity.Position = player.Entity.Position.Add(firstMove)
+			restMove := move.Sub(firstMove)
+			if restMove.Len() > 0 {
+				if restMove.X() != 0 {
+				}
+			}
 		}
 		if !(forward || backward) || !touchGround {
-			player.Speed = entities.Friction(player.Speed, secDiff)
+			player.Speed = entities.Friction(player.Speed, dt)
 		}
-		player.Speed = entities.Gravity(player.Speed, secDiff, touchGround)
+		player.Speed = entities.Gravity(player.Speed, dt, touchGround)
 	}
 	player.LastMove = now
 }
