@@ -27,8 +27,8 @@ func main() {
 	r := render.CreateMasterRenderer()
 	defer r.CleanUp()
 	t := loader.LoadModelTexture("textures/skin.png")
-	cubeTexture := loader.LoadModelTexture("textures/textures.png")
-	cubeTexture.NumberOfRows = 2
+	cubeTexture := loader.LoadModelTexture("textures/textures2.png")
+	cubeTexture.NumberOfRows = 16
 	texturedModel := models.TexturedModel{
 		ModelTexture: t,
 		RawModel:     model,

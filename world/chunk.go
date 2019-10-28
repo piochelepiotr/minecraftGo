@@ -17,7 +17,7 @@ type Chunk struct {
 }
 
 // NumberRowsTextures is the number number of rows on the texture image
-const NumberRowsTextures int = 2
+const NumberRowsTextures int = 16
 
 // ChunkSize is the size of a chunk in blocks
 const ChunkSize int = 16

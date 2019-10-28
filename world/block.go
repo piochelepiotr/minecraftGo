@@ -5,11 +5,11 @@ type Block uint8
 
 const (
 	// Dirt block
-	Dirt Block = 0
+	Dirt Block = 2
 	// Stone block
 	Stone Block = 1
 	// Grass block
-	Grass Block = 2
+	Grass Block = 0
 	// GrassSide block
 	GrassSide Block = 3
 	//Air block
@@ -23,5 +23,10 @@ var BlockSides = map[Block]map[string]Block{
 		"side":   GrassSide,
 		"bottom": Dirt,
 		"top":    Grass,
+	},
+	Dirt: {
+		"side":   Dirt,
+		"bottom": Dirt,
+		"top":    Dirt,
 	},
 }
