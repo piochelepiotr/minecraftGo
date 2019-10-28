@@ -18,6 +18,7 @@ const (
 	loadChunkDistance    float32 = 40
 	chunkMaxLoadDistance int     = 10
 	maxWallJump float32 = 0.4
+	backwardJump float32 = 0.4
 	playerWidth float32 = 0.4
 	playerVWidth = playerWidth/1.5
 )
@@ -150,9 +151,21 @@ func (w *World) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Vec3) floa
 	if place > 0 {
 		return place
 	}
-	placeWithJump, _ := w.PlaceInFront(p.Add(dir.Mul(maxWallJump/dir.Len())), dir)
+	uDir := dir.Mul(1/dir.Len())
+	placeWithJump, _ := w.PlaceInFront(p.Add(uDir.Mul(maxWallJump)), dir)
 	if placeWithJump > 0 {
 		return placeWithJump + maxWallJump
+	}
+	if dir.Y() == 0  && (dir.X() == 0 || dir.Z() == 0){
+		orthDir := mgl32.Vec3{uDir.Z(), 0, uDir.X()}
+		placeWithBackJump, _ := w.PlaceInFront(p.Add(orthDir.Mul(backwardJump)), dir)
+		if placeWithBackJump > 0 {
+			return placeWithBackJump
+		}
+		placeWithForwardJump, _ := w.PlaceInFront(p.Add(orthDir.Mul(-backwardJump)), dir)
+		if placeWithForwardJump > 0 {
+			return placeWithForwardJump
+		}
 	}
 	return 0
 }
@@ -267,8 +280,29 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 			// fmt.Printf("first move is %f\n", firstMove.Len())
 			player.Entity.Position = player.Entity.Position.Add(firstMove)
 			restMove := move.Sub(firstMove)
+
 			if restMove.Len() > 0 {
 				if restMove.X() != 0 {
+					placeX := w.PlaceInFrontWithJumps(returnPlayerEdges(player), mgl32.Vec3{hSpeed.X(), 0, 0})
+					if placeX > toolbox.Abs(restMove.X()) {
+						player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{restMove.X(), 0, 0})
+					} else {
+						player.Speed = mgl32.Vec3{0, player.Speed.Y(), player.Speed.Z()}
+						if placeX > 0 {
+							player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{(restMove.X()/toolbox.Abs(restMove.X()))*placeX, 0, 0})
+						}
+					}
+				}
+				if restMove.Z() != 0 {
+					placeZ := w.PlaceInFrontWithJumps(returnPlayerEdges(player), mgl32.Vec3{0, 0, hSpeed.Z()})
+					if placeZ > toolbox.Abs(restMove.Z()) {
+						player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{0, 0, restMove.Z()})
+					} else {
+						player.Speed = mgl32.Vec3{player.Speed.X(), player.Speed.Y(), 0}
+						if placeZ > 0 {
+							player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{0, 0, (restMove.Z()/toolbox.Abs(restMove.Z()))*placeZ})
+						}
+					}
 				}
 			}
 		}

@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -139,7 +138,6 @@ func (p *Player) Move(forward, backward, jump, ground bool) {
 		p.Accelerate(-0.5)
 	}
 	if jump && ground {
-		fmt.Println("jump")
 		p.Jump()
 	}
 }

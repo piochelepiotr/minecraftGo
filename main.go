@@ -41,7 +41,7 @@ func main() {
 			}
 		}
 	}
-	camera := entities.CreateCamera(-50, 30, -50, -0.5, 1.8)
+	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
 	camera.Rotation = mgl32.Vec3{0, 0, 0}
 
 	light := entities.Light{
@@ -144,7 +144,7 @@ func main() {
 	for !d.Window.ShouldClose() {
 		//world.LoadChunks(player.Entity.Position)
 		camera.LockOnPlayer(player)
-		r.ProcessEntity(player.Entity)
+		// r.ProcessEntity(player.Entity)
 		r.ProcessEntities(world.GetChunks())
 		r.ProcessGui(cursor)
 		r.ProcessMenu(menu)
