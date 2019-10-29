@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	deleteChunkDistance  float32 = 130
-	loadChunkDistance    float32 = 40
+	deleteChunkDistance  float32 = 80
+	loadChunkDistance    float32 = 60
 	chunkMaxLoadDistance int     = 10
 	maxWallJump float32 = 0.4
 	backwardJump float32 = 0.4
@@ -331,16 +331,9 @@ func (w *World) deleteChunks(playerPos mgl32.Vec3) {
 	}
 }
 
-//LoadAllChunks loads one chunk per second
-func (w *World) LoadAllChunks(playerPos mgl32.Vec3) {
-	for {
-		time.Sleep(1e9)
-		w.LoadChunks(playerPos)
-	}
-}
-
-//LoadChunks load chunks around the player, for now, only load one chunk per frame
+//LoadChunks load chunks around the player
 func (w *World) LoadChunks(playerPos mgl32.Vec3) {
+	w.deleteChunks(playerPos)
 	xPlayer := int(playerPos.X())
 	zPlayer := int(playerPos.Z())
 	chunkX := getChunk(xPlayer)
@@ -348,57 +341,7 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	for i := 0; i < chunkMaxLoadDistance; i++ {
 		p := Point{i * ChunkSize, 0, i * ChunkSize}
 		if p.DistanceTo(playerPos) > loadChunkDistance {
-			return
-		}
-		z := -i
-		for x := -i; x <= i; x++ {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
-				}
-				return
-			}
-		}
-		x := i
-		for z := -i + 1; z < i; z++ {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
-				}
-				return
-			}
-		}
-		z = i
-		for x := i; x >= -i; x-- {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
-				}
-				return
-			}
-		}
-		x = -i
-		for z := i - 1; z > -i; z-- {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
-				}
-				return
-			}
-		}
-	}
-}
-
-//LoadChunks2 load chunks around the player, for now, only load one chunk per frame
-func (w *World) LoadChunks2(playerPos mgl32.Vec3) {
-	xPlayer := int(playerPos.X())
-	zPlayer := int(playerPos.Z())
-	chunkX := getChunk(xPlayer)
-	chunkZ := getChunk(zPlayer)
-	for i := 0; i < chunkMaxLoadDistance; i++ {
-		p := Point{i * ChunkSize, 0, i * ChunkSize}
-		if p.DistanceTo(playerPos) > loadChunkDistance {
-			return
+			continue
 		}
 		z := -i
 		for x := -i; x <= i; x++ {

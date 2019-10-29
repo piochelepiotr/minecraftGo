@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
@@ -11,6 +9,8 @@ import (
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/render"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
+	"os"
+	"time"
 )
 
 const windowWidth = 800
@@ -138,27 +138,33 @@ func main() {
 	d.Window.SetMouseButtonCallback(menuClick)
 	d.Window.SetSizeCallback(resizeWindow)
 
-	//go world.LoadAllChunks(player.Entity.Position)
-	world.LoadChunks2(player.Entity.Position)
+	world.LoadChunks(player.Entity.Position)
+
+	updateTicker := time.NewTicker(time.Second)
+	defer updateTicker.Stop()
 
 	for !d.Window.ShouldClose() {
-		//world.LoadChunks(player.Entity.Position)
-		camera.LockOnPlayer(player)
-		// r.ProcessEntity(player.Entity)
-		r.ProcessEntities(world.GetChunks())
-		r.ProcessGui(cursor)
-		r.ProcessMenu(menu)
-		r.Render(light, camera)
-		d.UpdateDisplay()
-		forward := d.Window.GetKey(glfw.KeyW) == glfw.Press
-		backward := d.Window.GetKey(glfw.KeyS) == glfw.Press
-		jump := d.Window.GetKey(glfw.KeySpace) == glfw.Press
-		touchGround := world.TouchesGround(&player)
-		//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
-		//player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press, move)
-		player.Move(forward, backward, jump, touchGround)
-		world.MovePlayer(&player, forward, backward, jump, touchGround)
-		glfw.PollEvents()
-		//time.Sleep(1e6)
+		select {
+			case <-updateTicker.C:
+				world.LoadChunks(player.Entity.Position)
+			default:
+				//world.LoadChunks(player.Entity.Position)
+				camera.LockOnPlayer(player)
+				// r.ProcessEntity(player.Entity)
+				r.ProcessEntities(world.GetChunks())
+				r.ProcessGui(cursor)
+				r.ProcessMenu(menu)
+				r.Render(light, camera)
+				d.UpdateDisplay()
+				forward := d.Window.GetKey(glfw.KeyW) == glfw.Press
+				backward := d.Window.GetKey(glfw.KeyS) == glfw.Press
+				jump := d.Window.GetKey(glfw.KeySpace) == glfw.Press
+				touchGround := world.TouchesGround(&player)
+				//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
+				//player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press, move)
+				player.Move(forward, backward, jump, touchGround)
+				world.MovePlayer(&player, forward, backward, jump, touchGround)
+				glfw.PollEvents()
+		}
 	}
 }
