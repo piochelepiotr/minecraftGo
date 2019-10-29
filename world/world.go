@@ -338,40 +338,15 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	zPlayer := int(playerPos.Z())
 	chunkX := getChunk(xPlayer)
 	chunkZ := getChunk(zPlayer)
-	for i := 0; i < chunkMaxLoadDistance; i++ {
-		p := Point{i * ChunkSize, 0, i * ChunkSize}
-		if p.DistanceTo(playerPos) > loadChunkDistance {
-			continue
-		}
-		z := -i
-		for x := -i; x <= i; x++ {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
-				}
+	for x := getChunk(chunkX - int(loadChunkDistance)); x <= getChunk(chunkX + int(loadChunkDistance)); x += ChunkSize {
+		for z := getChunk(chunkZ - int(loadChunkDistance)); z <= getChunk(chunkZ + int(loadChunkDistance)); z += ChunkSize {
+			p := Point{x, 0, z}
+			if p.DistanceTo(playerPos) > loadChunkDistance {
+				continue
 			}
-		}
-		x := i
-		for z := -i + 1; z < i; z++ {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
+			if w.loadChunkIfNotLoaded(x, 0, z) {
 				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
-				}
-			}
-		}
-		z = i
-		for x := i; x >= -i; x-- {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
-				}
-			}
-		}
-		x = -i
-		for z := i - 1; z > -i; z-- {
-			if w.loadChunkIfNotLoaded(x*ChunkSize+chunkX, 0, z*ChunkSize+chunkZ) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
-					w.LoadChunk(x*ChunkSize+chunkX, y*ChunkSize, z*ChunkSize+chunkZ)
+					w.LoadChunk(x, y*ChunkSize, z)
 				}
 			}
 		}
