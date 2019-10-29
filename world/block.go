@@ -16,17 +16,28 @@ const (
 	Air Block = 255
 )
 
-// BlockSides allows you to put different blocks on sides, top and
+// blockFaces allows you to put different blocks on sides, top and
 // bottom of blocks
-var BlockSides = map[Block]map[string]Block{
+var blockFaces = map[Block]map[Face]Block{
 	Grass: {
-		"side":   GrassSide,
-		"bottom": Dirt,
-		"top":    Grass,
+		Side:   GrassSide,
+		Bottom: Dirt,
+		Top:    Grass,
 	},
-	Dirt: {
-		"side":   Dirt,
-		"bottom": Dirt,
-		"top":    Dirt,
-	},
+}
+
+type Face byte
+const (
+	Top Face = 0
+	Side Face = 1
+	Bottom Face = 2
+)
+
+func (b Block) GetSide(f Face) Block {
+	if sides, ok := blockFaces[b]; ok {
+		if side, ok := sides[f]; ok {
+			return side
+		}
+	}
+	return b
 }

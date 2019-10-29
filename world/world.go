@@ -5,7 +5,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/aquilax/go-perlin"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
 	"github.com/piochelepiotr/minecraftGo/models"
@@ -27,7 +26,7 @@ const (
 type World struct {
 	chunks       map[Point]*Chunk
 	modelTexture textures.ModelTexture
-	perlin       *perlin.Perlin
+	generator *Generator
 }
 
 func getChunk(x int) int {
@@ -40,7 +39,7 @@ func CreateWorld(modelTexture textures.ModelTexture) World {
 	return World{
 		chunks:       chunks,
 		modelTexture: modelTexture,
-		perlin:       perlin.NewPerlin(alpha, beta, perlinN, 233),
+		generator: NewGenerator(),
 	}
 }
 
@@ -76,7 +75,7 @@ func (w *World) LoadChunk(x, y, z int) {
 		Y: y,
 		Z: z,
 	}
-	chunk := CreateChunk(x, y, z, w.modelTexture, w.perlin)
+	chunk := CreateChunk(x, y, z, w.modelTexture, w.generator)
 	w.chunks[p] = &chunk
 }
 
