@@ -4,15 +4,13 @@ package world
 type Block uint8
 
 const (
-	// Dirt block
 	Dirt Block = 2
-	// Stone block
 	Stone Block = 1
-	// Grass block
 	Grass Block = 0
-	// GrassSide block
 	GrassSide Block = 3
-	//Air block
+	Tree Block = 21
+	TreeSide Block = 20
+	Leaves Block = 52
 	Air Block = 255
 )
 
@@ -22,7 +20,9 @@ var blockFaces = map[Block]map[Face]Block{
 	Grass: {
 		Side:   GrassSide,
 		Bottom: Dirt,
-		Top:    Grass,
+	},
+	Tree: {
+		Side:   TreeSide,
 	},
 }
 

@@ -1,6 +1,12 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+)
+
+import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
@@ -18,6 +24,9 @@ const windowHeight = 600
 const aspectRatio = windowWidth / windowHeight
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	d := render.DisplayManager{WindowWidth: windowWidth, WindowHeight: windowHeight}
 	defer d.CloseDisplay()
 	d.CreateDisplay()
