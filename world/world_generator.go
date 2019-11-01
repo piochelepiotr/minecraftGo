@@ -10,29 +10,16 @@ const (
 	alpha float64 = 1
 	beta float64 = 2
 	perlinN int = 3
-	perlinScale float64 = 100
 	// WorldHeight is the height of the world in blocks
-	WorldHeight int = ChunkSize * 3
-	dirtLayerThikness int = 5
+	WorldHeight = ChunkSize * 3
 	treeProbability float64 = 0.004
+	biomeScale float64 = 200
 )
 
 type Biome interface {
 	blockType(x, y, z int) Block
-}
-
-type ForestBiome struct {
-	structures []*Structure
-	perlin *perlin.Perlin
-}
-
-func makeForestBiome() *ForestBiome {
-	structures := make([]*Structure, 0)
-	structures = append(structures, makeTree())
-	return &ForestBiome{
-		structures: structures,
-		perlin:       perlin.NewPerlin(alpha, beta, perlinN, 233),
-	}
+	getStructures() []*Structure
+	worldHeight(x, z int) int
 }
 
 type Structure struct {
@@ -96,6 +83,7 @@ type Generator struct {
 func makeBiomes() []Biome {
 	biomes := make([]Biome, 0)
 	biomes = append(biomes, makeForestBiome())
+	biomes = append(biomes, makeDesertBiome())
 	return biomes
 }
 
@@ -106,28 +94,34 @@ func NewGenerator() *Generator {
 	}
 }
 
-func (f *ForestBiome) worldHeight(x, z int) int {
-	half := WorldHeight/2
-	return half + int(float64(half)*f.perlin.Noise2D(float64(x)/perlinScale, float64(z)/perlinScale))
+// returns a number between 0 and 1 generated using perlin noise
+func perlinCoef(p *perlin.Perlin, x, z int, scale float64) float64 {
+	return 0.5 + 0.5*p.Noise2D(float64(x)/scale, float64(z)/scale)
 }
 
 func (g *Generator) getBiome(x, z int) Biome {
-	return g.biomes[0]
+	r := perlinCoef(g.perlin, x, z, biomeScale)
+	incr := float64(1) / float64(len(g.biomes))
+	n := int(math.Floor(r / incr))
+	return g.biomes[n]
 }
 
 func (g *Generator) BlockType(x, y, z int) Block {
-	return g.getBiome(x, z).blockType(x, y, z)
+	biome := g.getBiome(x, z)
+	if structureBlock := getStructureBlock(biome, x, y, z); structureBlock != Air {
+		return structureBlock
+	}
+	return biome.blockType(x, y, z)
 }
 
-func (f *ForestBiome) blockType(x, y, z int) Block {
-	height := f.worldHeight(x, z)
-	for _, s := range f.structures {
+func getStructureBlock(b Biome, x, y, z int) Block {
+	for _, s := range b.getStructures() {
 		xn := s.X()
 		yn := s.Y()
 		zn := s.Z()
 		xo := int(math.Floor(float64(x)/float64(xn)))*xn
 		zo := int(math.Floor(float64(z)/float64(zn)))*zn
-		yo := f.worldHeight(xo, zo) + 1
+		yo := b.worldHeight(xo, zo) + 1
 		if y < yo || y >= yo + yn {
 			continue
 		}
@@ -139,15 +133,6 @@ func (f *ForestBiome) blockType(x, y, z int) Block {
 		yi := y - yo
 		zi := z - zo
 		return s.blocks[xi][yi][zi]
-	}
-	if y == height {
-		return Grass
-	}
-	if y < height && y > height - dirtLayerThikness {
-		return Dirt
-	}
-	if y <= height - dirtLayerThikness {
-		return Stone
 	}
 	return Air
 }
