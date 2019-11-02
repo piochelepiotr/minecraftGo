@@ -26,6 +26,8 @@ type Biome interface {
 type Structure struct {
 	blocks [][][]Block
 	p float64
+	originX int
+	originZ int
 }
 
 func (s *Structure) X() int {
@@ -68,6 +70,8 @@ func makeTree() *Structure {
 	s.blocks[0][3][1] = Leaves
 	s.blocks[2][3][1] = Leaves
 	s.p = treeProbability
+	s.originX = 1
+	s.originZ = 1
 	return s
 }
 
@@ -137,7 +141,7 @@ func getStructureBlock(b Biome, x, y, z int) Block {
 		zn := s.Z()
 		xo := int(math.Floor(float64(x)/float64(xn)))*xn
 		zo := int(math.Floor(float64(z)/float64(zn)))*zn
-		yo := b.worldHeight(xo, zo) + 1
+		yo := b.worldHeight(xo+s.originX, zo+s.originZ) + 1
 		if y < yo || y >= yo + yn {
 			continue
 		}
