@@ -24,12 +24,13 @@ var vbos = make([]uint32, 0)
 var textures = make([]uint32, 0)
 
 // LoadToVAO loads vertices into a vao
-func LoadToVAO(positions []float32, textureCoord []float32, indices []uint32, normals []float32) models.RawModel {
+func LoadToVAO(positions []float32, textureCoord []float32, indices []uint32, normals []float32, colors []float32) models.RawModel {
 	vaoID := createVAO()
 	bindIndicesBuffer(indices)
 	storeDataInAttributeList(0, 3, positions)
 	storeDataInAttributeList(1, 2, textureCoord)
 	storeDataInAttributeList(2, 3, normals)
+	storeDataInAttributeList(3, 3, colors)
 	defer unbindVAO()
 	return models.RawModel{
 		VaoID:       vaoID,

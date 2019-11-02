@@ -22,6 +22,7 @@ func CreateStaticShader() StaticShader {
         s.bindAttribute(0, "position\x00")
         s.bindAttribute(1, "textureCoords\x00")
         s.bindAttribute(2, "normal\x00")
+        s.bindAttribute(3, "colors\x00")
     }
     s:= StaticShader{Program: CreateShader("shaders/vertexShader.txt", "shaders/fragmentShader.txt", bindAttributes)}
     s.getAllUniformLocations()

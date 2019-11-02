@@ -1,5 +1,7 @@
 package world
 
+import "github.com/go-gl/mathgl/mgl32"
+
 // Block is an id representing a type of Block
 type Block uint8
 
@@ -32,6 +34,10 @@ var blockFaces = map[Block]map[Face]Block{
 	},
 }
 
+var blockColors = map[Block]mgl32.Vec3{
+	Leaves: {0, 1, 0},
+}
+
 type Face byte
 const (
 	Top Face = 0
@@ -46,4 +52,11 @@ func (b Block) GetSide(f Face) Block {
 		}
 	}
 	return b
+}
+
+func (b Block) GetColor() mgl32.Vec3 {
+	if color, ok := blockColors[b]; ok {
+		return color
+	}
+	return mgl32.Vec3{1, 1, 1}
 }

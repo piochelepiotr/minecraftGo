@@ -75,7 +75,11 @@ func LoadObjModel(file string) models.RawModel {
 		indicesArray = processVertex(vertex2, indicesArray, textures, normals, vertices, texturesArray, normalsArray, verticesArray)
 		indicesArray = processVertex(vertex3, indicesArray, textures, normals, vertices, texturesArray, normalsArray, verticesArray)
 	}
-	return LoadToVAO(verticesArray, texturesArray, indicesArray, normalsArray)
+	colors := make([]float32, len(normalsArray))
+	for i := range colors {
+		colors[i] = 1
+	}
+	return LoadToVAO(verticesArray, texturesArray, indicesArray, normalsArray, colors)
 }
 
 func processVertex(vertexData []string, indices []uint32, textures []mgl32.Vec2, normals []mgl32.Vec3, vertices []mgl32.Vec3, texturesArray []float32, normalsArray []float32, verticesArray []float32) []uint32 {

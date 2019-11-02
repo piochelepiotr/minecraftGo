@@ -41,6 +41,7 @@ func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
 	gl.EnableVertexAttribArray(0)
 	gl.EnableVertexAttribArray(1)
 	gl.EnableVertexAttribArray(2)
+	gl.EnableVertexAttribArray(3)
 	r.shader.LoadShineVariables(model.ModelTexture.ShineDamper, model.ModelTexture.Reflectivity)
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, model.ModelTexture.Id)
@@ -50,6 +51,7 @@ func (r *Renderer) unbindTexturedModel() {
 	gl.DisableVertexAttribArray(0)
 	gl.DisableVertexAttribArray(1)
 	gl.DisableVertexAttribArray(2)
+	gl.DisableVertexAttribArray(3)
 	gl.BindVertexArray(0)
 }
 

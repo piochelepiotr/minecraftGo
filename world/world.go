@@ -15,7 +15,6 @@ import (
 const (
 	deleteChunkDistance  float32 = 80
 	loadChunkDistance    float32 = 60
-	chunkMaxLoadDistance int     = 10
 	maxWallJump float32 = 0.4
 	backwardJump float32 = 0.4
 	playerWidth float32 = 0.4
