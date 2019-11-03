@@ -71,6 +71,11 @@ func (p *Player) Accelerate(dist float32) {
 	p.Speed = limitSpeed(p.Speed.Add(p.FacingDir(dist)))
 }
 
+// Accelerate increases the speed forward
+func (p *Player) LeftAccelerate(dist float32) {
+	p.Speed = limitSpeed(p.Speed.Add(p.SideFacingDir(dist)))
+}
+
 // speed in m/s, acc in m/s2, t in s
 func friction(x float32, z float32, t float32) float32 {
 	v2 := math.Pow(float64(x), 2) + math.Pow(float64(z), 2)
@@ -129,13 +134,19 @@ func (p *Player) PosPlus(e float32) mgl32.Vec3 {
 }
 
 //Move updates the player's speed according to pressed keys
-func (p *Player) Move(forward, backward, jump, ground bool) {
+func (p *Player) Move(forward, backward, jump, ground, right, left bool) {
 	if forward {
 		p.Accelerate(0.5)
 		// fmt.Printf("speed is %f\n", p.Speed.Len())
 	}
 	if backward {
 		p.Accelerate(-0.5)
+	}
+	if right {
+		p.LeftAccelerate(-5)
+	}
+	if left {
+		p.LeftAccelerate(5)
 	}
 	if jump && ground {
 		p.Jump()

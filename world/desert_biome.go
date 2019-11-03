@@ -33,7 +33,7 @@ func makeCactus() *Structure {
 	s.blocks[0][1][0] = Cactus
 	s.blocks[0][2][0] = Cactus
 	s.blocks[0][3][0] = Cactus
-	s.p = treeProbability
+	s.p = 0.005
 	return s
 }
 
