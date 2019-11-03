@@ -83,6 +83,7 @@ func (c *Chunk) buildFaces() {
 	normals := make([]mgl32.Vec3, 0)
 	colors := make([]mgl32.Vec3, 0)
 	indexes := make([]uint32, 0)
+	nextIndex := uint32(0)
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {
 			for z := 0; z < ChunkSize; z++ {
@@ -108,7 +109,7 @@ func (c *Chunk) buildFaces() {
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
 					p3 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
 					p4 := mgl32.Vec3{xF, yF + 1, zF + 1}
-					c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Top))
+					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Top), nextIndex, true)
 				}
 				//bottom
 				if !(b == a || (y-1 > 0 && c.GetBlock(x, y-1, z) != a)) {
@@ -117,7 +118,7 @@ func (c *Chunk) buildFaces() {
 					p2 := mgl32.Vec3{xF + 1, yF, (zF)}
 					p3 := mgl32.Vec3{xF + 1, yF, (zF + 1)}
 					p4 := mgl32.Vec3{xF, yF, (zF + 1)}
-					c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Bottom))
+					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Bottom), nextIndex, false)
 				}
 				//right
 				if !(b == a || (x+1 < ChunkSize && c.GetBlock(x+1, y, z) != a)) {
@@ -126,7 +127,7 @@ func (c *Chunk) buildFaces() {
 					p2 := mgl32.Vec3{(xF + 1), (yF + 1), (zF)}
 					p3 := mgl32.Vec3{(xF + 1), (yF), (zF)}
 					p4 := mgl32.Vec3{(xF + 1), (yF), (zF + 1)}
-					c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side))
+					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 				//left
 				if !(b == a || (x-1 > 0 && c.GetBlock(x-1, y, z) != a)) {
@@ -135,7 +136,7 @@ func (c *Chunk) buildFaces() {
 					p2 := mgl32.Vec3{(xF), (yF + 1), (zF + 1)}
 					p3 := mgl32.Vec3{(xF), (yF), (zF + 1)}
 					p4 := mgl32.Vec3{(xF), (yF), (zF)}
-					c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side))
+					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 				//front
 				if !(b == a || (z+1 < ChunkSize && c.GetBlock(x, y, z+1) != a)) {
@@ -144,7 +145,7 @@ func (c *Chunk) buildFaces() {
 					p2 := mgl32.Vec3{(xF + 1), (yF + 1), (zF + 1)}
 					p3 := mgl32.Vec3{(xF + 1), (yF), (zF + 1)}
 					p4 := mgl32.Vec3{(xF), (yF), (zF + 1)}
-					c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side))
+					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 				//back
 				if !(b == a || (z-1 > 0 && c.GetBlock(x, y, z-1) != a)) {
@@ -153,7 +154,7 @@ func (c *Chunk) buildFaces() {
 					p2 := mgl32.Vec3{(xF), (yF + 1), (zF)}
 					p3 := mgl32.Vec3{(xF), (yF), (zF)}
 					p4 := mgl32.Vec3{(xF + 1), (yF), (zF)}
-					c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side))
+					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 			}
 		}
@@ -161,7 +162,7 @@ func (c *Chunk) buildFaces() {
 	c.buildRawModel(vertices, textures, normals, colors, indexes)
 }
 
-func (c *Chunk) addFace(vertices *[]mgl32.Vec3, textures *[]mgl32.Vec2, normals *[]mgl32.Vec3, colors *[]mgl32.Vec3, indexes *[]uint32, p1, p2, p3, p4, n mgl32.Vec3, b Block) {
+func (c *Chunk) addFace(vertices *[]mgl32.Vec3, textures *[]mgl32.Vec2, normals *[]mgl32.Vec3, colors *[]mgl32.Vec3, indexes *[]uint32, p1, p2, p3, p4, n mgl32.Vec3, b Block, nextIndex uint32, inverseRotation bool) uint32 {
 	if b == Grass {
 		if n.ApproxEqual(mgl32.Vec3{0, -1, 0}) {
 			b = Dirt
@@ -200,17 +201,24 @@ func (c *Chunk) addFace(vertices *[]mgl32.Vec3, textures *[]mgl32.Vec2, normals 
 	*textures = append(*textures, t2)
 	*textures = append(*textures, t3)
 	*textures = append(*textures, t4)
-	startIndex := uint32(0)
-	if len(*indexes) > 0 {
-		startIndex = (*indexes)[len(*indexes)-1] + 1
-	}
-	*indexes = append(*indexes, startIndex)
-	*indexes = append(*indexes, startIndex+1)
-	*indexes = append(*indexes, startIndex+2)
+	if inverseRotation {
+		*indexes = append(*indexes, nextIndex)
+		*indexes = append(*indexes, nextIndex+2)
+		*indexes = append(*indexes, nextIndex+1)
 
-	*indexes = append(*indexes, startIndex)
-	*indexes = append(*indexes, startIndex+2)
-	*indexes = append(*indexes, startIndex+3)
+		*indexes = append(*indexes, nextIndex)
+		*indexes = append(*indexes, nextIndex+3)
+		*indexes = append(*indexes, nextIndex+2)
+	} else {
+		*indexes = append(*indexes, nextIndex)
+		*indexes = append(*indexes, nextIndex+1)
+		*indexes = append(*indexes, nextIndex+2)
+
+		*indexes = append(*indexes, nextIndex)
+		*indexes = append(*indexes, nextIndex+2)
+		*indexes = append(*indexes, nextIndex+3)
+	}
+	return nextIndex + 4
 }
 
 func (c *Chunk) freeModel() {

@@ -5,5 +5,6 @@ type ModelTexture struct {
     Reflectivity float32
     Id uint32
     NumberOfRows uint32
+    HasTransparency bool;
 }
 

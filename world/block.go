@@ -15,6 +15,7 @@ const (
 	Leaves Block = 52
 	Cactus Block = 69
 	CactusSide Block = 70
+	CactusBottom Block = 71
 	Sand Block = 18
 	Air Block = 255
 )
@@ -31,6 +32,7 @@ var blockFaces = map[Block]map[Face]Block{
 	},
 	Cactus: {
 		Side: CactusSide,
+		Bottom: CactusBottom,
 	},
 }
 

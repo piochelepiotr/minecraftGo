@@ -19,15 +19,23 @@ type Renderer struct {
 }
 
 func CreateRenderer(shader shaders.StaticShader) Renderer {
+	EnableCulling()
 	var r Renderer
-	//gl.Enable(gl.CULL_FACE)
-	//gl.CullFace(gl.BACK)
 	r.projectionMatrix = mgl32.Perspective(mgl32.DegToRad(fov), float32(800.0)/600.0, nearPlane, farPlane)
 	r.shader = shader
 	shader.Program.Start()
 	shader.LoadProjectionMatrix(r.projectionMatrix)
 	shader.Program.Stop()
 	return r
+}
+
+func EnableCulling() {
+	gl.Enable(gl.CULL_FACE)
+	gl.CullFace(gl.BACK)
+}
+
+func DisableCulling() {
+	gl.Disable(gl.CULL_FACE)
 }
 
 func (r *Renderer) Prepare() {

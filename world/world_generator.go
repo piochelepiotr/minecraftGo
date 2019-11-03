@@ -1,7 +1,6 @@
 package world
 
 import (
-	"fmt"
 	"github.com/aquilax/go-perlin"
 	"math"
 	"math/rand"
@@ -88,7 +87,7 @@ type Generator struct {
 func makeBiomes() []Biome {
 	biomes := make([]Biome, 0)
 	biomes = append(biomes, makeForestBiome())
-	// biomes = append(biomes, makeDesertBiome())
+	biomes = append(biomes, makeDesertBiome())
 	return biomes
 }
 
@@ -116,13 +115,6 @@ func (g *Generator) getBiome(x, z int) Biome {
 	r := perlinCoef(g.perlin, x, z, biomeScale)
 	incr := float64(1) / float64(len(g.biomes))
 	n := int(math.Floor(r / incr))
-	if n != 0 {
-		fmt.Println(r)
-		fmt.Println(incr)
-		fmt.Println(n)
-		fmt.Println("hello")
-		fmt.Println(len(g.biomes))
-	}
 	return g.biomes[n]
 }
 
