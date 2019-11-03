@@ -59,13 +59,14 @@ func main() {
 	}
 
 	entity := entities.Entity{
-		Position:      mgl32.Vec3{0, float32(world.GetHeight(int(0), int(0))), 0},
+		Position:      mgl32.Vec3{0, float32(pworld.WorldHeight + 20), 0},
 		Rotation:      mgl32.Vec3{0, 0, 0},
 		TexturedModel: texturedModel,
 	}
 	player := entities.Player{
 		Entity: entity,
 	}
+	world.PlacePlayerOnGround(&player)
 
 	cursor := loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03})
 

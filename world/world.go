@@ -236,6 +236,20 @@ func returnPlayerVerticalEdges(player *entities.Player) []mgl32.Vec3 {
 	return edges
 }
 
+
+func (w *World) PlacePlayerOnGround(player *entities.Player) {
+	p := player.Entity.Position
+	dir := float32(-1)
+	for {
+		edges := returnPlayerVerticalEdges(player)
+		place := w.PlaceInFrontWithJumps(edges, mgl32.Vec3{0, dir, 0})
+		if place == 0 {
+			return
+		}
+		player.Entity.Position = mgl32.Vec3{p.X(), float32(math.Floor(float64(dir*place+player.Entity.Position.Y()))), p.Z()}
+	}
+}
+
 // MovePlayer moves the player inside the world
 func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, touchGround bool) {
 	now := time.Now()
