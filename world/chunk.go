@@ -10,6 +10,7 @@ import (
 // Chunk is set cube of blocks
 type Chunk struct {
 	Model  models.RawModel
+	TransparentModel  models.RawModel
 	blocks []Block
 	generator *Generator
 	Start  Point
@@ -88,8 +89,7 @@ func (c *Chunk) buildFaces() {
 		for y := 0; y < ChunkSize; y++ {
 			for z := 0; z < ChunkSize; z++ {
 				b := c.GetBlock(x, y, z)
-				a := Air
-				//add face if not block isn't air and the block next to it is air
+				//add face if the block isn't air and the block next to it is air
 				/*faces are :
 				 * up ( + y)
 				 * bottom (-y)
@@ -103,7 +103,7 @@ func (c *Chunk) buildFaces() {
 				xF := float32(x)
 				yF := float32(y)
 				zF := float32(z)
-				if !(b == a || (y+1 < ChunkSize && c.GetBlock(x, y+1, z) != a)) {
+				if b != Air && (y == ChunkSize-1 || c.GetBlock(x, y+1, z) == Air) {
 					n := mgl32.Vec3{0, 1, 0}
 					p1 := mgl32.Vec3{xF, yF + 1, zF}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
@@ -112,54 +112,56 @@ func (c *Chunk) buildFaces() {
 					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Top), nextIndex, true)
 				}
 				//bottom
-				if !(b == a || (y-1 > 0 && c.GetBlock(x, y-1, z) != a)) {
+				if b != Air && (y == 0 || c.GetBlock(x, y-1, z) == Air) {
 					n := mgl32.Vec3{0, -1, 0}
-					p1 := mgl32.Vec3{xF, yF, (zF)}
-					p2 := mgl32.Vec3{xF + 1, yF, (zF)}
-					p3 := mgl32.Vec3{xF + 1, yF, (zF + 1)}
-					p4 := mgl32.Vec3{xF, yF, (zF + 1)}
+					p1 := mgl32.Vec3{xF, yF, zF}
+					p2 := mgl32.Vec3{xF + 1, yF, zF}
+					p3 := mgl32.Vec3{xF + 1, yF, zF + 1}
+					p4 := mgl32.Vec3{xF, yF, zF + 1}
 					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Bottom), nextIndex, false)
 				}
 				//right
-				if !(b == a || (x+1 < ChunkSize && c.GetBlock(x+1, y, z) != a)) {
+				if b != Air && (x == ChunkSize - 1 || c.GetBlock(x+1, y, z) == Air) {
 					n := mgl32.Vec3{1, 0, 0}
-					p1 := mgl32.Vec3{(xF + 1), (yF + 1), (zF + 1)}
-					p2 := mgl32.Vec3{(xF + 1), (yF + 1), (zF)}
-					p3 := mgl32.Vec3{(xF + 1), (yF), (zF)}
-					p4 := mgl32.Vec3{(xF + 1), (yF), (zF + 1)}
+					p1 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
+					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
+					p3 := mgl32.Vec3{xF + 1, yF, zF}
+					p4 := mgl32.Vec3{xF + 1, yF, zF + 1}
 					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 				//left
-				if !(b == a || (x-1 > 0 && c.GetBlock(x-1, y, z) != a)) {
+				if b != Air && (x == 0 || c.GetBlock(x-1, y, z) == Air) {
 					n := mgl32.Vec3{-1, 0, 0}
-					p1 := mgl32.Vec3{(xF), (yF + 1), (zF)}
-					p2 := mgl32.Vec3{(xF), (yF + 1), (zF + 1)}
-					p3 := mgl32.Vec3{(xF), (yF), (zF + 1)}
-					p4 := mgl32.Vec3{(xF), (yF), (zF)}
+					p1 := mgl32.Vec3{xF, yF + 1, zF}
+					p2 := mgl32.Vec3{xF, yF + 1, zF + 1}
+					p3 := mgl32.Vec3{xF, yF, zF + 1}
+					p4 := mgl32.Vec3{xF, yF, zF}
 					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 				//front
-				if !(b == a || (z+1 < ChunkSize && c.GetBlock(x, y, z+1) != a)) {
+				if b != Air && (z == ChunkSize - 1 || c.GetBlock(x, y, z+1) == Air) {
 					n := mgl32.Vec3{0, 0, 1}
-					p1 := mgl32.Vec3{(xF), (yF + 1), (zF + 1)}
-					p2 := mgl32.Vec3{(xF + 1), (yF + 1), (zF + 1)}
-					p3 := mgl32.Vec3{(xF + 1), (yF), (zF + 1)}
-					p4 := mgl32.Vec3{(xF), (yF), (zF + 1)}
+					p1 := mgl32.Vec3{xF, yF + 1, zF + 1}
+					p2 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
+					p3 := mgl32.Vec3{xF + 1, yF, zF + 1}
+					p4 := mgl32.Vec3{xF, yF, zF + 1}
 					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 				//back
-				if !(b == a || (z-1 > 0 && c.GetBlock(x, y, z-1) != a)) {
+				if b != Air && (z == 0 || c.GetBlock(x, y, z-1) == Air) {
 					n := mgl32.Vec3{0, 0, -1}
-					p1 := mgl32.Vec3{(xF + 1), (yF + 1), (zF)}
-					p2 := mgl32.Vec3{(xF), (yF + 1), (zF)}
-					p3 := mgl32.Vec3{(xF), (yF), (zF)}
-					p4 := mgl32.Vec3{(xF + 1), (yF), (zF)}
+					p1 := mgl32.Vec3{xF + 1, yF + 1, zF}
+					p2 := mgl32.Vec3{xF, yF + 1, zF}
+					p3 := mgl32.Vec3{xF, yF, zF}
+					p4 := mgl32.Vec3{xF + 1, yF, zF}
 					nextIndex = c.addFace(&vertices, &textures, &normals, &colors, &indexes, p1, p2, p3, p4, n, b.GetSide(Side), nextIndex, true)
 				}
 			}
 		}
 	}
-	c.buildRawModel(vertices, textures, normals, colors, indexes)
+	if len(indexes) > 0 {
+		c.Model = loader.LoadToVAO(flatten3D(vertices), flatten2D(textures), indexes, flatten3D(normals), flatten3D(colors))
+	}
 }
 
 func (c *Chunk) addFace(vertices *[]mgl32.Vec3, textures *[]mgl32.Vec2, normals *[]mgl32.Vec3, colors *[]mgl32.Vec3, indexes *[]uint32, p1, p2, p3, p4, n mgl32.Vec3, b Block, nextIndex uint32, inverseRotation bool) uint32 {
@@ -224,28 +226,21 @@ func (c *Chunk) addFace(vertices *[]mgl32.Vec3, textures *[]mgl32.Vec2, normals 
 func (c *Chunk) freeModel() {
 }
 
-func (c *Chunk) buildRawModel(vertices []mgl32.Vec3, textures []mgl32.Vec2, normals []mgl32.Vec3, colors []mgl32.Vec3, indexes []uint32) {
-	size := len(vertices)
-	verticesArray := make([]float32, size*3)
-	texturesArray := make([]float32, size*2)
-	normalsArray := make([]float32, size*3)
-	colorsArray := make([]float32, size*3)
-	for i := 0; i < size; i++ {
-		verticesArray[3*i] = vertices[i].X()
-		verticesArray[3*i+1] = vertices[i].Y()
-		verticesArray[3*i+2] = vertices[i].Z()
-		texturesArray[2*i] = textures[i].X()
-		texturesArray[2*i+1] = textures[i].Y()
-		normalsArray[3*i] = normals[i].X()
-		normalsArray[3*i+1] = normals[i].Y()
-		normalsArray[3*i+2] = normals[i].Z()
-		colorsArray[3*i] = colors[i].X()
-		colorsArray[3*i+1] = colors[i].Y()
-		colorsArray[3*i+2] = colors[i].Z()
+func flatten2D(array2D []mgl32.Vec2) []float32 {
+	array := make([]float32, 0, len(array2D)*2)
+	for _, p := range array2D {
+		array = append(array, p.X())
+		array = append(array, p.Y())
 	}
-	if len(indexes) == 0 {
-		c.Model.VertexCount = 0
-	} else {
-		c.Model = loader.LoadToVAO(verticesArray, texturesArray, indexes, normalsArray, colorsArray)
+	return array
+}
+
+func flatten3D(array3D []mgl32.Vec3) []float32 {
+	array := make([]float32, 0, len(array3D)*3)
+	for _, p := range array3D {
+		array = append(array, p.X())
+		array = append(array, p.Y())
+		array = append(array, p.Z())
 	}
+	return array
 }
