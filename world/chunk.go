@@ -2,6 +2,7 @@ package world
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/textures"
@@ -13,7 +14,7 @@ type Chunk struct {
 	TransparentModel  models.RawModel
 	blocks []Block
 	generator *Generator
-	Start  Point
+	Start  geometry.Point
 }
 
 // NumberRowsTextures is the number number of rows on the texture image
@@ -32,7 +33,7 @@ const ChunkSize3 = ChunkSize2 * ChunkSize
 // CreateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
 func CreateChunk(startX int, startY int, startZ int, modelTexture textures.ModelTexture, generator *Generator) Chunk {
 	var chunk Chunk
-	chunk.Start = Point{
+	chunk.Start = geometry.Point{
 		X: startX,
 		Y: startY,
 		Z: startZ,

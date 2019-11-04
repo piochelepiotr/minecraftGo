@@ -2,6 +2,7 @@ package world
 
 import (
 	"fmt"
+	"github.com/piochelepiotr/minecraftGo/geometry"
 	"math"
 	"time"
 
@@ -24,7 +25,7 @@ const (
 
 // World contains all the blocks of the world in chunks that load around the player
 type World struct {
-	chunks       map[Point]*Chunk
+	chunks       map[geometry.Point]*Chunk
 	modelTexture textures.ModelTexture
 	generator *Generator
 }
@@ -35,7 +36,7 @@ func getChunk(x int) int {
 
 // CreateWorld initiate the world
 func CreateWorld(modelTexture textures.ModelTexture) World {
-	chunks := make(map[Point]*Chunk)
+	chunks := make(map[geometry.Point]*Chunk)
 	return World{
 		chunks:       chunks,
 		modelTexture: modelTexture,
@@ -86,7 +87,7 @@ func (w *World) GetChunks() []entities.Entity {
 
 // LoadChunk loads a chunk into the world so that it is rendered
 func (w *World) LoadChunk(x, y, z int) {
-	p := Point{
+	p := geometry.Point{
 		X: x,
 		Y: y,
 		Z: z,
@@ -96,7 +97,7 @@ func (w *World) LoadChunk(x, y, z int) {
 }
 
 func (w *World) loadChunkIfNotLoaded(x, y, z int) bool {
-	if _, ok := w.chunks[Point{x, y, z}]; !ok {
+	if _, ok := w.chunks[geometry.Point{x, y, z}]; !ok {
 		w.LoadChunk(x, y, z)
 		return true
 	}
@@ -118,7 +119,7 @@ func (w *World) GetBlock(x, y, z int) Block {
 	chunkX := getChunk(x)
 	chunkY := getChunk(y)
 	chunkZ := getChunk(z)
-	p := Point{
+	p := geometry.Point{
 		X: chunkX,
 		Y: chunkY,
 		Z: chunkZ,
@@ -135,7 +136,7 @@ func (w *World) SetBlock(x, y, z int, b Block) {
 	chunkX := getChunk(x)
 	chunkY := getChunk(y)
 	chunkZ := getChunk(z)
-	p := Point{
+	p := geometry.Point{
 		X: chunkX,
 		Y: chunkY,
 		Z: chunkZ,
@@ -186,26 +187,16 @@ func (w *World) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Vec3) floa
 }
 
 //PlaceInFront returns place in front of the player
-func (w *World) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, Point, Point) {
-	dist := float32(0)
-	px := p.X()
-	py := p.Y()
-	pz := p.Z()
-	x := int(math.Floor(float64(px)))
-	y := int(math.Floor(float64(py)))
-	z := int(math.Floor(float64(pz)))
-	previous := Point{}
+func (w *World) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, geometry.Point, geometry.Point) {
+	xray := geometry.NewXray(p, dir)
 	for i := 0; i < 10; i++ {
 		//fmt.Println("POS: ", x, ";", y, ";", z)
-		point := Point{x, y, z}
-		if w.GetBlock(x, y, z) != Air {
-			return dist, point, previous
+		if w.GetBlock(xray.P.X, xray.P.Y, xray.P.Z) != Air {
+			return xray.Distance, xray.P, xray.Previous
 		}
-		previous = point
-		// TODO don't use pointers here
-		dist += toolbox.GetNextBlock(&px, &py, &pz, dir, &x, &y, &z)
+		xray.GoToNextBlock()
 	}
-	return dist, Point{0, 0, 0}, Point{0, 0, 0}
+	return xray.Distance, geometry.Point{}, geometry.Point{}
 }
 
 func truncateMovement(move mgl32.Vec3, place float32) mgl32.Vec3 {
@@ -352,7 +343,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 
 // ClickOnBlock removes or adds a block
 func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool) {
-	xray := toolbox.ComputeCameraRay(camera.Rotation)
+	xray := geometry.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
 	_, block, previous := w.PlaceInFront(p, xray)
 	if placeBlock {
@@ -381,7 +372,7 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	chunkZ := getChunk(zPlayer)
 	for x := getChunk(chunkX - int(loadChunkDistance)); x <= getChunk(chunkX + int(loadChunkDistance)); x += ChunkSize {
 		for z := getChunk(chunkZ - int(loadChunkDistance)); z <= getChunk(chunkZ + int(loadChunkDistance)); z += ChunkSize {
-			p := Point{x, 0, z}
+			p := geometry.Point{x, 0, z}
 			if p.DistanceTo(playerPos) > loadChunkDistance {
 				continue
 			}
