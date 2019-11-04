@@ -82,33 +82,7 @@ func main() {
 			if key == glfw.KeyEscape {
 				menu.Opened = true
 				d.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-			} else if key == glfw.KeyW {
-				//player.Accelerate(4)
-			} else if key == glfw.KeyS {
-				//player.Accelerate(-4)
-			} else if key == glfw.KeyD {
-				//player.Entity.IncreasePosition(0, -0.1, 0)
-			} else if key == glfw.KeyU {
-				//player.Entity.IncreasePosition(0, 0.1, 0)
-			} else if key == glfw.KeySpace {
-				//player.Jump()
 			}
-
-			//else if key == glfw.KeyA {
-			//	player.Entity.IncreaseRotation(0.0, -0.1, 0.0)
-			//} else if key == glfw.KeyW {
-			//	player.Entity.IncreasePosition(0.0, 0.1, 0.0)
-			//} else if key == glfw.KeyS {
-			//	player.Entity.IncreasePosition(0.0, -0.1, 0.0)
-			//} else if key == glfw.KeyJ {
-			//	player.Entity.IncreasePosition(0.1, 0.0, 0.0)
-			//} else if key == glfw.KeyL {
-			//	player.Entity.IncreasePosition(-0.1, 0.0, 0.0)
-			//} else if key == glfw.KeyI {
-			//	player.Entity.IncreasePosition(0.0, 0.0, 0.1)
-			//} else if key == glfw.KeyK {
-			//	player.Entity.IncreasePosition(0.0, 0.0, -0.1)
-			//}
 		}
 	}
 
@@ -134,7 +108,9 @@ func main() {
 			}
 		} else {
 			if button == glfw.MouseButtonLeft && action == glfw.Press {
-				world.ClickOnBlock(&camera)
+				world.ClickOnBlock(&camera, false)
+			} else if button == glfw.MouseButtonRight && action == glfw.Press {
+				world.ClickOnBlock(&camera, true)
 			}
 		}
 	}

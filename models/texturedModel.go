@@ -6,4 +6,5 @@ import (
 type TexturedModel struct {
     RawModel RawModel
     ModelTexture textures.ModelTexture
+    Transparent bool
 }

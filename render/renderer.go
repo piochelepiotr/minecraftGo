@@ -45,6 +45,9 @@ func (r *Renderer) Prepare() {
 }
 
 func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
+	if model.Transparent {
+		DisableCulling()
+	}
 	gl.BindVertexArray(model.RawModel.VaoID)
 	gl.EnableVertexAttribArray(0)
 	gl.EnableVertexAttribArray(1)
@@ -56,6 +59,7 @@ func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
 }
 
 func (r *Renderer) unbindTexturedModel() {
+	EnableCulling()
 	gl.DisableVertexAttribArray(0)
 	gl.DisableVertexAttribArray(1)
 	gl.DisableVertexAttribArray(2)

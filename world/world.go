@@ -19,6 +19,7 @@ const (
 	backwardJump float32 = 0.4
 	playerWidth float32 = 0.4
 	playerVWidth = playerWidth/1.5
+	playerHeight float32 = 1.8
 )
 
 // World contains all the blocks of the world in chunks that load around the player
@@ -50,19 +51,35 @@ func (w *World) GetChunks() []entities.Entity {
 		if model.VertexCount == 0 {
 			continue
 		}
-		t := models.TexturedModel{
-			RawModel:     chunk.Model,
-			ModelTexture: w.modelTexture,
-		}
-		e := entities.Entity{
-			TexturedModel: t,
+		chunkEntity := entities.Entity{
+			TexturedModel: models.TexturedModel{
+				RawModel:     chunk.Model,
+				ModelTexture: w.modelTexture,
+			},
 			Position: mgl32.Vec3{
 				float32(chunk.Start.X),
 				float32(chunk.Start.Y),
 				float32(chunk.Start.Z),
 			},
 		}
-		chunks = append(chunks, e)
+		transparentChunkEntity := entities.Entity{
+			TexturedModel: models.TexturedModel{
+				RawModel:     chunk.TransparentModel,
+				ModelTexture: w.modelTexture,
+				Transparent: true,
+			},
+			Position: mgl32.Vec3{
+				float32(chunk.Start.X),
+				float32(chunk.Start.Y),
+				float32(chunk.Start.Z),
+			},
+		}
+		if chunkEntity.TexturedModel.RawModel.VertexCount > 0 {
+			chunks = append(chunks, chunkEntity)
+		}
+		if transparentChunkEntity.TexturedModel.RawModel.VertexCount > 0 {
+			chunks = append(chunks, transparentChunkEntity)
+		}
 	}
 	return chunks
 }
@@ -124,9 +141,9 @@ func (w *World) SetBlock(x, y, z int, b Block) {
 		Z: chunkZ,
 	}
 	if chunk, ok := w.chunks[p]; ok {
-		chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, Air)
+		chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, b)
 	} else {
-		//fmt.Println("ERROR when setting block in chunk ", p)
+		fmt.Println("ERROR when setting block in chunk ", p)
 	}
 }
 
@@ -145,22 +162,22 @@ func (w *World) PlaceInFrontWithJumps(edges []mgl32.Vec3, dir mgl32.Vec3) float3
 
 // even if the point is a bit inside a wall, this is going to return
 func (w *World) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Vec3) float32 {
-	place, _ := w.PlaceInFront(p, dir)
+	place, _, _ := w.PlaceInFront(p, dir)
 	if place > 0 {
 		return place
 	}
 	uDir := dir.Mul(1/dir.Len())
-	placeWithJump, _ := w.PlaceInFront(p.Add(uDir.Mul(maxWallJump)), dir)
+	placeWithJump, _, _ := w.PlaceInFront(p.Add(uDir.Mul(maxWallJump)), dir)
 	if placeWithJump > 0 {
 		return placeWithJump + maxWallJump
 	}
 	if dir.Y() == 0  && (dir.X() == 0 || dir.Z() == 0){
 		orthDir := mgl32.Vec3{uDir.Z(), 0, uDir.X()}
-		placeWithBackJump, _ := w.PlaceInFront(p.Add(orthDir.Mul(backwardJump)), dir)
+		placeWithBackJump, _, _ := w.PlaceInFront(p.Add(orthDir.Mul(backwardJump)), dir)
 		if placeWithBackJump > 0 {
 			return placeWithBackJump
 		}
-		placeWithForwardJump, _ := w.PlaceInFront(p.Add(orthDir.Mul(-backwardJump)), dir)
+		placeWithForwardJump, _, _ := w.PlaceInFront(p.Add(orthDir.Mul(-backwardJump)), dir)
 		if placeWithForwardJump > 0 {
 			return placeWithForwardJump
 		}
@@ -169,7 +186,7 @@ func (w *World) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Vec3) floa
 }
 
 //PlaceInFront returns place in front of the player
-func (w *World) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, Point) {
+func (w *World) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, Point, Point) {
 	dist := float32(0)
 	px := p.X()
 	py := p.Y()
@@ -177,15 +194,18 @@ func (w *World) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, Point) {
 	x := int(math.Floor(float64(px)))
 	y := int(math.Floor(float64(py)))
 	z := int(math.Floor(float64(pz)))
+	previous := Point{}
 	for i := 0; i < 10; i++ {
 		//fmt.Println("POS: ", x, ";", y, ";", z)
+		point := Point{x, y, z}
 		if w.GetBlock(x, y, z) != Air {
-			return dist, Point{x, y, z}
+			return dist, point, previous
 		}
+		previous = point
 		// TODO don't use pointers here
 		dist += toolbox.GetNextBlock(&px, &py, &pz, dir, &x, &y, &z)
 	}
-	return dist, Point{0, 0, 0}
+	return dist, Point{0, 0, 0}, Point{0, 0, 0}
 }
 
 func truncateMovement(move mgl32.Vec3, place float32) mgl32.Vec3 {
@@ -207,7 +227,7 @@ func returnPlayerEdges(player *entities.Player) []mgl32.Vec3 {
 	backward := forward.Mul(-1)
 	side1 := player.SideFacingDir(playerWidth)
 	side2 := side1.Mul(-1)
-	up := mgl32.Vec3{0, 1.8, 0}
+	up := mgl32.Vec3{0, playerHeight, 0}
 	edges := make([]mgl32.Vec3,0, 8)
 	edges = append(edges, player.Entity.Position.Add(forward).Add(side1))
 	edges = append(edges, player.Entity.Position.Add(forward).Add(side2))
@@ -224,7 +244,7 @@ func returnPlayerVerticalEdges(player *entities.Player) []mgl32.Vec3 {
 	backward := forward.Mul(-1)
 	side1 := player.SideFacingDir(playerVWidth)
 	side2 := side1.Mul(-1)
-	up := mgl32.Vec3{0, 1.8, 0}
+	up := mgl32.Vec3{0, playerHeight, 0}
 	edges := make([]mgl32.Vec3,0, 8)
 	edges = append(edges, player.Entity.Position.Add(forward).Add(side1))
 	edges = append(edges, player.Entity.Position.Add(forward).Add(side2))
@@ -271,7 +291,11 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 			// fmt.Printf("Speed y is %f\n", player.Speed.Y())
 			if toolbox.Abs(y) > place {
 				player.Speed = mgl32.Vec3{player.Speed.X(), 0, player.Speed.Z()}
-				player.Entity.Position = mgl32.Vec3{p.X(), float32(math.Floor(float64(dir*place+player.Entity.Position.Y()))), p.Z()}
+				newY := dir*place+player.Entity.Position.Y()
+				if dir == -1 {
+					newY = float32(math.Floor(float64(newY)))
+				}
+				player.Entity.Position = mgl32.Vec3{p.X(), newY, p.Z()}
 			} else {
 				player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{0, y, 0})
 			}
@@ -327,12 +351,17 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 }
 
 // ClickOnBlock removes or adds a block
-func (w *World) ClickOnBlock(camera *entities.Camera) {
+func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool) {
 	xray := toolbox.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
-	place, block := w.PlaceInFront(p, xray)
-	fmt.Println(place)
-	w.SetBlock(block.X, block.Y, block.Z, Air)
+	_, block, previous := w.PlaceInFront(p, xray)
+	if placeBlock {
+		if !block.Equal(previous) {
+			w.SetBlock(previous.X, previous.Y, previous.Z, Tree)
+		}
+	} else {
+		w.SetBlock(block.X, block.Y, block.Z, Air)
+	}
 }
 
 func (w *World) deleteChunks(playerPos mgl32.Vec3) {

@@ -47,6 +47,10 @@ const (
 	Bottom Face = 2
 )
 
+func (b Block) IsTransparent() bool {
+	return b == Air || b == Leaves
+}
+
 func (b Block) GetSide(f Face) Block {
 	if sides, ok := blockFaces[b]; ok {
 		if side, ok := sides[f]; ok {

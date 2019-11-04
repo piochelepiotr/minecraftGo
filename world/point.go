@@ -1,6 +1,7 @@
 package world
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -13,8 +14,16 @@ type Point struct {
 	Z int
 }
 
+func (p Point) Equal(p2 Point) bool {
+	return p.X == p2.X && p.Y == p2.Y && p.Z == p2.Z
+}
+
+func (p Point) Print() {
+	fmt.Printf("Point {x:%d,y:%d,z:%d}\n", p.X, p.Y, p.Z)
+}
+
 // DistanceTo computes the distance from Point to an other point in space
-func (p *Point) DistanceTo(p2 mgl32.Vec3) float32 {
+func (p Point) DistanceTo(p2 mgl32.Vec3) float32 {
 	x := math.Pow(float64(p2.X())-float64(p.X), 2)
 	// y := math.Pow(float64(p2.Y())-float64(p.Y), 2)
 	z := math.Pow(float64(p2.Z())-float64(p.Z), 2)

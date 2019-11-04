@@ -99,10 +99,12 @@ func newConstructionChunk() *constructionChunk {
 
 func (c *Chunk) buildFaces() {
 	chunk := newConstructionChunk()
+	transparentChunk := newConstructionChunk()
 	for x := 0; x < ChunkSize; x++ {
 		for y := 0; y < ChunkSize; y++ {
 			for z := 0; z < ChunkSize; z++ {
 				b := c.GetBlock(x, y, z)
+				transparent := b.IsTransparent()
 				//add face if the block isn't air and the block next to it is air
 				/*faces are :
 				 * up ( + y)
@@ -117,64 +119,91 @@ func (c *Chunk) buildFaces() {
 				xF := float32(x)
 				yF := float32(y)
 				zF := float32(z)
-				if b != Air && (y == ChunkSize-1 || c.GetBlock(x, y+1, z) == Air) {
+				if b != Air && (y == ChunkSize-1 || c.GetBlock(x, y+1, z).IsTransparent() || transparent) {
 					n := mgl32.Vec3{0, 1, 0}
 					p1 := mgl32.Vec3{xF, yF + 1, zF}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
 					p3 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
 					p4 := mgl32.Vec3{xF, yF + 1, zF + 1}
-					chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Top), true)
+					if transparent {
+						transparentChunk.addFace(p1, p2, p3, p4, n, b.GetSide(Top), true)
+					} else {
+						chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Top), true)
+					}
 				}
 				//bottom
-				if b != Air && (y == 0 || c.GetBlock(x, y-1, z) == Air) {
+				if b != Air && (y == 0 || c.GetBlock(x, y-1, z).IsTransparent() || transparent) {
 					n := mgl32.Vec3{0, -1, 0}
 					p1 := mgl32.Vec3{xF, yF, zF}
 					p2 := mgl32.Vec3{xF + 1, yF, zF}
 					p3 := mgl32.Vec3{xF + 1, yF, zF + 1}
 					p4 := mgl32.Vec3{xF, yF, zF + 1}
-					chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Bottom), false)
+					if transparent {
+						transparentChunk.addFace(p1, p2, p3, p4, n, b.GetSide(Bottom), false)
+					} else {
+						chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Bottom), false)
+					}
 				}
 				//right
-				if b != Air && (x == ChunkSize - 1 || c.GetBlock(x+1, y, z) == Air) {
+				if b != Air && (x == ChunkSize - 1 || c.GetBlock(x+1, y, z).IsTransparent() || transparent) {
 					n := mgl32.Vec3{1, 0, 0}
 					p1 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
 					p3 := mgl32.Vec3{xF + 1, yF, zF}
 					p4 := mgl32.Vec3{xF + 1, yF, zF + 1}
-					chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					if transparent {
+						transparentChunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					} else {
+						chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					}
 				}
 				//left
-				if b != Air && (x == 0 || c.GetBlock(x-1, y, z) == Air) {
+				if b != Air && (x == 0 || c.GetBlock(x-1, y, z).IsTransparent() || transparent) {
 					n := mgl32.Vec3{-1, 0, 0}
 					p1 := mgl32.Vec3{xF, yF + 1, zF}
 					p2 := mgl32.Vec3{xF, yF + 1, zF + 1}
 					p3 := mgl32.Vec3{xF, yF, zF + 1}
 					p4 := mgl32.Vec3{xF, yF, zF}
-					chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					if transparent {
+						transparentChunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					} else {
+						chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					}
 				}
 				//front
-				if b != Air && (z == ChunkSize - 1 || c.GetBlock(x, y, z+1) == Air) {
+				if b != Air && (z == ChunkSize - 1 || c.GetBlock(x, y, z+1).IsTransparent() || transparent) {
 					n := mgl32.Vec3{0, 0, 1}
 					p1 := mgl32.Vec3{xF, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
 					p3 := mgl32.Vec3{xF + 1, yF, zF + 1}
 					p4 := mgl32.Vec3{xF, yF, zF + 1}
-					chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					if transparent {
+						transparentChunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					} else {
+						chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					}
 				}
 				//back
-				if b != Air && (z == 0 || c.GetBlock(x, y, z-1) == Air) {
+				if b != Air && (z == 0 || c.GetBlock(x, y, z-1).IsTransparent() || transparent) {
 					n := mgl32.Vec3{0, 0, -1}
 					p1 := mgl32.Vec3{xF + 1, yF + 1, zF}
 					p2 := mgl32.Vec3{xF, yF + 1, zF}
 					p3 := mgl32.Vec3{xF, yF, zF}
 					p4 := mgl32.Vec3{xF + 1, yF, zF}
-					chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					if transparent {
+						transparentChunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					} else {
+						chunk.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
+					}
 				}
 			}
 		}
 	}
 	if len(chunk.indices) > 0 {
 		c.Model = loader.LoadToVAO(flatten3D(chunk.vertices), flatten2D(chunk.textures), chunk.indices, flatten3D(chunk.normals), flatten3D(chunk.colors))
+	}
+	if len(transparentChunk.indices) > 0 {
+		c.TransparentModel = loader.LoadToVAO(flatten3D(transparentChunk.vertices), flatten2D(transparentChunk.textures), transparentChunk.indices, flatten3D(transparentChunk.normals), flatten3D(transparentChunk.colors))
 	}
 }
 
