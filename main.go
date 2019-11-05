@@ -1,21 +1,13 @@
 package main
 
 import (
+	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/piochelepiotr/minecraftGo/game"
+	"github.com/piochelepiotr/minecraftGo/render"
+	"github.com/piochelepiotr/minecraftGo/state"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-)
-
-import (
-	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/entities"
-	"github.com/piochelepiotr/minecraftGo/loader"
-	pmenu "github.com/piochelepiotr/minecraftGo/menu"
-	"github.com/piochelepiotr/minecraftGo/models"
-	"github.com/piochelepiotr/minecraftGo/render"
-	pworld "github.com/piochelepiotr/minecraftGo/world"
-	"os"
 	"time"
 )
 
@@ -31,100 +23,44 @@ func main() {
 	defer d.CloseDisplay()
 	d.CreateDisplay()
 
-	model := loader.LoadObjModel("objects/steve.obj")
-	defer loader.CleanUp()
-	r := render.CreateMasterRenderer()
-	defer r.CleanUp()
-	t := loader.LoadModelTexture("textures/skin.png")
-	cubeTexture := loader.LoadModelTexture("textures/textures2.png")
-	cubeTexture.NumberOfRows = 16
-	texturedModel := models.TexturedModel{
-		ModelTexture: t,
-		RawModel:     model,
-	}
-	world := pworld.CreateWorld(cubeTexture)
-	for x := -1; x < 2; x++ {
-		for y := 0; y < 2; y++ {
-			for z := -1; z < 2; z++ {
-				world.LoadChunk(x*pworld.ChunkSize, y*pworld.ChunkSize, z*pworld.ChunkSize)
-			}
-		}
-	}
-	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
-	camera.Rotation = mgl32.Vec3{0, 0, 0}
+	changeState := make(chan state.StateID, 1)
+	defer close(changeState)
 
-	light := entities.Light{
-		Position: mgl32.Vec3{5, 5, 5},
-		Colour:   mgl32.Vec3{1, 1, 1},
-	}
-
-	entity := entities.Entity{
-		Position:      mgl32.Vec3{0, float32(pworld.WorldHeight + 20), 0},
-		Rotation:      mgl32.Vec3{0, 0, 0},
-		TexturedModel: texturedModel,
-	}
-	player := entities.Player{
-		Entity: entity,
-	}
-	world.PlacePlayerOnGround(&player)
-
-	cursor := loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03})
-
-	menu := pmenu.CreateMenu(aspectRatio)
-	menu.Opened = false
-	menu.AddItem("Resume game")
-	menu.AddItem("Exit game")
-	menu.AddItem("Watch YouTube")
-	menu.AddItem("Go to Website")
-
-	movePlayer := func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		if !menu.Opened {
-			if key == glfw.KeyEscape {
-				menu.Opened = true
-				d.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-			}
-		}
-	}
-
-	menuSelectItem := func(w *glfw.Window, xpos float64, ypos float64) {
-		x, y := d.GLPos(xpos, ypos)
-		if menu.Opened {
-			menu.ComputeSelectedItem(x, y)
-		} else {
-			player.Entity.Rotation = mgl32.Vec3{0, -x, 0}
-			camera.Rotation = mgl32.Vec3{y, camera.Rotation.Y(), camera.Rotation.Z()}
-		}
-	}
-
-	menuClick := func(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
-		if menu.Opened {
-			if button == glfw.MouseButtonLeft {
-				if menu.SelectedItem == 0 {
-					menu.Opened = false
-					d.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
-				} else if menu.SelectedItem == 1 {
-					os.Exit(0)
-				}
-			}
-		} else {
-			if button == glfw.MouseButtonLeft && action == glfw.Press {
-				world.ClickOnBlock(&camera, false)
-			} else if button == glfw.MouseButtonRight && action == glfw.Press {
-				world.ClickOnBlock(&camera, true)
-			}
-		}
-	}
+	gameState := game.NewGameState(aspectRatio, changeState)
+	defer gameState.Close()
 
 	resizeWindow := func(w *glfw.Window, width int, height int) {
 		d.Resize(width, height)
 	}
 
-	d.Window.SetKeyCallback(movePlayer)
-	d.Window.SetCursorPosCallback(menuSelectItem)
-	d.Window.SetMouseButtonCallback(menuClick)
+	clickCallback := func(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
+		if action == glfw.Press {
+			if button == glfw.MouseButtonRight {
+				gameState.RightClick()
+			} else if button == glfw.MouseButtonLeft {
+				gameState.LeftClick()
+			}
+		}
+	}
+
+	mouseMoveCallback := func(w *glfw.Window, xpos float64, ypos float64) {
+		x, y := d.GLPos(xpos, ypos)
+		gameState.MouseMove(x, y)
+	}
+
+	keyCallback := func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if action == glfw.Press {
+			gameState.KeyPressed(key)
+		} else if action == glfw.Release {
+			gameState.KeyReleased(key)
+		}
+	}
+
+	d.Window.SetKeyCallback(keyCallback)
+	d.Window.SetCursorPosCallback(mouseMoveCallback)
+	d.Window.SetMouseButtonCallback(clickCallback)
 	d.Window.SetSizeCallback(resizeWindow)
 
-	world.LoadChunks(player.Entity.Position)
 
 	updateTicker := time.NewTicker(time.Second)
 	defer updateTicker.Stop()
@@ -132,26 +68,18 @@ func main() {
 	for !d.Window.ShouldClose() {
 		select {
 			case <-updateTicker.C:
-				world.LoadChunks(player.Entity.Position)
+				gameState.Update()
+			case stateID := <- changeState:
+				if stateID == state.Game {
+					d.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+					gameState.CloseMenu()
+				} else if stateID == state.GameMenu {
+					d.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+					gameState.OpenMenu()
+				}
 			default:
-				//world.LoadChunks(player.Entity.Position)
-				camera.LockOnPlayer(player)
-				// r.ProcessEntity(player.Entity)
-				r.ProcessEntities(world.GetChunks())
-				r.ProcessGui(cursor)
-				r.ProcessMenu(menu)
-				r.Render(light, camera)
+				gameState.NextFrame()
 				d.UpdateDisplay()
-				forward := d.Window.GetKey(glfw.KeyW) == glfw.Press
-				backward := d.Window.GetKey(glfw.KeyS) == glfw.Press
-				right := d.Window.GetKey(glfw.KeyD) == glfw.Press
-				left := d.Window.GetKey(glfw.KeyA) == glfw.Press
-				jump := d.Window.GetKey(glfw.KeySpace) == glfw.Press
-				touchGround := world.TouchesGround(&player)
-				//player.Entity.IncreaseRotation(0.0, 0.1, 0.0)
-				//player.Move(d.Window.GetKey(glfw.KeyW) == glfw.Press, move)
-				player.Move(forward, backward, jump, touchGround, right, left)
-				world.MovePlayer(&player, forward, backward, jump, touchGround)
 				glfw.PollEvents()
 		}
 	}

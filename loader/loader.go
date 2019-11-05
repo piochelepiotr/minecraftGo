@@ -133,7 +133,7 @@ func loadTexture(file string) (uint32, error) {
 }
 
 // LoadModelTexture gets a texture from a file and loads it
-func LoadModelTexture(file string) texturesPackage.ModelTexture {
+func LoadModelTexture(file string, numberOfRows uint32) texturesPackage.ModelTexture {
 	textureID, err := loadTexture(file)
 	if err != nil {
 		panic(err)
@@ -142,7 +142,7 @@ func LoadModelTexture(file string) texturesPackage.ModelTexture {
 		Id:           textureID,
 		Reflectivity: 1,
 		ShineDamper:  10,
-		NumberOfRows: 1,
+		NumberOfRows: numberOfRows,
 	}
 }
 

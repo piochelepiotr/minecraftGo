@@ -13,8 +13,8 @@ type Camera struct {
 }
 
 //CreateCamera creates a camera
-func CreateCamera(x, y, z, followDistance, height float32) Camera {
-	return Camera{
+func CreateCamera(x, y, z, followDistance, height float32) *Camera {
+	return &Camera{
 		Position:       mgl32.Vec3{x, y, z},
 		Rotation:       mgl32.Vec3{0, 0, 0},
 		FollowDistance: followDistance,
@@ -23,7 +23,7 @@ func CreateCamera(x, y, z, followDistance, height float32) Camera {
 }
 
 //LockOnPlayer locks the camera on the player
-func (c *Camera) LockOnPlayer(player Player) {
+func (c *Camera) LockOnPlayer(player *Player) {
 	rotY := mgl32.Rotate3DY(player.Entity.Rotation.Y())
 	cameraShift := mgl32.Vec3{0, 0, c.FollowDistance}
 	movement := rotY.Mul3x1(cameraShift)

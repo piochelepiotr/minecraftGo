@@ -3,6 +3,7 @@ package world
 import (
 	"fmt"
 	"github.com/piochelepiotr/minecraftGo/geometry"
+	"github.com/piochelepiotr/minecraftGo/loader"
 	"math"
 	"time"
 
@@ -35,9 +36,10 @@ func getChunk(x int) int {
 }
 
 // CreateWorld initiate the world
-func CreateWorld(modelTexture textures.ModelTexture) World {
+func CreateWorld() *World {
+	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
 	chunks := make(map[geometry.Point]*Chunk)
-	return World{
+	return &World{
 		chunks:       chunks,
 		modelTexture: modelTexture,
 		generator: NewGenerator(),
@@ -383,4 +385,8 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 			}
 		}
 	}
+}
+
+// Close saves the world when closing the game
+func (w *World) Close() {
 }

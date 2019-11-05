@@ -15,8 +15,8 @@ type Menu struct {
 }
 
 // CreateMenu creates the menu of the game
-func CreateMenu(aspectRatio float32) Menu {
-	return Menu{
+func CreateMenu(aspectRatio float32) *Menu {
+	return &Menu{
 		Opened:       false,
 		Items:        make([]*Item, 0),
 		font:         loader.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),

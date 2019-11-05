@@ -48,12 +48,12 @@ func (s *StaticShader) LoadProjectionMatrix(mat mgl32.Mat4) {
     s.Program.LoadMatrix4(s.projectionMatrixLocation, mat)
 }
 
-func (s *StaticShader) LoadViewMatrix(camera entities.Camera) {
+func (s *StaticShader) LoadViewMatrix(camera *entities.Camera) {
     viewMatrix := toolbox.CreateViewMatrix(camera.Position, camera.Rotation)
     s.Program.LoadMatrix4(s.viewMatrixLocation, viewMatrix)
 }
 
-func (s *StaticShader) LoadLight(light entities.Light) {
+func (s *StaticShader) LoadLight(light *entities.Light) {
     s.Program.LoadVector(s.lightPositionLocation, light.Position)
     s.Program.LoadVector(s.lightColourLocation, light.Colour)
 }

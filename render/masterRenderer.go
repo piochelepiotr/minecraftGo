@@ -23,7 +23,7 @@ type MasterRenderer struct {
 }
 
 // CreateMasterRenderer creates a MasterRenderer class
-func CreateMasterRenderer() MasterRenderer {
+func CreateMasterRenderer() *MasterRenderer {
 	var r MasterRenderer
 	r.fontRenderer = CreateFontRenderer()
 	r.guiRenderer = loader.CreateGuiRenderer()
@@ -32,11 +32,11 @@ func CreateMasterRenderer() MasterRenderer {
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
-	return r
+	return &r
 }
 
 // Render renders everything on the screen
-func (r *MasterRenderer) Render(sun entities.Light, camera entities.Camera) {
+func (r *MasterRenderer) Render(sun *entities.Light, camera *entities.Camera) {
 	r.renderer.Prepare()
 	r.shader.Program.Start()
 	r.shader.LoadLight(sun)
@@ -76,7 +76,7 @@ func (r *MasterRenderer) ProcessGuis(guis []pguis.GuiTexture) {
 
 // ProcessMenu adds guis and text from menu to the
 // list of elements to render
-func (r *MasterRenderer) ProcessMenu(menu menu.Menu) {
+func (r *MasterRenderer) ProcessMenu(menu *menu.Menu) {
 	if menu.Opened {
 		r.ProcessGuis(menu.GetItems())
 		r.ProcessTexts(menu.GetMenuTexts())
