@@ -120,7 +120,7 @@ func (c *Chunk) buildFaces() {
 				xF := float32(x)
 				yF := float32(y)
 				zF := float32(z)
-				if b != Air && (y == ChunkSize-1 || c.GetBlock(x, y+1, z).IsTransparent() || transparent) {
+				if b != Air && (y == ChunkSize-1 || c.GetBlock(x, y+1, z).IsTransparent()) {
 					n := mgl32.Vec3{0, 1, 0}
 					p1 := mgl32.Vec3{xF, yF + 1, zF}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
@@ -133,7 +133,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//bottom
-				if b != Air && (y == 0 || c.GetBlock(x, y-1, z).IsTransparent() || transparent) {
+				if b != Air && (y == 0 || c.GetBlock(x, y-1, z).IsTransparent()) {
 					n := mgl32.Vec3{0, -1, 0}
 					p1 := mgl32.Vec3{xF, yF, zF}
 					p2 := mgl32.Vec3{xF + 1, yF, zF}
@@ -146,7 +146,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//right
-				if b != Air && (x == ChunkSize - 1 || c.GetBlock(x+1, y, z).IsTransparent() || transparent) {
+				if b != Air && (x == ChunkSize - 1 || c.GetBlock(x+1, y, z).IsTransparent()) {
 					n := mgl32.Vec3{1, 0, 0}
 					p1 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
@@ -159,7 +159,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//left
-				if b != Air && (x == 0 || c.GetBlock(x-1, y, z).IsTransparent() || transparent) {
+				if b != Air && (x == 0 || c.GetBlock(x-1, y, z).IsTransparent()) {
 					n := mgl32.Vec3{-1, 0, 0}
 					p1 := mgl32.Vec3{xF, yF + 1, zF}
 					p2 := mgl32.Vec3{xF, yF + 1, zF + 1}
@@ -172,7 +172,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//front
-				if b != Air && (z == ChunkSize - 1 || c.GetBlock(x, y, z+1).IsTransparent() || transparent) {
+				if b != Air && (z == ChunkSize - 1 || c.GetBlock(x, y, z+1).IsTransparent()) {
 					n := mgl32.Vec3{0, 0, 1}
 					p1 := mgl32.Vec3{xF, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
@@ -185,7 +185,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//back
-				if b != Air && (z == 0 || c.GetBlock(x, y, z-1).IsTransparent() || transparent) {
+				if b != Air && (z == 0 || c.GetBlock(x, y, z-1).IsTransparent()) {
 					n := mgl32.Vec3{0, 0, -1}
 					p1 := mgl32.Vec3{xF + 1, yF + 1, zF}
 					p2 := mgl32.Vec3{xF, yF + 1, zF}
