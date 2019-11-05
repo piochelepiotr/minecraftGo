@@ -5,7 +5,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/font"
 	pguis "github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/loader"
-	"github.com/piochelepiotr/minecraftGo/menu"
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/shaders"
 )
@@ -72,15 +71,6 @@ func (r *MasterRenderer) ProcessGui(gui pguis.GuiTexture) {
 // ProcessGuis adds guis to the list of guis to render
 func (r *MasterRenderer) ProcessGuis(guis []pguis.GuiTexture) {
 	r.guis = append(r.guis, guis...)
-}
-
-// ProcessMenu adds guis and text from menu to the
-// list of elements to render
-func (r *MasterRenderer) ProcessMenu(menu *menu.Menu) {
-	if menu.Opened {
-		r.ProcessGuis(menu.GetItems())
-		r.ProcessTexts(menu.GetMenuTexts())
-	}
 }
 
 // ProcessText adds text to the list of texts to render

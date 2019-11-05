@@ -26,16 +26,15 @@ type GameState struct {
 	world *pworld.World
 	player *entities.Player
 	camera *entities.Camera
-	renderer *render.MasterRenderer
 	cursor guis.GuiTexture
 	light *entities.Light
 	menu *pmenu.Menu
 	keyPressed keyPressed
 	changeState chan<- state.StateID
+	menuOpened bool
 }
 
 func NewGameState(aspectRatio float32, changeState chan<- state.StateID) *GameState {
-	renderer := render.CreateMasterRenderer()
 
 	world := pworld.CreateWorld()
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
@@ -66,28 +65,21 @@ func NewGameState(aspectRatio float32, changeState chan<- state.StateID) *GameSt
 
 
 	menu := pmenu.CreateMenu(aspectRatio)
-	menu.Opened = false
-	menu.AddItem("Resume game")
-	menu.AddItem("Exit game")
-	menu.AddItem("Watch YouTube")
-	menu.AddItem("Go to Website")
+	menu.AddItem("Resume game", func() { changeState <- state.Game })
+	menu.AddItem("Exit game", func() { os.Exit(0) })
+	menu.AddItem("Watch YouTube", func() {})
+	menu.AddItem("Go to Website", func() {})
 
 
 	return &GameState{
 		world: world,
 		player: player,
 		camera: camera,
-		renderer: renderer,
 		cursor: loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
 		menu: menu,
 		light: light,
 		changeState: changeState,
 	}
-}
-
-func (g *GameState) Close() {
-	loader.CleanUp()
-	g.renderer.CleanUp()
 }
 
 // update is called every second
@@ -96,12 +88,6 @@ func (g *GameState) Update() {
 }
 
 func (g *GameState) NextFrame() {
-	g.camera.LockOnPlayer(g.player)
-	// r.ProcessEntity(player.Entity)
-	g.renderer.ProcessEntities(g.world.GetChunks())
-	g.renderer.ProcessGui(g.cursor)
-	g.renderer.ProcessMenu(g.menu)
-	g.renderer.Render(g.light, g.camera)
 	forward := g.keyPressed.wPressed
 	backward := g.keyPressed.sPressed
 	right := g.keyPressed.dPressed
@@ -112,8 +98,19 @@ func (g *GameState) NextFrame() {
 	g.world.MovePlayer(g.player, forward, backward, jump, touchGround)
 }
 
+func (g *GameState) Render(renderer *render.MasterRenderer) {
+	g.camera.LockOnPlayer(g.player)
+	// r.ProcessEntity(player.Entity)
+	renderer.ProcessEntities(g.world.GetChunks())
+	renderer.ProcessGui(g.cursor)
+	renderer.Render(g.light, g.camera)
+	if g.menuOpened {
+		g.menu.Render(renderer)
+	}
+}
+
 func (g *GameState) MouseMove(x, y float32) {
-	if g.menu.Opened {
+	if g.menuOpened {
 		g.menu.ComputeSelectedItem(x, y)
 	} else {
 		g.player.Entity.Rotation = mgl32.Vec3{0, -x, 0}
@@ -133,7 +130,7 @@ func (g *GameState) KeyPressed(key glfw.Key) {
 	} else if key == glfw.KeySpace {
 		g.keyPressed.spacePressed = true
 	} else if key == glfw.KeyEscape {
-		if !g.menu.Opened {
+		if !g.menuOpened {
 			g.changeState <- state.GameMenu
 		}
 	}
@@ -154,27 +151,23 @@ func (g *GameState) KeyReleased(key glfw.Key) {
 }
 
 func (g *GameState) OpenMenu() {
-	g.menu.Opened = true
+	g.menuOpened = true
 }
 
 func (g *GameState) CloseMenu() {
-	g.menu.Opened = false
+	g.menuOpened = false
 }
 
 func (g *GameState) LeftClick() {
-	if g.menu.Opened {
-		if g.menu.SelectedItem == 0 {
-			g.changeState <- state.Game
-		} else if g.menu.SelectedItem == 1 {
-			os.Exit(0)
-		}
+	if g.menuOpened {
+		g.menu.LeftClick()
 	} else {
 		g.world.ClickOnBlock(g.camera, false)
 	}
 }
 
 func (g *GameState) RightClick() {
-	if !g.menu.Opened {
+	if !g.menuOpened {
 		g.world.ClickOnBlock(g.camera, true)
 	}
 }

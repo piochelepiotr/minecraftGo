@@ -4,11 +4,11 @@ import (
 	"github.com/piochelepiotr/minecraftGo/font"
 	"github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/loader"
+	"github.com/piochelepiotr/minecraftGo/render"
 )
 
 // Menu is the menu of the game
 type Menu struct {
-	Opened       bool
 	Items        []*Item
 	font         *font.FontType
 	SelectedItem int
@@ -17,7 +17,6 @@ type Menu struct {
 // CreateMenu creates the menu of the game
 func CreateMenu(aspectRatio float32) *Menu {
 	return &Menu{
-		Opened:       false,
 		Items:        make([]*Item, 0),
 		font:         loader.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
 		SelectedItem: -1,
@@ -25,8 +24,8 @@ func CreateMenu(aspectRatio float32) *Menu {
 }
 
 // AddItem adds item to the game menu
-func (m *Menu) AddItem(text string) {
-	m.Items = append(m.Items, CreateItem(text, len(m.Items), m.font))
+func (m *Menu) AddItem(text string, callback func()) {
+	m.Items = append(m.Items, CreateItem(text, len(m.Items), m.font, callback))
 	for _, item := range m.Items {
 		item.computeYPos(len(m.Items))
 	}
@@ -57,4 +56,15 @@ func (m *Menu) GetMenuTexts() []font.GUIText {
 // ComputeSelectedItem returns the index of the item under the cursor
 func (m *Menu) ComputeSelectedItem(x, y float32) {
 	m.SelectedItem = itemIndex(x, y, len(m.Items))
+}
+
+func (m *Menu) LeftClick() {
+	if m.SelectedItem != -1 {
+		m.Items[m.SelectedItem].callback()
+	}
+}
+
+func (m *Menu) Render(renderer *render.MasterRenderer) {
+	renderer.ProcessGuis(m.GetItems())
+	renderer.ProcessTexts(m.GetMenuTexts())
 }

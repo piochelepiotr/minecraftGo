@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/piochelepiotr/minecraftGo/game"
+	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/state"
 	"log"
@@ -27,7 +28,6 @@ func main() {
 	defer close(changeState)
 
 	gameState := game.NewGameState(aspectRatio, changeState)
-	defer gameState.Close()
 
 	resizeWindow := func(w *glfw.Window, width int, height int) {
 		d.Resize(width, height)
@@ -61,6 +61,10 @@ func main() {
 	d.Window.SetMouseButtonCallback(clickCallback)
 	d.Window.SetSizeCallback(resizeWindow)
 
+	renderer := render.CreateMasterRenderer()
+	defer renderer.CleanUp()
+	defer loader.CleanUp()
+
 
 	updateTicker := time.NewTicker(time.Second)
 	defer updateTicker.Stop()
@@ -78,6 +82,7 @@ func main() {
 					gameState.OpenMenu()
 				}
 			default:
+				gameState.Render(renderer)
 				gameState.NextFrame()
 				d.UpdateDisplay()
 				glfw.PollEvents()

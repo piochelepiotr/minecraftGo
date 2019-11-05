@@ -25,15 +25,17 @@ type Item struct {
 	guiTexture      guis.GuiTexture
 	selectedTexture guis.GuiTexture
 	index           int
+	callback        func()
 }
 
 // CreateItem creates text and gui for menu item
-func CreateItem(text string, index int, font *pfont.FontType) *Item {
+func CreateItem(text string, index int, font *pfont.FontType, callback func()) *Item {
 	return &Item{
 		text:            loader.LoadText(pfont.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
 		index:           index,
 		guiTexture:      loader.LoadGuiTexture("textures/stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
 		selectedTexture: loader.LoadGuiTexture("textures/dark_stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
+		callback: callback,
 	}
 }
 
@@ -67,7 +69,6 @@ func itemIndex(x, y float32, numberOfItems int) int {
 func (i *Item) computeYPos(numberOfItems int) {
 	yPos := getStartMenu(numberOfItems) + float32(i.index)*blockSize()
 	yPos = 2 * yPos
-	//yPos = -0.5
 	i.guiTexture.Position = mgl32.Vec2{0, yPos + ItemHeight}
 	i.selectedTexture.Position = mgl32.Vec2{0, yPos + ItemHeight}
 	i.text.Position = mgl32.Vec2{0, 1 + yPos}
