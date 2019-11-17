@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
@@ -12,6 +13,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/state"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
 	"os"
+	"time"
 )
 
 type keyPressed struct {
@@ -30,13 +32,18 @@ type GameState struct {
 	light *entities.Light
 	menu *pmenu.Menu
 	keyPressed keyPressed
-	changeState chan<- state.StateID
+	changeState chan state.StateID
 	menuOpened bool
+	display *render.DisplayManager
+	chunkLoader *pworld.ChunkLoader
 }
 
-func NewGameState(aspectRatio float32, changeState chan<- state.StateID) *GameState {
-
-	world := pworld.CreateWorld()
+func Run(aspectRatio float32, changeState chan state.StateID, display *render.DisplayManager) {
+	generator := pworld.NewGenerator()
+	chunkLoader := pworld.NewChunkLoader(generator)
+	world := pworld.CreateWorld(generator)
+	defer world.Close()
+	chunkLoader.Run(world.ChunkLoadDecisions)
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
 	camera.Rotation = mgl32.Vec3{0, 0, 0}
 
@@ -60,7 +67,7 @@ func NewGameState(aspectRatio float32, changeState chan<- state.StateID) *GameSt
 	player := &entities.Player{
 		Entity: entity,
 	}
-	world.LoadChunks(player.Entity.Position)
+	world.LoadChunks(player.Entity.Position, false)
 	world.PlacePlayerOnGround(player)
 
 
@@ -70,8 +77,7 @@ func NewGameState(aspectRatio float32, changeState chan<- state.StateID) *GameSt
 	menu.AddItem("Watch YouTube", func() {})
 	menu.AddItem("Go to Website", func() {})
 
-
-	return &GameState{
+	gameState := &GameState{
 		world: world,
 		player: player,
 		camera: camera,
@@ -79,12 +85,85 @@ func NewGameState(aspectRatio float32, changeState chan<- state.StateID) *GameSt
 		menu: menu,
 		light: light,
 		changeState: changeState,
+		display: display,
+		chunkLoader: chunkLoader,
 	}
+
+
+	// set callbacks
+
+	clickCallback := func(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
+		if action == glfw.Press {
+			if button == glfw.MouseButtonRight {
+				gameState.RightClick()
+			} else if button == glfw.MouseButtonLeft {
+				gameState.LeftClick()
+			}
+		}
+	}
+
+	mouseMoveCallback := func(w *glfw.Window, xpos float64, ypos float64) {
+		x, y := display.GLPos(xpos, ypos)
+		gameState.MouseMove(x, y)
+	}
+
+	keyCallback := func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if action == glfw.Press {
+			gameState.KeyPressed(key)
+		} else if action == glfw.Release {
+			gameState.KeyReleased(key)
+		}
+	}
+
+	display.Window.SetKeyCallback(keyCallback)
+	display.Window.SetCursorPosCallback(mouseMoveCallback)
+	display.Window.SetMouseButtonCallback(clickCallback)
+	gameState.run()
+}
+
+func (g *GameState) run() {
+	renderer := render.CreateMasterRenderer()
+	defer renderer.CleanUp()
+	defer loader.CleanUp()
+
+
+	updateTicker := time.NewTicker(time.Second)
+	defer updateTicker.Stop()
+
+	frames := 0
+	for !g.display.Window.ShouldClose() {
+		select {
+		case <-updateTicker.C:
+			start := time.Now()
+			g.Update()
+			stopTime := time.Now().Sub(start)
+			fmt.Println(stopTime)
+			fmt.Printf("FPS is %d\n", frames)
+			frames = 0
+		case stateID := <- g.changeState:
+			if stateID == state.Game {
+				g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+				g.CloseMenu()
+			} else if stateID == state.GameMenu {
+				g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+				g.OpenMenu()
+			}
+		case chunk := <-g.chunkLoader.LoadedChunk:
+			g.world.AddChunk(chunk)
+		default:
+			frames += 1
+			g.Render(renderer)
+			g.NextFrame()
+			g.display.UpdateDisplay()
+			glfw.PollEvents()
+		}
+	}
+
 }
 
 // update is called every second
 func (g *GameState) Update() {
-	g.world.LoadChunks(g.player.Entity.Position)
+	g.world.LoadChunks(g.player.Entity.Position, true)
 }
 
 func (g *GameState) NextFrame() {
@@ -101,7 +180,7 @@ func (g *GameState) NextFrame() {
 func (g *GameState) Render(renderer *render.MasterRenderer) {
 	g.camera.LockOnPlayer(g.player)
 	// r.ProcessEntity(player.Entity)
-	renderer.ProcessEntities(g.world.GetChunks())
+	renderer.ProcessEntities(g.world.GetChunks(g.camera))
 	renderer.ProcessGui(g.cursor)
 	renderer.Render(g.light, g.camera)
 	if g.menuOpened {
@@ -167,6 +246,7 @@ func (g *GameState) LeftClick() {
 }
 
 func (g *GameState) RightClick() {
+	fmt.Println(g.camera.Position)
 	if !g.menuOpened {
 		g.world.ClickOnBlock(g.camera, true)
 	}

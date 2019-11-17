@@ -2,21 +2,22 @@ package world
 
 import (
 	"fmt"
-	"github.com/piochelepiotr/minecraftGo/geometry"
-	"github.com/piochelepiotr/minecraftGo/loader"
-	"math"
-	"time"
-
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
+	"github.com/piochelepiotr/minecraftGo/geometry"
+	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/models"
+	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/textures"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
+	"math"
+	"time"
 )
 
+
 const (
-	deleteChunkDistance  float32 = 80
-	loadChunkDistance    float32 = 60
+	deleteChunkDistance  float32 = 120
+	loadChunkDistance    float32 = 100
 	maxWallJump float32 = 0.4
 	backwardJump float32 = 0.4
 	playerWidth float32 = 0.4
@@ -24,11 +25,15 @@ const (
 	playerHeight float32 = 1.8
 )
 
+var cosAngle = float32(math.Cos(float64(render.Fov/2 + mgl32.DegToRad(10))))
+var alwaysRenderDistance = float32(20)//float32(ChunkSize)/ float32( 2 * math.Tan(float64(render.Fov/2)))
+
 // World contains all the blocks of the world in chunks that load around the player
 type World struct {
 	chunks       map[geometry.Point]*Chunk
 	modelTexture textures.ModelTexture
 	generator *Generator
+	ChunkLoadDecisions chan geometry.Point
 }
 
 func getChunk(x int) int {
@@ -36,22 +41,60 @@ func getChunk(x int) int {
 }
 
 // CreateWorld initiate the world
-func CreateWorld() *World {
+func CreateWorld(generator *Generator) *World {
 	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
 	chunks := make(map[geometry.Point]*Chunk)
+	fmt.Println(alwaysRenderDistance)
 	return &World{
 		chunks:       chunks,
 		modelTexture: modelTexture,
-		generator: NewGenerator(),
+		generator: generator,
+		ChunkLoadDecisions: make(chan geometry.Point, 200),
 	}
 }
 
+func isVisible(cameraPosition, coneVector, pos mgl32.Vec3) bool {
+	if cameraPosition.Sub(pos).Len() < alwaysRenderDistance {
+		return true
+	}
+	toPoint := pos.Sub(cameraPosition).Normalize()
+	dotProduct := toPoint.Dot(coneVector)
+	return dotProduct > cosAngle
+}
+func isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bool {
+	points := []mgl32.Vec3{
+		{0, 0, 0},
+		{float32(ChunkSize), 0, 0},
+		{0, float32(ChunkSize), 0},
+		{0, 0, float32(ChunkSize)},
+		{float32(ChunkSize), float32(ChunkSize), 0},
+		{float32(ChunkSize), 0, float32(ChunkSize)},
+		{0, float32(ChunkSize), float32(ChunkSize)},
+		{float32(ChunkSize), float32(ChunkSize), float32(ChunkSize)},
+	}
+	for _, p := range points {
+		if isVisible(cameraPosition, coneVector, corner.Add(p)) {
+			return true
+		}
+	}
+	return false
+}
+
 //GetChunks returns all chunks that are going to be rendered
-func (w *World) GetChunks() []entities.Entity {
+func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 	chunks := make([]entities.Entity, 0)
 	for _, chunk := range w.chunks {
 		model := chunk.Model
 		if model.VertexCount == 0 {
+			continue
+		}
+		coneVector := geometry.ComputeCameraRay(camera.Rotation).Normalize()
+		p := mgl32.Vec3{
+				float32(chunk.Start.X),
+				float32(chunk.Start.Y),
+				float32(chunk.Start.Z),
+		}
+		if !isChunkVisible(camera.Position, coneVector, p) {
 			continue
 		}
 		chunkEntity := entities.Entity{
@@ -59,11 +102,7 @@ func (w *World) GetChunks() []entities.Entity {
 				RawModel:     chunk.Model,
 				ModelTexture: w.modelTexture,
 			},
-			Position: mgl32.Vec3{
-				float32(chunk.Start.X),
-				float32(chunk.Start.Y),
-				float32(chunk.Start.Z),
-			},
+			Position: p,
 		}
 		transparentChunkEntity := entities.Entity{
 			TexturedModel: models.TexturedModel{
@@ -94,16 +133,14 @@ func (w *World) LoadChunk(x, y, z int) {
 		Y: y,
 		Z: z,
 	}
-	chunk := CreateChunk(x, y, z, w.modelTexture, w.generator)
-	w.chunks[p] = &chunk
+	chunk := CreateChunk(p, w.generator)
+	chunk.Load()
+	w.chunks[p] = chunk
 }
 
-func (w *World) loadChunkIfNotLoaded(x, y, z int) bool {
-	if _, ok := w.chunks[geometry.Point{x, y, z}]; !ok {
-		w.LoadChunk(x, y, z)
-		return true
-	}
-	return false
+func (w *World) chunkIsLoaded(x, y, z int) bool {
+	_, ok := w.chunks[geometry.Point{x, y, z}]
+	return ok
 }
 
 // GetHeight returns height of the world in blocks at a x,z position
@@ -366,7 +403,7 @@ func (w *World) deleteChunks(playerPos mgl32.Vec3) {
 }
 
 //LoadChunks load chunks around the player
-func (w *World) LoadChunks(playerPos mgl32.Vec3) {
+func (w *World) LoadChunks(playerPos mgl32.Vec3, delay bool) {
 	w.deleteChunks(playerPos)
 	xPlayer := int(playerPos.X())
 	zPlayer := int(playerPos.Z())
@@ -378,8 +415,13 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 			if p.DistanceTo(playerPos) > loadChunkDistance {
 				continue
 			}
-			if w.loadChunkIfNotLoaded(x, 0, z) {
-				for y := 1; y < WorldHeight/ChunkSize; y++ {
+			if w.chunkIsLoaded(x, 0, z) {
+				continue
+			}
+			for y := 0; y < WorldHeight/ChunkSize; y++ {
+				if delay {
+					w.ChunkLoadDecisions <- geometry.Point{x, y*ChunkSize, z}
+				} else {
 					w.LoadChunk(x, y*ChunkSize, z)
 				}
 			}
@@ -387,6 +429,12 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	}
 }
 
+func (w *World) AddChunk(chunk *Chunk) {
+	chunk.Load()
+	w.chunks[chunk.Start] = chunk
+}
+
 // Close saves the world when closing the game
 func (w *World) Close() {
+	close(w.ChunkLoadDecisions)
 }

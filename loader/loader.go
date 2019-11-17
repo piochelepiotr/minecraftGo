@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
+	"time"
 
 	// only support png images
 	_ "image/png"
@@ -22,6 +23,8 @@ import (
 var vaos = make([]uint32, 0)
 var vbos = make([]uint32, 0)
 var textures = make([]uint32, 0)
+
+var Debug bool
 
 // LoadToVAO loads vertices into a vao
 func LoadToVAO(positions []float32, textureCoord []float32, indices []uint32, normals []float32, colors []float32) models.RawModel {
@@ -160,8 +163,16 @@ func LoadGuiTexture(file string, position, scale mgl32.Vec2) guis.GuiTexture {
 }
 
 func createVAO() uint32 {
+	if Debug {
+		fmt.Println("hello")
+		time.Sleep(time.Second)
+	}
 	var vaoID uint32
 	gl.GenVertexArrays(1, &vaoID)
+	if Debug {
+		fmt.Println("after gen")
+		time.Sleep(time.Second)
+	}
 	vaos = append(vaos, vaoID)
 	gl.BindVertexArray(vaoID)
 	return vaoID
