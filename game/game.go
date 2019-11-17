@@ -2,6 +2,9 @@ package game
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
@@ -12,32 +15,32 @@ import (
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/state"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
-	"os"
-	"time"
 )
 
 type keyPressed struct {
-	wPressed bool
-	aPressed bool
-	dPressed bool
-	sPressed bool
+	wPressed     bool
+	aPressed     bool
+	dPressed     bool
+	sPressed     bool
 	spacePressed bool
 }
 
-type GameState struct {
-	world *pworld.World
-	player *entities.Player
-	camera *entities.Camera
-	cursor guis.GuiTexture
-	light *entities.Light
-	menu *pmenu.Menu
-	keyPressed keyPressed
+// Game is the state in which the player is playing (not all the menus)
+type Game struct {
+	world       *pworld.World
+	player      *entities.Player
+	camera      *entities.Camera
+	cursor      guis.GuiTexture
+	light       *entities.Light
+	menu        *pmenu.Menu
+	keyPressed  keyPressed
 	changeState chan state.StateID
-	menuOpened bool
-	display *render.DisplayManager
+	menuOpened  bool
+	display     *render.DisplayManager
 	chunkLoader *pworld.ChunkLoader
 }
 
+// Run starts the main event loop of the game
 func Run(aspectRatio float32, changeState chan state.StateID, display *render.DisplayManager) {
 	generator := pworld.NewGenerator()
 	chunkLoader := pworld.NewChunkLoader(generator)
@@ -70,25 +73,23 @@ func Run(aspectRatio float32, changeState chan state.StateID, display *render.Di
 	world.LoadChunks(player.Entity.Position, false)
 	world.PlacePlayerOnGround(player)
 
-
 	menu := pmenu.CreateMenu(aspectRatio)
 	menu.AddItem("Resume game", func() { changeState <- state.Game })
 	menu.AddItem("Exit game", func() { os.Exit(0) })
 	menu.AddItem("Watch YouTube", func() {})
 	menu.AddItem("Go to Website", func() {})
 
-	gameState := &GameState{
-		world: world,
-		player: player,
-		camera: camera,
-		cursor: loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
-		menu: menu,
-		light: light,
+	gameState := &Game{
+		world:       world,
+		player:      player,
+		camera:      camera,
+		cursor:      loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
+		menu:        menu,
+		light:       light,
 		changeState: changeState,
-		display: display,
+		display:     display,
 		chunkLoader: chunkLoader,
 	}
-
 
 	// set callbacks
 
@@ -121,11 +122,10 @@ func Run(aspectRatio float32, changeState chan state.StateID, display *render.Di
 	gameState.run()
 }
 
-func (g *GameState) run() {
+func (g *Game) run() {
 	renderer := render.CreateMasterRenderer()
 	defer renderer.CleanUp()
 	defer loader.CleanUp()
-
 
 	updateTicker := time.NewTicker(time.Second)
 	defer updateTicker.Stop()
@@ -140,7 +140,7 @@ func (g *GameState) run() {
 			fmt.Println(stopTime)
 			fmt.Printf("FPS is %d\n", frames)
 			frames = 0
-		case stateID := <- g.changeState:
+		case stateID := <-g.changeState:
 			if stateID == state.Game {
 				g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 				g.CloseMenu()
@@ -151,7 +151,7 @@ func (g *GameState) run() {
 		case chunk := <-g.chunkLoader.LoadedChunk:
 			g.world.AddChunk(chunk)
 		default:
-			frames += 1
+			frames++
 			g.Render(renderer)
 			g.NextFrame()
 			g.display.UpdateDisplay()
@@ -161,12 +161,13 @@ func (g *GameState) run() {
 
 }
 
-// update is called every second
-func (g *GameState) Update() {
+// Update is called every second
+func (g *Game) Update() {
 	g.world.LoadChunks(g.player.Entity.Position, true)
 }
 
-func (g *GameState) NextFrame() {
+// NextFrame makes time pass to move to the next frame of the game
+func (g *Game) NextFrame() {
 	forward := g.keyPressed.wPressed
 	backward := g.keyPressed.sPressed
 	right := g.keyPressed.dPressed
@@ -177,7 +178,8 @@ func (g *GameState) NextFrame() {
 	g.world.MovePlayer(g.player, forward, backward, jump, touchGround)
 }
 
-func (g *GameState) Render(renderer *render.MasterRenderer) {
+// Render renders all objects on the screen
+func (g *Game) Render(renderer *render.MasterRenderer) {
 	g.camera.LockOnPlayer(g.player)
 	// r.ProcessEntity(player.Entity)
 	renderer.ProcessEntities(g.world.GetChunks(g.camera))
@@ -188,7 +190,8 @@ func (g *GameState) Render(renderer *render.MasterRenderer) {
 	}
 }
 
-func (g *GameState) MouseMove(x, y float32) {
+// MouseMove reacts to the mouse movements
+func (g *Game) MouseMove(x, y float32) {
 	if g.menuOpened {
 		g.menu.ComputeSelectedItem(x, y)
 	} else {
@@ -197,7 +200,8 @@ func (g *GameState) MouseMove(x, y float32) {
 	}
 }
 
-func (g *GameState) KeyPressed(key glfw.Key) {
+// KeyPressed reacts to the keys being pressed
+func (g *Game) KeyPressed(key glfw.Key) {
 	if key == glfw.KeyW {
 		g.keyPressed.wPressed = true
 	} else if key == glfw.KeyA {
@@ -215,7 +219,8 @@ func (g *GameState) KeyPressed(key glfw.Key) {
 	}
 }
 
-func (g *GameState) KeyReleased(key glfw.Key) {
+// KeyReleased reacts to the keys being released
+func (g *Game) KeyReleased(key glfw.Key) {
 	if key == glfw.KeyW {
 		g.keyPressed.wPressed = false
 	} else if key == glfw.KeyA {
@@ -229,15 +234,18 @@ func (g *GameState) KeyReleased(key glfw.Key) {
 	}
 }
 
-func (g *GameState) OpenMenu() {
+// OpenMenu opens the in-game menu
+func (g *Game) OpenMenu() {
 	g.menuOpened = true
 }
 
-func (g *GameState) CloseMenu() {
+// CloseMenu closes the in-game menu
+func (g *Game) CloseMenu() {
 	g.menuOpened = false
 }
 
-func (g *GameState) LeftClick() {
+// LeftClick reacts to left clicks
+func (g *Game) LeftClick() {
 	if g.menuOpened {
 		g.menu.LeftClick()
 	} else {
@@ -245,7 +253,8 @@ func (g *GameState) LeftClick() {
 	}
 }
 
-func (g *GameState) RightClick() {
+// RightClick reacts to right clicks
+func (g *Game) RightClick() {
 	fmt.Println(g.camera.Position)
 	if !g.menuOpened {
 		g.world.ClickOnBlock(g.camera, true)
