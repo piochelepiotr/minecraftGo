@@ -9,13 +9,13 @@ import (
 
 // Chunk is set cube of blocks
 type Chunk struct {
-	model *constructionChunk
+	model            *constructionChunk
 	transparentModel *constructionChunk
-	Model  models.RawModel
-	TransparentModel  models.RawModel
-	blocks []Block
-	generator *Generator
-	Start  geometry.Point
+	Model            models.RawModel
+	TransparentModel models.RawModel
+	blocks           []Block
+	generator        *Generator
+	Start            geometry.Point
 }
 
 // NumberRowsTextures is the number number of rows on the texture image
@@ -30,7 +30,6 @@ const ChunkSize2 = ChunkSize * ChunkSize
 // ChunkSize3 is the volume of a chunk in blocks
 const ChunkSize3 = ChunkSize2 * ChunkSize
 
-
 // CreateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
 func CreateChunk(start geometry.Point, generator *Generator) *Chunk {
 	var chunk Chunk
@@ -40,7 +39,7 @@ func CreateChunk(start geometry.Point, generator *Generator) *Chunk {
 	for x := 0; x < ChunkSize; x++ {
 		for z := 0; z < ChunkSize; z++ {
 			for y := 0; y < ChunkSize; y++ {
-				chunk.setBlockNoUpdate(x, y, z, chunk.generator.BlockType(start.X + x, start.Y + y, start.Z + z))
+				chunk.setBlockNoUpdate(x, y, z, chunk.generator.BlockType(start.X+x, start.Y+y, start.Z+z))
 			}
 		}
 	}
@@ -76,11 +75,11 @@ func (c *Chunk) GetHeight(x, z int) int {
 }
 
 type constructionChunk struct {
-	vertices []mgl32.Vec3
-	textures []mgl32.Vec2
-	normals []mgl32.Vec3
-	colors []mgl32.Vec3
-	indices []uint32
+	vertices  []mgl32.Vec3
+	textures  []mgl32.Vec2
+	normals   []mgl32.Vec3
+	colors    []mgl32.Vec3
+	indices   []uint32
 	nextIndex uint32
 }
 
@@ -88,9 +87,9 @@ func newConstructionChunk() *constructionChunk {
 	return &constructionChunk{
 		vertices: make([]mgl32.Vec3, 0),
 		textures: make([]mgl32.Vec2, 0),
-		normals: make([]mgl32.Vec3, 0),
-		colors: make([]mgl32.Vec3, 0),
-		indices: make([]uint32, 0),
+		normals:  make([]mgl32.Vec3, 0),
+		colors:   make([]mgl32.Vec3, 0),
+		indices:  make([]uint32, 0),
 	}
 }
 
@@ -152,7 +151,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//right
-				if b != Air && (x == ChunkSize - 1 || c.GetBlock(x+1, y, z).IsTransparent()) {
+				if b != Air && (x == ChunkSize-1 || c.GetBlock(x+1, y, z).IsTransparent()) {
 					n := mgl32.Vec3{1, 0, 0}
 					p1 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
@@ -178,7 +177,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//front
-				if b != Air && (z == ChunkSize - 1 || c.GetBlock(x, y, z+1).IsTransparent()) {
+				if b != Air && (z == ChunkSize-1 || c.GetBlock(x, y, z+1).IsTransparent()) {
 					n := mgl32.Vec3{0, 0, 1}
 					p1 := mgl32.Vec3{xF, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
