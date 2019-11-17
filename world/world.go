@@ -133,7 +133,9 @@ func (w *World) LoadChunk(x, y, z int) {
 		Y: y,
 		Z: z,
 	}
-	w.chunks[p] = CreateChunk(p, w.generator)
+	chunk := CreateChunk(p, w.generator)
+	chunk.Load()
+	w.chunks[p] = chunk
 }
 
 func (w *World) chunkIsLoaded(x, y, z int) bool {
@@ -428,6 +430,7 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3, delay bool) {
 }
 
 func (w *World) AddChunk(chunk *Chunk) {
+	chunk.Load()
 	w.chunks[chunk.Start] = chunk
 }
 
