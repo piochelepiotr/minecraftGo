@@ -1,17 +1,18 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/piochelepiotr/minecraftGo/game"
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/state"
-	"log"
-	"net/http"
-	_ "net/http/pprof"
 )
 
-const windowWidth = 400
-const windowHeight = 300
+const windowWidth = 800
+const windowHeight = 600
 const aspectRatio = windowWidth / windowHeight
 
 func main() {
