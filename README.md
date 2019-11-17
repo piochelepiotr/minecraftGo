@@ -12,3 +12,7 @@ The OpenGL render engine has been implemented by following the YouTube channel [
 3. `cd $GOPATH/src/github.com/piochelepiotr/minecraftGo`
 4. `go build`
 5. `./minecraftGo`
+
+## State of advancement
+
+![](screenshot.png)
