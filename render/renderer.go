@@ -9,9 +9,10 @@ import (
 	"github.com/piochelepiotr/minecraftGo/toolbox"
 )
 
-const fov = 120.0
 const nearPlane = 0.1
 const farPlane = 1000
+
+var Fov = mgl32.DegToRad(70.0)
 
 type Renderer struct {
 	projectionMatrix mgl32.Mat4
@@ -21,7 +22,7 @@ type Renderer struct {
 func CreateRenderer(shader shaders.StaticShader) Renderer {
 	EnableCulling()
 	var r Renderer
-	r.projectionMatrix = mgl32.Perspective(mgl32.DegToRad(fov), float32(800.0)/600.0, nearPlane, farPlane)
+	r.projectionMatrix = mgl32.Perspective(Fov, float32(800.0)/600.0, nearPlane, farPlane)
 	r.shader = shader
 	shader.Program.Start()
 	shader.LoadProjectionMatrix(r.projectionMatrix)

@@ -5,8 +5,11 @@ import (
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/models"
-	"github.com/piochelepiotr/minecraftGo/textures"
 )
+
+type PreLoadedChunk struct {
+
+}
 
 // Chunk is set cube of blocks
 type Chunk struct {
@@ -31,24 +34,20 @@ const ChunkSize3 = ChunkSize2 * ChunkSize
 
 
 // CreateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
-func CreateChunk(startX int, startY int, startZ int, modelTexture textures.ModelTexture, generator *Generator) Chunk {
+func CreateChunk(start geometry.Point, generator *Generator) *Chunk {
 	var chunk Chunk
-	chunk.Start = geometry.Point{
-		X: startX,
-		Y: startY,
-		Z: startZ,
-	}
+	chunk.Start = start
 	chunk.blocks = make([]Block, ChunkSize3)
 	chunk.generator = generator
 	for x := 0; x < ChunkSize; x++ {
 		for z := 0; z < ChunkSize; z++ {
 			for y := 0; y < ChunkSize; y++ {
-				chunk.setBlockNoUpdate(x, y, z, chunk.generator.BlockType(startX + x, startY + y, startZ + z))
+				chunk.setBlockNoUpdate(x, y, z, chunk.generator.BlockType(start.X + x, start.Y + y, start.Z + z))
 			}
 		}
 	}
 	chunk.buildFaces()
-	return chunk
+	return &chunk
 }
 
 // setBlockNoUpdate sets a block in a chunk, it doesn't refresh the display
