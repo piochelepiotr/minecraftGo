@@ -8,7 +8,11 @@ The OpenGL render engine has been implemented by following the YouTube channel [
 ## Setup
 
 1. Install [golang](https://github.com/golang/go#download-and-install)
-2. `git clone https://github.com/piochelepiotr/minecraftGo.git`
-3. `cd minecraftGo`
+2. `go get github.com/piochelepiotr/minecraftGo`
+3. `cd $GOPATH/src/github.com/piochelepiotr/minecraftGo`
 4. `go build`
 5. `./minecraftGo`
+
+## State of advancement
+
+![](screenshot.png)
