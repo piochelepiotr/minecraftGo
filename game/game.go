@@ -12,7 +12,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/state"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
-	"os"
 	"time"
 )
 
@@ -36,13 +35,14 @@ type GameState struct {
 	menuOpened bool
 	display *render.DisplayManager
 	chunkLoader *pworld.ChunkLoader
+	settings *settings
 }
 
-func Run(aspectRatio float32, changeState chan state.StateID, display *render.DisplayManager) {
+func Start(aspectRatio float32, changeState chan state.StateID, display *render.DisplayManager) {
 	generator := pworld.NewGenerator()
 	chunkLoader := pworld.NewChunkLoader(generator)
 	world := pworld.CreateWorld(generator)
-	defer world.Close()
+	doneWriter := pworld.NewChunkWriter(world.OutChunksToWrite())
 	chunkLoader.Run(world.ChunkLoadDecisions)
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
 	camera.Rotation = mgl32.Vec3{0, 0, 0}
@@ -73,7 +73,7 @@ func Run(aspectRatio float32, changeState chan state.StateID, display *render.Di
 
 	menu := pmenu.CreateMenu(aspectRatio)
 	menu.AddItem("Resume game", func() { changeState <- state.Game })
-	menu.AddItem("Exit game", func() { os.Exit(0) })
+	menu.AddItem("Exit game", func() { display.Window.SetShouldClose(true) })
 	menu.AddItem("Watch YouTube", func() {})
 	menu.AddItem("Go to Website", func() {})
 
@@ -87,6 +87,7 @@ func Run(aspectRatio float32, changeState chan state.StateID, display *render.Di
 		changeState: changeState,
 		display: display,
 		chunkLoader: chunkLoader,
+		settings: defaultSettings(),
 	}
 
 
@@ -119,6 +120,10 @@ func Run(aspectRatio float32, changeState chan state.StateID, display *render.Di
 	display.Window.SetCursorPosCallback(mouseMoveCallback)
 	display.Window.SetMouseButtonCallback(clickCallback)
 	gameState.run()
+	fmt.Println("we are here")
+
+	world.Close()
+	<-doneWriter
 }
 
 func (g *GameState) run() {
@@ -192,8 +197,8 @@ func (g *GameState) MouseMove(x, y float32) {
 	if g.menuOpened {
 		g.menu.ComputeSelectedItem(x, y)
 	} else {
-		g.player.Entity.Rotation = mgl32.Vec3{0, -x, 0}
-		g.camera.Rotation = mgl32.Vec3{y, g.camera.Rotation.Y(), g.camera.Rotation.Z()}
+		g.player.Entity.Rotation = mgl32.Vec3{0, -x*g.settings.cameraSensitivity, 0}
+		g.camera.Rotation = mgl32.Vec3{y*g.settings.cameraSensitivity, g.camera.Rotation.Y(), g.camera.Rotation.Z()}
 	}
 }
 

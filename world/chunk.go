@@ -1,21 +1,45 @@
 package world
 
 import (
+	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/models"
 )
 
+const (
+	chunkFormatV1 = 1
+)
+
+type RawChunk struct {
+	blocks []Block
+	Start            geometry.Point
+}
+
+func (c *RawChunk) encode() []byte {
+	encoded := make([]byte, 1, len(c.blocks) + 1)
+	encoded[0] = chunkFormatV1
+	for _, b := range c.blocks {
+		encoded = append(encoded, byte(b))
+	}
+	return encoded
+}
+
+func (c *RawChunk) getKey() string {
+	return fmt.Sprintf("%d-%d-%d", c.Start.X, c.Start.Y, c.Start.Z)
+}
+
 // Chunk is set cube of blocks
 type Chunk struct {
+	RawChunk
 	model            *constructionChunk
 	transparentModel *constructionChunk
 	Model            models.RawModel
 	TransparentModel models.RawModel
-	blocks           []Block
-	generator        *Generator
-	Start            geometry.Point
+	rawChunk           RawChunk
+	// dirty is true when the content of the chunk hasn't been save to disk yet
+	dirty bool
 }
 
 // NumberRowsTextures is the number number of rows on the texture image
@@ -30,23 +54,6 @@ const ChunkSize2 = ChunkSize * ChunkSize
 // ChunkSize3 is the volume of a chunk in blocks
 const ChunkSize3 = ChunkSize2 * ChunkSize
 
-// CreateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
-func CreateChunk(start geometry.Point, generator *Generator) *Chunk {
-	var chunk Chunk
-	chunk.Start = start
-	chunk.blocks = make([]Block, ChunkSize3)
-	chunk.generator = generator
-	for x := 0; x < ChunkSize; x++ {
-		for z := 0; z < ChunkSize; z++ {
-			for y := 0; y < ChunkSize; y++ {
-				chunk.setBlockNoUpdate(x, y, z, chunk.generator.BlockType(start.X+x, start.Y+y, start.Z+z))
-			}
-		}
-	}
-	chunk.buildFaces()
-	return &chunk
-}
-
 // setBlockNoUpdate sets a block in a chunk, it doesn't refresh the display
 func (c *Chunk) setBlockNoUpdate(x, y, z int, b Block) {
 	c.blocks[x*ChunkSize2+y*ChunkSize+z] = b
@@ -54,7 +61,8 @@ func (c *Chunk) setBlockNoUpdate(x, y, z int, b Block) {
 
 // SetBlock sets a block in a chunk and refreshes the model
 func (c *Chunk) SetBlock(x, y, z int, b Block) {
-	c.blocks[x*ChunkSize2+y*ChunkSize+z] = b
+	c.setBlockNoUpdate(x, y, z, b)
+	c.dirty = true
 	c.buildFaces()
 	c.Load()
 }

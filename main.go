@@ -31,5 +31,5 @@ func main() {
 	}
 
 	d.Window.SetSizeCallback(resizeWindow)
-	game.Run(aspectRatio, changeState, d)
+	game.Start(aspectRatio, changeState, d)
 }

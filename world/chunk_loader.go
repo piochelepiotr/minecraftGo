@@ -19,7 +19,7 @@ func NewChunkLoader(generator *Generator) *ChunkLoader {
 func (c *ChunkLoader) Run(chunkLoadDecisions <-chan geometry.Point) {
 	go func() {
 		for p := range chunkLoadDecisions {
-			chunk := CreateChunk(p, c.generator)
+			chunk := c.generator.GenerateChunk(p)
 			c.LoadedChunk <- chunk
 		}
 		close(c.LoadedChunk)

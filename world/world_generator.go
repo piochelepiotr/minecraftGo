@@ -2,6 +2,7 @@ package world
 
 import (
 	"github.com/aquilax/go-perlin"
+	"github.com/piochelepiotr/minecraftGo/geometry"
 	"math"
 	"math/rand"
 )
@@ -147,4 +148,20 @@ func getStructureBlock(b Biome, x, y, z int) Block {
 		return s.blocks[xi][yi][zi]
 	}
 	return Air
+}
+
+// GenerateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
+func (g *Generator) GenerateChunk(start geometry.Point) *Chunk {
+	var chunk Chunk
+	chunk.Start = start
+	chunk.blocks = make([]Block, ChunkSize3)
+	for x := 0; x < ChunkSize; x++ {
+		for z := 0; z < ChunkSize; z++ {
+			for y := 0; y < ChunkSize; y++ {
+				chunk.setBlockNoUpdate(x, y, z, g.BlockType(start.X+x, start.Y+y, start.Z+z))
+			}
+		}
+	}
+	chunk.buildFaces()
+	return &chunk
 }

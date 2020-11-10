@@ -10,6 +10,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/textures"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
+	"log"
 	"math"
 	"time"
 )
@@ -34,6 +35,11 @@ type World struct {
 	modelTexture textures.ModelTexture
 	generator *Generator
 	ChunkLoadDecisions chan geometry.Point
+	chunksToWrite chan *RawChunk
+}
+
+func (w *World) OutChunksToWrite() <-chan *RawChunk {
+	return w.chunksToWrite
 }
 
 func getChunk(x int) int {
@@ -50,6 +56,7 @@ func CreateWorld(generator *Generator) *World {
 		modelTexture: modelTexture,
 		generator: generator,
 		ChunkLoadDecisions: make(chan geometry.Point, 200),
+		chunksToWrite: make(chan *RawChunk, 200),
 	}
 }
 
@@ -133,7 +140,7 @@ func (w *World) LoadChunk(x, y, z int) {
 		Y: y,
 		Z: z,
 	}
-	chunk := CreateChunk(p, w.generator)
+	chunk := w.generator.GenerateChunk(p)
 	chunk.Load()
 	w.chunks[p] = chunk
 }
@@ -411,7 +418,7 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3, delay bool) {
 	chunkZ := getChunk(zPlayer)
 	for x := getChunk(chunkX - int(loadChunkDistance)); x <= getChunk(chunkX + int(loadChunkDistance)); x += ChunkSize {
 		for z := getChunk(chunkZ - int(loadChunkDistance)); z <= getChunk(chunkZ + int(loadChunkDistance)); z += ChunkSize {
-			p := geometry.Point{x, 0, z}
+			p := geometry.Point{X: x, Y: 0, Z: z}
 			if p.DistanceTo(playerPos) > loadChunkDistance {
 				continue
 			}
@@ -437,4 +444,6 @@ func (w *World) AddChunk(chunk *Chunk) {
 // Close saves the world when closing the game
 func (w *World) Close() {
 	close(w.ChunkLoadDecisions)
+	close(w.chunksToWrite)
+	log.Println("Closed world")
 }
