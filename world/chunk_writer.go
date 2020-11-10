@@ -6,13 +6,21 @@ import (
 	"os"
 )
 
+const (
+	savesPath = "saves"
+)
+
 // write chunk to disk
 func (c *RawChunk) write() {
-	path := "~/Documents/perso/minecraftGoSaves"
+	path := savesPath
 	encoded := c.encode()
-	key := c.getKey()
+	key := "chunk_" + c.Start.GetKey()
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, os.ModeDir)
+		if err := os.Mkdir(path, 0755); err != nil {
+			log.Printf("error creating directory: %v", err)
+		}
+	} else {
+		log.Printf("error %v", err)
 	}
 	if err := ioutil.WriteFile(path + "/" + key, encoded, 0644); err != nil {
 		log.Printf("Error when writing chunk to file. %v\n", err)

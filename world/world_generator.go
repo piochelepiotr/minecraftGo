@@ -151,8 +151,7 @@ func getStructureBlock(b Biome, x, y, z int) Block {
 }
 
 // GenerateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
-func (g *Generator) GenerateChunk(start geometry.Point) *Chunk {
-	var chunk Chunk
+func (g *Generator) GenerateChunk(start geometry.Point) (chunk RawChunk) {
 	chunk.Start = start
 	chunk.blocks = make([]Block, ChunkSize3)
 	for x := 0; x < ChunkSize; x++ {
@@ -162,6 +161,5 @@ func (g *Generator) GenerateChunk(start geometry.Point) *Chunk {
 			}
 		}
 	}
-	chunk.buildFaces()
-	return &chunk
+	return chunk
 }

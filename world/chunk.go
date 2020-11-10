@@ -1,7 +1,6 @@
 package world
 
 import (
-	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/loader"
@@ -26,8 +25,15 @@ func (c *RawChunk) encode() []byte {
 	return encoded
 }
 
-func (c *RawChunk) getKey() string {
-	return fmt.Sprintf("%d-%d-%d", c.Start.X, c.Start.Y, c.Start.Z)
+func decode(data []byte, start geometry.Point) (chunk RawChunk) {
+	// for now, we only have v1
+	data = data[1:]
+	chunk.Start = start
+	chunk.blocks = make([]Block, 0, len(data))
+	for _, b := range data {
+		chunk.blocks = append(chunk.blocks, Block(b))
+	}
+	return chunk
 }
 
 // Chunk is set cube of blocks
@@ -37,7 +43,6 @@ type Chunk struct {
 	transparentModel *constructionChunk
 	Model            models.RawModel
 	TransparentModel models.RawModel
-	rawChunk           RawChunk
 	// dirty is true when the content of the chunk hasn't been save to disk yet
 	dirty bool
 }
@@ -55,7 +60,7 @@ const ChunkSize2 = ChunkSize * ChunkSize
 const ChunkSize3 = ChunkSize2 * ChunkSize
 
 // setBlockNoUpdate sets a block in a chunk, it doesn't refresh the display
-func (c *Chunk) setBlockNoUpdate(x, y, z int, b Block) {
+func (c *RawChunk) setBlockNoUpdate(x, y, z int, b Block) {
 	c.blocks[x*ChunkSize2+y*ChunkSize+z] = b
 }
 

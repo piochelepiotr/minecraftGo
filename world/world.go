@@ -140,7 +140,7 @@ func (w *World) LoadChunk(x, y, z int) {
 		Y: y,
 		Z: z,
 	}
-	chunk := w.generator.GenerateChunk(p)
+	chunk := GetGraphicChunk(p, w.generator)
 	chunk.Load()
 	w.chunks[p] = chunk
 }
@@ -404,6 +404,9 @@ func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool) {
 func (w *World) deleteChunks(playerPos mgl32.Vec3) {
 	for p, chunk := range w.chunks {
 		if chunk.Start.DistanceTo(playerPos) > deleteChunkDistance {
+			if chunk.dirty {
+				w.chunksToWrite <- &chunk.RawChunk
+			}
 			delete(w.chunks, p)
 		}
 	}
@@ -444,6 +447,11 @@ func (w *World) AddChunk(chunk *Chunk) {
 // Close saves the world when closing the game
 func (w *World) Close() {
 	close(w.ChunkLoadDecisions)
+	for _, chunk := range w.chunks {
+		if chunk.dirty {
+			w.chunksToWrite <- &chunk.RawChunk
+		}
+	}
 	close(w.chunksToWrite)
 	log.Println("Closed world")
 }

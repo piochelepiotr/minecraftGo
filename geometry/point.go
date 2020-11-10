@@ -36,3 +36,8 @@ func (p Point) ToFloat32() mgl32.Vec3 {
 func (p Point) Add(x, y, z int) Point {
 	return Point{p.X + x, p.Y + y, p.Z + z}
 }
+
+func (p Point) GetKey() string {
+	return fmt.Sprintf("%d_%d_%d", p.X, p.Y, p.Z)
+}
+
