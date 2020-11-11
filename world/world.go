@@ -36,6 +36,7 @@ type World struct {
 	generator *Generator
 	ChunkLoadDecisions chan geometry.Point
 	chunksToWrite chan *RawChunk
+	worldConfig Config
 }
 
 func (w *World) OutChunksToWrite() <-chan *RawChunk {
@@ -47,7 +48,7 @@ func getChunk(x int) int {
 }
 
 // CreateWorld initiate the world
-func CreateWorld(generator *Generator) *World {
+func CreateWorld(worldConfig Config, generator *Generator) *World {
 	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
 	chunks := make(map[geometry.Point]*Chunk)
 	fmt.Println(alwaysRenderDistance)
@@ -57,6 +58,7 @@ func CreateWorld(generator *Generator) *World {
 		generator: generator,
 		ChunkLoadDecisions: make(chan geometry.Point, 200),
 		chunksToWrite: make(chan *RawChunk, 200),
+		worldConfig: worldConfig,
 	}
 }
 
@@ -140,7 +142,7 @@ func (w *World) LoadChunk(x, y, z int) {
 		Y: y,
 		Z: z,
 	}
-	chunk := GetGraphicChunk(p, w.generator)
+	chunk := GetGraphicChunk(w.worldConfig, p, w.generator)
 	chunk.Load()
 	w.chunks[p] = chunk
 }

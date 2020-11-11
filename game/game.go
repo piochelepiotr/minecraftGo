@@ -25,7 +25,6 @@ func Start(display *render.DisplayManager) {
 	gameState := &Game{
 		inGameMenuState: NewInGameMenuState(display, changeState),
 		mainMenuState: NewMainMenuState(display, changeState),
-		gamingState: NewGamingState(display, changeState),
 		changeState: changeState,
 		display:     display,
 		state: state.Empty,
@@ -34,7 +33,8 @@ func Start(display *render.DisplayManager) {
 	gameState.switchState(state.Switch{ID: state.MainMenu})
 
 	gameState.run()
-	gameState.gamingState.Close()
+	// switch to empty state to close correctly everything
+	gameState.switchState(state.Switch{ID: state.Empty})
 }
 
 func (g *Game) run() {
@@ -72,10 +72,16 @@ func (g *Game) switchState(newState state.Switch) {
 	switch g.state  {
 	case state.Game:
 		g.gamingState.pause()
+	case state.GameMenu:
+		if newState.ID != state.Game {
+			g.gamingState.Close()
+			g.gamingState = nil
+		}
 	default:
 	}
 	switch newState.ID {
 	case state.Game:
+		g.gamingState = NewGamingState(newState.WorldName, g.display, g.changeState)
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 		g.display.Window.SetKeyCallback(g.gamingState.keyCallback)
 		g.display.Window.SetCursorPosCallback(g.gamingState.mouseMoveCallback)

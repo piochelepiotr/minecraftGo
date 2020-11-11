@@ -9,10 +9,12 @@ import (
 type ChunkLoader struct {
 	LoadedChunk chan *Chunk
 	generator *Generator
+	worldConfig Config
 }
 
-func NewChunkLoader(generator *Generator) *ChunkLoader {
+func NewChunkLoader(worldConfig Config, generator *Generator) *ChunkLoader {
 	return &ChunkLoader{
+		worldConfig: worldConfig,
 		generator: generator,
 		LoadedChunk: make(chan *Chunk, 100),
 	}
@@ -21,7 +23,7 @@ func NewChunkLoader(generator *Generator) *ChunkLoader {
 func (c *ChunkLoader) Run(chunkLoadDecisions <-chan geometry.Point) {
 	go func() {
 		for p := range chunkLoadDecisions {
-			chunk := GetGraphicChunk(p, c.generator)
+			chunk := GetGraphicChunk(c.worldConfig, p, c.generator)
 			c.LoadedChunk <- chunk
 		}
 		close(c.LoadedChunk)
@@ -29,20 +31,20 @@ func (c *ChunkLoader) Run(chunkLoadDecisions <-chan geometry.Point) {
 }
 
 // GetChunk tries to load the chunk from a saved file. If there is nothing, generates one using the generator
-func GetChunk(start geometry.Point, generator *Generator) RawChunk {
-	if chunk, err := LoadChunkFromSaves(start); err == nil {
+func GetChunk(worldConfig Config, start geometry.Point, generator *Generator) RawChunk {
+	if chunk, err := LoadChunkFromSaves(worldConfig, start); err == nil {
 		return chunk
 	}
 	return generator.GenerateChunk(start)
 }
 
-func GetGraphicChunk(start geometry.Point, generator *Generator) *Chunk {
-	chunk := Chunk{RawChunk: GetChunk(start, generator)}
+func GetGraphicChunk(worldConfig Config, start geometry.Point, generator *Generator) *Chunk {
+	chunk := Chunk{RawChunk: GetChunk(worldConfig, start, generator)}
 	chunk.buildFaces()
 	return &chunk
 }
 
-func LoadChunkFromSaves(start geometry.Point) (chunk RawChunk, err error) {
+func LoadChunkFromSaves(worldConfig Config, start geometry.Point) (chunk RawChunk, err error) {
 	path := savesPath + "/" + "chunk_" + start.GetKey()
 	if _, err := os.Stat(path); err != nil {
 		return chunk, err

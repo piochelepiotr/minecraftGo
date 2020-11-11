@@ -35,10 +35,11 @@ type GamingState struct {
 	changeState chan<- state.Switch
 }
 // NewGamingState loads a new world
-func NewGamingState(display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
+func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
+	worldConfig := pworld.LoadWorld(worldName)
 	generator := pworld.NewGenerator()
-	chunkLoader := pworld.NewChunkLoader(generator)
-	world := pworld.CreateWorld(generator)
+	chunkLoader := pworld.NewChunkLoader(worldConfig, generator)
+	world := pworld.CreateWorld(worldConfig, generator)
 	doneWriter := pworld.NewChunkWriter(world.OutChunksToWrite())
 	chunkLoader.Run(world.ChunkLoadDecisions)
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
