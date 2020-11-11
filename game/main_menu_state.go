@@ -7,14 +7,11 @@ import (
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/state"
 	"github.com/piochelepiotr/minecraftGo/world"
+	"log"
 )
 type MainMenuState struct {
 	menu        *pmenu.Menu
 	display     *render.DisplayManager
-}
-
-func loadWorlds() []string {
-	return nil
 }
 
 func generateWorldName(worlds []string) string {
@@ -27,7 +24,7 @@ func generateWorldName(worlds []string) string {
 		return false
 	}
 	for i := 0;; i++ {
-		worldName := fmt.Sprintf("World %d", i)
+		worldName := fmt.Sprintf("World_%d", i)
 		if !contains(worldName) {
 			return worldName
 		}
@@ -36,7 +33,10 @@ func generateWorldName(worlds []string) string {
 
 func NewMainMenuState(display *render.DisplayManager, changeState chan<- state.Switch) *MainMenuState{
 	menu := pmenu.CreateMenu(display.AspectRatio())
-	worlds := loadWorlds()
+	worlds, err := world.LoadWorlds()
+	if err != nil {
+		log.Fatalf("Error loading worlds. err:%v", err)
+	}
 	for _, worldName := range worlds {
 		menu.AddItem(worldName, func() { changeState <- state.Switch{ID: state.Game, WorldName: worldName} })
 	}

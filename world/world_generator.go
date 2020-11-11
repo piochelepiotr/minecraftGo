@@ -92,9 +92,9 @@ func makeBiomes() []Biome {
 	return biomes
 }
 
-func NewGenerator() *Generator {
+func NewGenerator(worldConfig Config) *Generator {
 	return &Generator{
-		perlin:       perlin.NewPerlin(alpha, beta, perlinN, 233),
+		perlin:       perlin.NewPerlin(alpha, beta, perlinN, worldConfig.Seed),
 		biomes: makeBiomes(),
 	}
 }
@@ -162,4 +162,14 @@ func (g *Generator) GenerateChunk(start geometry.Point) (chunk RawChunk) {
 		}
 	}
 	return chunk
+}
+
+// GetHeight returns height of the world in blocks at a x,z position
+func (g *Generator) GetHeight(x, z int) int {
+	for y := WorldHeight - 1; y >= 0; y-- {
+		if g.BlockType(x, y, z) != Air {
+			return y + 1
+		}
+	}
+	return 0
 }

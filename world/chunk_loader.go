@@ -45,7 +45,7 @@ func GetGraphicChunk(worldConfig Config, start geometry.Point, generator *Genera
 }
 
 func LoadChunkFromSaves(worldConfig Config, start geometry.Point) (chunk RawChunk, err error) {
-	path := savesPath + "/" + "chunk_" + start.GetKey()
+	path := savesPath + "/" + worldConfig.Name + "/" + "chunk_" + start.GetKey()
 	if _, err := os.Stat(path); err != nil {
 		return chunk, err
 	}

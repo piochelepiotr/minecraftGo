@@ -10,6 +10,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/state"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
+	"log"
 )
 
 type keyPressed struct {
@@ -36,11 +37,14 @@ type GamingState struct {
 }
 // NewGamingState loads a new world
 func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
-	worldConfig := pworld.LoadWorld(worldName)
-	generator := pworld.NewGenerator()
+	worldConfig, err := pworld.LoadWorld(worldName)
+	if err != nil {
+		log.Fatalf("Unable to load world %s. Err: %v", worldName, err)
+	}
+	generator := pworld.NewGenerator(worldConfig)
 	chunkLoader := pworld.NewChunkLoader(worldConfig, generator)
 	world := pworld.CreateWorld(worldConfig, generator)
-	doneWriter := pworld.NewChunkWriter(world.OutChunksToWrite())
+	doneWriter := pworld.NewChunkWriter(worldConfig, world.OutChunksToWrite())
 	chunkLoader.Run(world.ChunkLoadDecisions)
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
 	camera.Rotation = mgl32.Vec3{0, 0, 0}
