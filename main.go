@@ -11,7 +11,6 @@ import (
 
 const windowWidth = 800
 const windowHeight = 600
-const aspectRatio = windowWidth / windowHeight
 
 func main() {
 	go func() {
@@ -19,5 +18,5 @@ func main() {
 	}()
 	d := render.NewDisplay(windowWidth, windowHeight)
 	defer d.CloseDisplay()
-	game.Start(aspectRatio, d)
+	game.Start(d)
 }

@@ -1,8 +1,8 @@
 package state
 
-type StateID byte
+type ID byte
 
 const (
-	Game StateID = 0
-	GameMenu StateID = 1
+	Game     ID = 0
+	GameMenu ID = 1
 )

@@ -53,6 +53,10 @@ func NewDisplay(windowWidth, windowHeight int) *DisplayManager{
 	return &d
 }
 
+func (d *DisplayManager) AspectRatio() float32 {
+	return float32(d.WindowWidth) / float32(d.WindowHeight)
+}
+
 //UpdateDisplay polls events and swap buffers
 func (d *DisplayManager) UpdateDisplay() {
 	d.Window.SwapBuffers()

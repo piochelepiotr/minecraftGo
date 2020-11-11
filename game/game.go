@@ -24,7 +24,7 @@ type keyPressed struct {
 	spacePressed bool
 }
 
-// Game is the state in which the player is playing (not all the menus)
+// Game is the state in which the player is playing
 type Game struct {
 	world       *pworld.World
 	player      *entities.Player
@@ -33,16 +33,17 @@ type Game struct {
 	light       *entities.Light
 	menu        *pmenu.Menu
 	keyPressed  keyPressed
-	changeState chan state.StateID
+	changeState chan state.ID
 	menuOpened  bool
 	display     *render.DisplayManager
 	chunkLoader *pworld.ChunkLoader
 	settings *settings
+	state state.ID
 }
 
 // Start starts the main event loop of the game
-func Start(aspectRatio float32, display *render.DisplayManager) {
-	changeState :=  make(chan state.StateID, 1)
+func Start(display *render.DisplayManager) {
+	changeState :=  make(chan state.ID, 1)
 	generator := pworld.NewGenerator()
 	chunkLoader := pworld.NewChunkLoader(generator)
 	world := pworld.CreateWorld(generator)
@@ -74,7 +75,7 @@ func Start(aspectRatio float32, display *render.DisplayManager) {
 	world.LoadChunks(player.Entity.Position, false)
 	world.PlacePlayerOnGround(player)
 
-	menu := pmenu.CreateMenu(aspectRatio)
+	menu := pmenu.CreateMenu(display.AspectRatio())
 	menu.AddItem("Resume game", func() { changeState <- state.Game })
 	menu.AddItem("Exit game", func() { display.Window.SetShouldClose(true) })
 	menu.AddItem("Watch YouTube", func() {})
@@ -91,6 +92,7 @@ func Start(aspectRatio float32, display *render.DisplayManager) {
 		display:     display,
 		chunkLoader: chunkLoader,
 		settings: defaultSettings(),
+		state: state.Game,
 	}
 
 	// set callbacks
@@ -146,13 +148,7 @@ func (g *Game) run() {
 			fmt.Printf("FPS is %d\n", frames)
 			frames = 0
 		case stateID := <-g.changeState:
-			if stateID == state.Game {
-				g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
-				g.CloseMenu()
-			} else if stateID == state.GameMenu {
-				g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-				g.OpenMenu()
-			}
+			g.switchState(stateID)
 		case chunk := <-g.chunkLoader.LoadedChunk:
 			g.world.AddChunk(chunk)
 		default:
@@ -164,6 +160,22 @@ func (g *Game) run() {
 		}
 	}
 
+}
+
+func (g *Game) switchState(newState state.ID) {
+	switch g.state  {
+	case state.Game:
+		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+	case state.GameMenu:
+		g.CloseMenu()
+	}
+	g.state = newState
+	switch g.state {
+	case state.Game:
+		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	case state.GameMenu:
+		g.OpenMenu()
+	}
 }
 
 // Update is called every second
