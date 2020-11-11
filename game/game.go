@@ -2,10 +2,7 @@ package game
 
 import (
 	"fmt"
-
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/render"
 	"github.com/piochelepiotr/minecraftGo/state"
@@ -14,27 +11,27 @@ import (
 
 // Game is the state in which the player is playing
 type Game struct {
-	cursor      guis.GuiTexture
 	changeState chan state.Switch
 	display     *render.DisplayManager
 	state state.ID
 	gamingState *GamingState
 	inGameMenuState *InGameMenuState
+	mainMenuState *MainMenuState
 }
 
 // Start starts the main event loop of the game
 func Start(display *render.DisplayManager) {
 	changeState :=  make(chan state.Switch, 1)
 	gameState := &Game{
-		cursor:      loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
 		inGameMenuState: NewInGameMenuState(display, changeState),
+		mainMenuState: NewMainMenuState(display, changeState),
 		gamingState: NewGamingState(display, changeState),
 		changeState: changeState,
 		display:     display,
 		state: state.Empty,
 	}
 
-	gameState.switchState(state.Switch{ID: state.Game})
+	gameState.switchState(state.Switch{ID: state.MainMenu})
 
 	gameState.run()
 	gameState.gamingState.Close()
@@ -74,7 +71,6 @@ func (g *Game) run() {
 func (g *Game) switchState(newState state.Switch) {
 	switch g.state  {
 	case state.Game:
-		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		g.gamingState.pause()
 	default:
 	}
@@ -85,9 +81,15 @@ func (g *Game) switchState(newState state.Switch) {
 		g.display.Window.SetCursorPosCallback(g.gamingState.mouseMoveCallback)
 		g.display.Window.SetMouseButtonCallback(g.gamingState.clickCallback)
 	case state.GameMenu:
+		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		g.display.Window.SetKeyCallback(g.inGameMenuState.keyCallback)
 		g.display.Window.SetCursorPosCallback(g.inGameMenuState.mouseMoveCallback)
 		g.display.Window.SetMouseButtonCallback(g.inGameMenuState.clickCallback)
+	case state.MainMenu:
+		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+		g.display.Window.SetKeyCallback(g.mainMenuState.keyCallback)
+		g.display.Window.SetCursorPosCallback(g.mainMenuState.mouseMoveCallback)
+		g.display.Window.SetMouseButtonCallback(g.mainMenuState.clickCallback)
 	default:
 	}
 	g.state = newState.ID
@@ -115,6 +117,8 @@ func (g *Game) Render(renderer *render.MasterRenderer) {
 	if g.state == state.GameMenu {
 		g.inGameMenuState.Render(renderer)
 	}
-	renderer.ProcessGui(g.cursor)
+	if g.state == state.MainMenu {
+		g.mainMenuState.Render(renderer)
+	}
 	renderer.Render()
 }

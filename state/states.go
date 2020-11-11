@@ -6,6 +6,7 @@ const (
 	Empty    ID = 0
 	Game     ID = 1
 	GameMenu ID = 2
+	MainMenu ID = 3
 )
 
 // Switch is the action of switching to a new state (open a menu for eg)

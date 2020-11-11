@@ -4,6 +4,7 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
+	"github.com/piochelepiotr/minecraftGo/guis"
 	"github.com/piochelepiotr/minecraftGo/loader"
 	"github.com/piochelepiotr/minecraftGo/models"
 	"github.com/piochelepiotr/minecraftGo/render"
@@ -25,6 +26,7 @@ type GamingState struct {
 	player      *entities.Player
 	camera      *entities.Camera
 	light       *entities.Light
+	cursor      guis.GuiTexture
 	keyPressed  keyPressed
 	chunkLoader *pworld.ChunkLoader
 	settings *settings
@@ -66,6 +68,7 @@ func NewGamingState(display *render.DisplayManager, changeState chan<- state.Swi
 	world.PlacePlayerOnGround(player)
 
 	state := &GamingState{
+		cursor:      loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
 		world:       world,
 		player:      player,
 		camera:      camera,
@@ -137,6 +140,7 @@ func (s *GamingState) Render(renderer *render.MasterRenderer) {
 	renderer.ProcessEntities(s.world.GetChunks(s.camera))
 	renderer.SetLight(s.light)
 	renderer.SetCamera(s.camera)
+	renderer.ProcessGui(s.cursor)
 }
 // NextFrame makes time pass to move to the next frame of the game
 func (s *GamingState) NextFrame() {

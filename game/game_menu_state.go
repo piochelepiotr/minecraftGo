@@ -15,8 +15,7 @@ func NewInGameMenuState(display *render.DisplayManager, changeState chan<- state
 	menu := pmenu.CreateMenu(display.AspectRatio())
 	menu.AddItem("Resume game", func() { changeState <- state.Switch{ID: state.Game} })
 	menu.AddItem("Exit game", func() { display.Window.SetShouldClose(true) })
-	menu.AddItem("Watch YouTube", func() {})
-	menu.AddItem("Go to Website", func() {})
+	menu.AddItem("Go to main menu", func() { changeState <- state.Switch{ID: state.MainMenu} })
 	return &InGameMenuState{
 		menu: menu,
 		display: display,
