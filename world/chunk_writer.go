@@ -19,8 +19,6 @@ func (c *RawChunk) write() {
 		if err := os.Mkdir(path, 0755); err != nil {
 			log.Printf("error creating directory: %v", err)
 		}
-	} else {
-		log.Printf("error %v", err)
 	}
 	if err := ioutil.WriteFile(path + "/" + key, encoded, 0644); err != nil {
 		log.Printf("Error when writing chunk to file. %v\n", err)

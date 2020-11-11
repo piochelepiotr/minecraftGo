@@ -3,6 +3,7 @@ package state
 type ID byte
 
 const (
-	Game     ID = 0
-	GameMenu ID = 1
+	Empty    ID = 0
+	Game     ID = 1
+	GameMenu ID = 2
 )
