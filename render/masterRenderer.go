@@ -12,6 +12,8 @@ import (
 // MasterRenderer is the main renderer that will render
 // everything on the screen
 type MasterRenderer struct {
+	light        *entities.Light
+	camera       *entities.Camera
 	shader       shaders.StaticShader
 	renderer     Renderer
 	fontRenderer FontRenderer
@@ -35,11 +37,15 @@ func CreateMasterRenderer() *MasterRenderer {
 }
 
 // Render renders everything on the screen
-func (r *MasterRenderer) Render(sun *entities.Light, camera *entities.Camera) {
+func (r *MasterRenderer) Render() {
 	r.renderer.Prepare()
 	r.shader.Program.Start()
-	r.shader.LoadLight(sun)
-	r.shader.LoadViewMatrix(camera)
+	if r.light != nil {
+		r.shader.LoadLight(r.light)
+	}
+	if r.camera != nil {
+		r.shader.LoadViewMatrix(r.camera)
+	}
 	r.renderer.Render(r.entities)
 	r.shader.Program.Stop()
 	r.guiRenderer.Render(r.guis)
@@ -49,6 +55,16 @@ func (r *MasterRenderer) Render(sun *entities.Light, camera *entities.Camera) {
 	}
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
+	r.light = nil
+	r.camera = nil
+}
+
+func (r *MasterRenderer) SetLight(light *entities.Light) {
+	r.light = light
+}
+
+func (r *MasterRenderer) SetCamera(camera *entities.Camera) {
+	r.camera = camera
 }
 
 // ProcessEntity adds entity to the list of entities to render

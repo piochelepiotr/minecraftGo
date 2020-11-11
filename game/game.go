@@ -109,11 +109,12 @@ func (g *Game) NextFrame() {
 
 // Render renders all objects on the screen
 func (g *Game) Render(renderer *render.MasterRenderer) {
-	if g.state == state.GameMenu || g.state == state.Game {
+	if g.state == state.Game || g.state == state.GameMenu {
 		g.gamingState.Render(renderer)
 	}
 	if g.state == state.GameMenu {
 		g.inGameMenuState.Render(renderer)
 	}
 	renderer.ProcessGui(g.cursor)
+	renderer.Render()
 }

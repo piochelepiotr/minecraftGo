@@ -135,7 +135,8 @@ func (s *GamingState) Render(renderer *render.MasterRenderer) {
 	s.camera.LockOnPlayer(s.player)
 	// r.ProcessEntity(player.Entity)
 	renderer.ProcessEntities(s.world.GetChunks(s.camera))
-	renderer.Render(s.light, s.camera)
+	renderer.SetLight(s.light)
+	renderer.SetCamera(s.camera)
 }
 // NextFrame makes time pass to move to the next frame of the game
 func (s *GamingState) NextFrame() {

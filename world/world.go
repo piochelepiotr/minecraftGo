@@ -190,7 +190,7 @@ func (w *World) SetBlock(x, y, z int, b Block) {
 	if chunk, ok := w.chunks[p]; ok {
 		chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, b)
 	} else {
-		fmt.Println("ERROR when setting block in chunk ", p)
+		log.Print("ERROR when setting block in chunk ", p, " chunk isn't loaded")
 	}
 }
 
