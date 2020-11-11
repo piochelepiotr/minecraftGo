@@ -38,7 +38,8 @@ func NewMainMenuState(display *render.DisplayManager, changeState chan<- state.S
 		log.Fatalf("Error loading worlds. err:%v", err)
 	}
 	for _, worldName := range worlds {
-		menu.AddItem(worldName, func() { changeState <- state.Switch{ID: state.Game, WorldName: worldName} })
+		name := worldName
+		menu.AddItem(worldName, func() { changeState <- state.Switch{ID: state.Game, WorldName: name} })
 	}
 	menu.AddItem("Create World", func() {
 		name := generateWorldName(worlds)

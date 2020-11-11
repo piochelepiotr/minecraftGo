@@ -38,6 +38,7 @@ type GamingState struct {
 }
 // NewGamingState loads a new world
 func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
+	log.Printf("Starting game in world %s\n", worldName)
 	worldConfig, err := pworld.LoadWorld(worldName)
 	if err != nil {
 		log.Fatalf("Unable to load world %s. Err: %v", worldName, err)
