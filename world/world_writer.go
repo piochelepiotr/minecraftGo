@@ -21,9 +21,9 @@ type Config struct {
 
 func randomWorld(name string) Config {
 	seed := rand.Int63()
-	generator := NewGenerator(Config{Seed: seed})
-	player := player{PosX: 0, PosY: 0, PosZ: 0}
-	player.PosY = float32(generator.GetHeight(0, 0)) + 10
+	// generator := NewGenerator(Config{Seed: seed})
+	player := player{PosX: 0, PosY: -1, PosZ: 0}
+	// player.PosY = float32(generator.GetHeight(0, 0)) + 10
 	return Config{
 		Seed: seed,
 		Name: name,
@@ -72,6 +72,12 @@ func LoadWorld(name string) (config Config, err error) {
 
 // LoadWorlds loads the list of available worlds
 func LoadWorlds() ([]string, error) {
+	path := savesPath
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.Mkdir(path, 0755); err != nil {
+			return nil, err
+		}
+	}
 	files, err := ioutil.ReadDir(savesPath)
 	if err != nil {
 		return nil, err

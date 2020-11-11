@@ -64,7 +64,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	}
 
 	entity := entities.Entity{
-		Position:      mgl32.Vec3{worldConfig.Player.PosX, float32(pworld.WorldHeight + 20), worldConfig.Player.PosZ},
+		Position:      mgl32.Vec3{worldConfig.Player.PosX, worldConfig.Player.PosY, worldConfig.Player.PosZ},
 		Rotation:      mgl32.Vec3{0, 0, 0},
 		TexturedModel: texturedModel,
 	}
@@ -72,7 +72,10 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		Entity: entity,
 	}
 	world.LoadChunks(player.Entity.Position, false)
-	world.PlacePlayerOnGround(player)
+	if player.Entity.Position.Y() == -1 {
+		player.Entity.Position = mgl32.Vec3{player.Entity.Position.X(), float32(pworld.WorldHeight + 20), player.Entity.Position.Z()}
+		world.PlacePlayerOnGround(player)
+	}
 
 	state := &GamingState{
 		worldConfig: worldConfig,
