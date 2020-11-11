@@ -1,12 +1,25 @@
-Add Main menu:
-name of world 1
-name of world 2
-Create new world:
+# Next
 
-Create new world creates a random name
-A folder named after the world name
-The player pos in the world
+## Nicer
 
-format of world file
-(use golang to Json directly)
-{"seed": 23423498723, "player": {"pos_x": 23, "pos_y", 43, "pos_z": 32}}
+Add background cube
+
+## Gameplay
+
+Add creative mode (save that in world config)
+Can fly in creative mode
+Can run in normal mode
+Add Inventory
+Add Bar at the bottom
+Breaking blocks gives you blocks
+
+## Robustness
+
+Fix bugs whith some blocks we can't break
+Fix Bugs when jumping, being in tunnels
+
+## World
+
+better world generation (no shard edges)
+more biomes
+more structures
