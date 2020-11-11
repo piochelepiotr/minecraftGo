@@ -1,7 +1,6 @@
 package render
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 
@@ -18,12 +17,11 @@ func init() {
 type DisplayManager struct {
 	Window                    *glfw.Window
 	WindowWidth, WindowHeight int
-	MouseX                    float32
-	MouseY                    float32
 }
 
-// CreateDisplay create a glfw window
-func (d *DisplayManager) CreateDisplay() {
+// NewDisplay create a glfw window
+func NewDisplay(windowWidth, windowHeight int) *DisplayManager{
+	d := DisplayManager{WindowWidth: windowWidth, WindowHeight: windowHeight}
 	var err error
 	if err := glfw.Init(); err != nil {
 		log.Fatalln("failed to initialize glfw:", err)
@@ -46,8 +44,13 @@ func (d *DisplayManager) CreateDisplay() {
 	}
 
 	version := gl.GoStr(gl.GetString(gl.VERSION))
-	fmt.Println("OpenGL version", version)
+	log.Printf("OpenGL version: %s\n", version)
 	d.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	resizeWindow := func(w *glfw.Window, width int, height int) {
+		d.Resize(width, height)
+	}
+	d.Window.SetSizeCallback(resizeWindow)
+	return &d
 }
 
 //UpdateDisplay polls events and swap buffers
@@ -67,8 +70,6 @@ func (d *DisplayManager) GLPos(x, y float64) (float32, float32) {
 	ypos := float32(y) / float32(d.WindowHeight)
 	xpos = xpos - 0.5
 	ypos = ypos - 0.5
-	d.MouseX = xpos
-	d.MouseY = ypos
 	return xpos, ypos
 }
 

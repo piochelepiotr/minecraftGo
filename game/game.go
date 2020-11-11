@@ -41,7 +41,8 @@ type Game struct {
 }
 
 // Start starts the main event loop of the game
-func Start(aspectRatio float32, changeState chan state.StateID, display *render.DisplayManager) {
+func Start(aspectRatio float32, display *render.DisplayManager) {
+	changeState :=  make(chan state.StateID, 1)
 	generator := pworld.NewGenerator()
 	chunkLoader := pworld.NewChunkLoader(generator)
 	world := pworld.CreateWorld(generator)
@@ -121,7 +122,6 @@ func Start(aspectRatio float32, changeState chan state.StateID, display *render.
 	display.Window.SetCursorPosCallback(mouseMoveCallback)
 	display.Window.SetMouseButtonCallback(clickCallback)
 	gameState.run()
-	fmt.Println("we are here")
 
 	world.Close()
 	<-doneWriter

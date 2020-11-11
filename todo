@@ -1,0 +1,12 @@
+Add Main menu:
+name of world 1
+name of world 2
+Create new world:
+
+Create new world creates a random name
+A folder named after the world name
+The player pos in the world
+
+format of world file
+(use golang to Json directly)
+{"seed": 23423498723, "player": {"pos_x": 23, "pos_y", 43, "pos_z": 32}}
