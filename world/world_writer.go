@@ -3,7 +3,6 @@ package world
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"os"
 )
@@ -34,12 +33,15 @@ func randomWorld(name string) Config {
 
 // GenerateWorld generates a random seed, places the player and saves the world on disk
 func GenerateWorld(name string) error {
-	config := randomWorld(name)
+	return WriteWorld(randomWorld(name))
+}
+
+func WriteWorld(config Config) error {
 	data, err := json.Marshal(&config)
 	if err != nil {
 		return err
 	}
-	path := savesPath + "/" + name
+	path := savesPath + "/" + config.Name
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		if err := os.Mkdir(path, 0755); err != nil {
 			return err
@@ -53,7 +55,6 @@ func GenerateWorld(name string) error {
 
 // LoadWorld loads the world config from local file
 func LoadWorld(name string) (config Config, err error) {
-	log.Printf("Loading world %s\n", name)
 	path := savesPath + "/" + name + "/" + "config.json"
 	if _, err := os.Stat(path); err != nil {
 		return Config{}, err

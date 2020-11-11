@@ -23,6 +23,7 @@ type keyPressed struct {
 
 // GamingState is the 3D state
 type GamingState struct {
+	worldConfig pworld.Config
 	world       *pworld.World
 	player      *entities.Player
 	camera      *entities.Camera
@@ -62,7 +63,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	}
 
 	entity := entities.Entity{
-		Position:      mgl32.Vec3{0, float32(pworld.WorldHeight + 20), 0},
+		Position:      mgl32.Vec3{worldConfig.Player.PosX, float32(pworld.WorldHeight + 20), worldConfig.Player.PosZ},
 		Rotation:      mgl32.Vec3{0, 0, 0},
 		TexturedModel: texturedModel,
 	}
@@ -73,6 +74,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	world.PlacePlayerOnGround(player)
 
 	state := &GamingState{
+		worldConfig: worldConfig,
 		cursor:      loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
 		world:       world,
 		player:      player,
@@ -90,6 +92,13 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 func (s *GamingState) Close() {
 	s.world.Close()
 	<-s.doneWriter
+	pos := s.player.Entity.Position
+	s.worldConfig.Player.PosX = pos.X()
+	s.worldConfig.Player.PosY = pos.Y()
+	s.worldConfig.Player.PosZ = pos.Z()
+	if err := pworld.WriteWorld(s.worldConfig); err != nil {
+		log.Fatalf("Error saving world. %v\n", err)
+	}
 }
 
 func (s *GamingState) clickCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
