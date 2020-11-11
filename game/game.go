@@ -15,7 +15,7 @@ import (
 // Game is the state in which the player is playing
 type Game struct {
 	cursor      guis.GuiTexture
-	changeState chan state.ID
+	changeState chan state.Switch
 	display     *render.DisplayManager
 	state state.ID
 	gamingState *GamingState
@@ -24,7 +24,7 @@ type Game struct {
 
 // Start starts the main event loop of the game
 func Start(display *render.DisplayManager) {
-	changeState :=  make(chan state.ID, 1)
+	changeState :=  make(chan state.Switch, 1)
 	gameState := &Game{
 		cursor:      loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
 		inGameMenuState: NewInGameMenuState(display, changeState),
@@ -34,7 +34,7 @@ func Start(display *render.DisplayManager) {
 		state: state.Empty,
 	}
 
-	gameState.switchState(state.Game)
+	gameState.switchState(state.Switch{ID: state.Game})
 
 	gameState.run()
 	gameState.gamingState.Close()
@@ -71,15 +71,14 @@ func (g *Game) run() {
 
 }
 
-func (g *Game) switchState(newState state.ID) {
+func (g *Game) switchState(newState state.Switch) {
 	switch g.state  {
 	case state.Game:
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		g.gamingState.pause()
 	default:
 	}
-	g.state = newState
-	switch g.state {
+	switch newState.ID {
 	case state.Game:
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 		g.display.Window.SetKeyCallback(g.gamingState.keyCallback)
@@ -91,6 +90,7 @@ func (g *Game) switchState(newState state.ID) {
 		g.display.Window.SetMouseButtonCallback(g.inGameMenuState.clickCallback)
 	default:
 	}
+	g.state = newState.ID
 }
 
 // Update is called every second

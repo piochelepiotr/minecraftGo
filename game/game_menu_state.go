@@ -11,9 +11,9 @@ type InGameMenuState struct {
 	display     *render.DisplayManager
 }
 
-func NewInGameMenuState(display *render.DisplayManager, changeState chan<- state.ID) *InGameMenuState{
+func NewInGameMenuState(display *render.DisplayManager, changeState chan<- state.Switch) *InGameMenuState{
 	menu := pmenu.CreateMenu(display.AspectRatio())
-	menu.AddItem("Resume game", func() { changeState <- state.Game })
+	menu.AddItem("Resume game", func() { changeState <- state.Switch{ID: state.Game} })
 	menu.AddItem("Exit game", func() { display.Window.SetShouldClose(true) })
 	menu.AddItem("Watch YouTube", func() {})
 	menu.AddItem("Go to Website", func() {})

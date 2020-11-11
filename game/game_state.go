@@ -30,10 +30,10 @@ type GamingState struct {
 	settings *settings
 	doneWriter <-chan struct{}
 	display     *render.DisplayManager
-	changeState chan<- state.ID
+	changeState chan<- state.Switch
 }
 // NewGamingState loads a new world
-func NewGamingState(display *render.DisplayManager, changeState chan<- state.ID) *GamingState{
+func NewGamingState(display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
 	generator := pworld.NewGenerator()
 	chunkLoader := pworld.NewChunkLoader(generator)
 	world := pworld.CreateWorld(generator)
@@ -113,7 +113,7 @@ func (s *GamingState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 		} else if key == glfw.KeySpace {
 			s.keyPressed.spacePressed = true
 		} else if key == glfw.KeyEscape {
-			s.changeState <- state.GameMenu
+			s.changeState <- state.Switch{ID: state.GameMenu}
 		}
 	} else if action == glfw.Release {
 		if key == glfw.KeyW {
