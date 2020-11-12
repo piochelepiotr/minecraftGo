@@ -15,7 +15,7 @@ func CreateFontShader() FontShader {
 		s.bindAttribute(0, "position\x00")
 		s.bindAttribute(1, "textureCoords\x00")
 	}
-	s := FontShader{Program: CreateShader("shaders/fontShader.vert", "shaders/fontShader.frag", bindAttributes)}
+	s := FontShader{Program: CreateShader("fontShader.vert", "fontShader.frag", bindAttributes)}
 	s.getAllUniformLocations()
 	return s
 }

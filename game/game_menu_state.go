@@ -2,8 +2,8 @@ package game
 
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
-	pmenu "github.com/piochelepiotr/minecraftGo/menu"
-	"github.com/piochelepiotr/minecraftGo/render"
+	pmenu "github.com/piochelepiotr/minecraftGo/game_engine/menu"
+	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/state"
 )
 type InGameMenuState struct {

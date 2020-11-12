@@ -3,8 +3,8 @@ package game
 import (
 	"fmt"
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/piochelepiotr/minecraftGo/loader"
-	"github.com/piochelepiotr/minecraftGo/render"
+	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
+	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/state"
 	"time"
 )

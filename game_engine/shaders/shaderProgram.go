@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const shadersDir = "game_engine/shaders/"
+
 type ShaderProgram struct {
 	ProgramID        uint32
 	VertexShaderId   uint32
@@ -50,7 +52,7 @@ func (s *ShaderProgram) bindAttribute(attribute uint32, variableName string) {
 }
 
 func loadShader(file string, shaderType uint32) uint32 {
-	dat, err := ioutil.ReadFile(file)
+	dat, err := ioutil.ReadFile(shadersDir + file)
 	if err != nil {
 		panic(err)
 	}

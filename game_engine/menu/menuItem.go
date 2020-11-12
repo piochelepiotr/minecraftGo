@@ -4,10 +4,10 @@ import (
 	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/font"
-	pfont "github.com/piochelepiotr/minecraftGo/font"
-	"github.com/piochelepiotr/minecraftGo/guis"
-	"github.com/piochelepiotr/minecraftGo/loader"
+	"github.com/piochelepiotr/minecraftGo/game_engine/font"
+	pfont "github.com/piochelepiotr/minecraftGo/game_engine/font"
+	"github.com/piochelepiotr/minecraftGo/game_engine/guis"
+	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 )
 
 const (

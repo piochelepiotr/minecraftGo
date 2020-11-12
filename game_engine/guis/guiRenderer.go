@@ -1,8 +1,8 @@
 package guis
 
 import (
-    "github.com/piochelepiotr/minecraftGo/models"
-    "github.com/piochelepiotr/minecraftGo/shaders"
+    "github.com/piochelepiotr/minecraftGo/game_engine/models"
+    "github.com/piochelepiotr/minecraftGo/game_engine/shaders"
     "github.com/piochelepiotr/minecraftGo/toolbox"
 	"github.com/go-gl/gl/v4.1-core/gl"
 )

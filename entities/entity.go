@@ -2,7 +2,7 @@ package entities
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/models"
+	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 )
 
 type Entity struct {

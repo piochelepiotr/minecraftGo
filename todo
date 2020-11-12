@@ -15,11 +15,24 @@ Breaking blocks gives you blocks
 Fix bugs whith some blocks we can't break
 Fix Bugs when jumping, being in tunnels
 
+Separate UI from world generation
+Only the loader can load blocks
+Speed of player doesn't depend on refresh rate
+
 ## World
 
 better world generation (no sharp edges)
 more biomes
 more structures
+load structures from json files
+create structure generator
 
 ## doing
 Add Inventory
+
+- Add square item renderer
+- Add opacity box
+- Add 9 squares
+- Add selected square
+- Scrolling changes selected square
+- Add 3d model of block? how to do that?

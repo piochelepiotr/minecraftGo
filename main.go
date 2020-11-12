@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/piochelepiotr/minecraftGo/game"
-	"github.com/piochelepiotr/minecraftGo/render"
+	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 )
 
 const windowWidth = 800

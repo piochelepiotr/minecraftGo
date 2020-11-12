@@ -3,8 +3,8 @@ package world
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/geometry"
-	"github.com/piochelepiotr/minecraftGo/loader"
-	"github.com/piochelepiotr/minecraftGo/models"
+	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
+	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 )
 
 const (

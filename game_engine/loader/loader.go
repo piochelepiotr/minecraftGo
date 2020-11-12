@@ -13,10 +13,10 @@ import (
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/font"
-	"github.com/piochelepiotr/minecraftGo/guis"
-	"github.com/piochelepiotr/minecraftGo/models"
-	"github.com/piochelepiotr/minecraftGo/shaders"
+	"github.com/piochelepiotr/minecraftGo/game_engine/font"
+	"github.com/piochelepiotr/minecraftGo/game_engine/guis"
+	"github.com/piochelepiotr/minecraftGo/game_engine/models"
+	"github.com/piochelepiotr/minecraftGo/game_engine/shaders"
 	texturesPackage "github.com/piochelepiotr/minecraftGo/textures"
 )
 

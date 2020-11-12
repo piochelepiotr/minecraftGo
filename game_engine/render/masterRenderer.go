@@ -2,11 +2,11 @@ package render
 
 import (
 	"github.com/piochelepiotr/minecraftGo/entities"
-	"github.com/piochelepiotr/minecraftGo/font"
-	pguis "github.com/piochelepiotr/minecraftGo/guis"
-	"github.com/piochelepiotr/minecraftGo/loader"
-	"github.com/piochelepiotr/minecraftGo/models"
-	"github.com/piochelepiotr/minecraftGo/shaders"
+	"github.com/piochelepiotr/minecraftGo/game_engine/font"
+	pguis "github.com/piochelepiotr/minecraftGo/game_engine/guis"
+	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
+	"github.com/piochelepiotr/minecraftGo/game_engine/models"
+	"github.com/piochelepiotr/minecraftGo/game_engine/shaders"
 )
 
 // MasterRenderer is the main renderer that will render

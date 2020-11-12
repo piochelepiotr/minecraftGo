@@ -1,10 +1,10 @@
 package menu
 
 import (
-	"github.com/piochelepiotr/minecraftGo/font"
-	"github.com/piochelepiotr/minecraftGo/guis"
-	"github.com/piochelepiotr/minecraftGo/loader"
-	"github.com/piochelepiotr/minecraftGo/render"
+	"github.com/piochelepiotr/minecraftGo/game_engine/font"
+	"github.com/piochelepiotr/minecraftGo/game_engine/guis"
+	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
+	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 )
 
 // Menu is the menu of the game
