@@ -17,6 +17,7 @@ type Config struct {
 	Name   string `json:"name"`
 	Seed   int64  `json:"seed"`
 	Player player `json:"player"`
+	Creative bool `json:"creative"`
 }
 
 func randomWorld(name string) Config {

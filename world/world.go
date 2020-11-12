@@ -384,7 +384,9 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 		if !(forward || backward) {
 			player.Speed = entities.Friction(player.Speed, dt)
 		}
-		player.Speed = entities.Gravity(player.Speed, dt, touchGround)
+		if !player.InFlight {
+			player.Speed = entities.Gravity(player.Speed, dt, touchGround)
+		}
 	}
 	player.LastMove = now
 }

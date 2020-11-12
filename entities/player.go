@@ -8,39 +8,41 @@ import (
 )
 
 const (
-	//TopSpeed in m/s
-	TopSpeed float32 = 5
-	vTopSpeed float32 = 20
-	JumpHeight float32 = 1.1
-	G = 50
-	BreakingAcceleration = 100
+	//topSpeed in m/s
+	topSpeed             float32 = 5
+	topFlightVSpeed      float32 = 5
+	topVSpeed            float32 = 20
+	jumpHeight           float32 = 1.1
+	g                            = 50
+	breakingAcceleration         = 100
 )
 
-//JumpSpeed is the vertical speed when jumping
-var JumpSpeed = float32(math.Sqrt(float64(2*G*JumpHeight)))
+//jumpSpeed is the vertical speed when jumping
+var jumpSpeed = float32(math.Sqrt(float64(2* g * jumpHeight)))
 
-// Acceleration is the player acceleration in m/s2
-var acceleration = mgl32.Vec3{10, -G, 10}
+// acceleration is the player acceleration in m/s2
+var acceleration = mgl32.Vec3{10, -g, 10}
 
 //Player is the player of the game
 type Player struct {
 	Entity   Entity
 	Speed    mgl32.Vec3
 	LastMove time.Time
+	InFlight bool
 }
 
 func (p *Player) HSpeed() mgl32.Vec3 {
 	return mgl32.Vec3{p.Speed.X(), 0, p.Speed.Z()}
 }
 
-func limitSpeed(speed mgl32.Vec3) mgl32.Vec3 {
+func limitHSpeed(speed mgl32.Vec3) mgl32.Vec3 {
 	v2 := math.Pow(float64(speed.X()), 2) + math.Pow(float64(speed.Z()), 2)
 	x := speed.X()
 	z := speed.Z()
 	if v2 > 0 {
 		v := float32(math.Sqrt(v2))
-		if v > TopSpeed {
-			d := TopSpeed / v
+		if v > topSpeed {
+			d := topSpeed / v
 			x = x * d
 			z = z * d
 		}
@@ -68,19 +70,19 @@ func (p *Player) SideFacingDir(dist float32) mgl32.Vec3 {
 
 // Accelerate increases the speed forward
 func (p *Player) Accelerate(dist float32) {
-	p.Speed = limitSpeed(p.Speed.Add(p.FacingDir(dist)))
+	p.Speed = limitHSpeed(p.Speed.Add(p.FacingDir(dist)))
 }
 
 // Accelerate increases the speed forward
 func (p *Player) LeftAccelerate(dist float32) {
-	p.Speed = limitSpeed(p.Speed.Add(p.SideFacingDir(dist)))
+	p.Speed = limitHSpeed(p.Speed.Add(p.SideFacingDir(dist)))
 }
 
 // speed in m/s, acc in m/s2, t in s
 func friction(x float32, z float32, t float32) float32 {
 	v2 := math.Pow(float64(x), 2) + math.Pow(float64(z), 2)
 	speed := float32(math.Sqrt(v2))
-	speed -= BreakingAcceleration * t
+	speed -= breakingAcceleration * t
 	if speed <= 0 {
 		return 0
 	}
@@ -97,14 +99,14 @@ func Friction(speed mgl32.Vec3, t float32) mgl32.Vec3 {
 	}
 }
 
-// Gravity returns new speed after grabity has been applied
+// Gravity returns new speed after gravity has been applied
 //speed in m/s, acc in m/s2, t in s
 func Gravity(speed mgl32.Vec3, t float32, touchGround bool) mgl32.Vec3 {
 	vSpeed := float32(speed.Y())
 	if !touchGround {
 		vSpeed = speed.Y() + acceleration.Y()*t
-		if vSpeed < -vTopSpeed {
-			vSpeed = -vTopSpeed
+		if vSpeed < -topVSpeed {
+			vSpeed = -topVSpeed
 		}
 	}
 	return mgl32.Vec3{
@@ -123,7 +125,7 @@ func (p *Player) Forward() mgl32.Vec3 {
 func (p *Player) Jump() {
 	p.Speed = mgl32.Vec3{
 		p.Speed.X(),
-		JumpSpeed,
+		jumpSpeed,
 		p.Speed.Z(),
 	}
 }
@@ -134,8 +136,9 @@ func (p *Player) PosPlus(e float32) mgl32.Vec3 {
 }
 
 //Move updates the player's speed according to pressed keys
-func (p *Player) Move(forward, backward, jump, ground, right, left bool) {
+func (p *Player) Move(forward, backward, up, down, onGround, right, left bool) {
 	if forward {
+		// this isn't good, it's not a function of time
 		p.Accelerate(0.5)
 		// fmt.Printf("speed is %f\n", p.Speed.Len())
 	}
@@ -148,7 +151,23 @@ func (p *Player) Move(forward, backward, jump, ground, right, left bool) {
 	if left {
 		p.LeftAccelerate(5)
 	}
-	if jump && ground {
-		p.Jump()
+	if p.InFlight {
+		if up {
+			p.Speed[1] += 0.5
+			if p.Speed[1] > topFlightVSpeed {
+				p.Speed[1] = topFlightVSpeed
+			}
+		} else if down {
+			p.Speed[1] -= 0.5
+			if p.Speed[1] < -topFlightVSpeed {
+				p.Speed[1] = -topFlightVSpeed
+			}
+		} else {
+			p.Speed[1] = 0
+		}
+	} else {
+		if up && onGround {
+			p.Jump()
+		}
 	}
 }

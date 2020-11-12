@@ -6,10 +6,7 @@ Add background cube
 
 ## Gameplay
 
-Add creative mode (save that in world config)
-Can fly in creative mode
 Can run in normal mode
-Add Inventory
 Add Bar at the bottom
 Breaking blocks gives you blocks
 
@@ -20,6 +17,9 @@ Fix Bugs when jumping, being in tunnels
 
 ## World
 
-better world generation (no shard edges)
+better world generation (no sharp edges)
 more biomes
 more structures
+
+## doing
+Add Inventory

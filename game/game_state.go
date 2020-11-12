@@ -11,14 +11,17 @@ import (
 	"github.com/piochelepiotr/minecraftGo/state"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
 	"log"
+	"time"
 )
 
 type keyPressed struct {
+	previousSpacePressed time.Time
 	wPressed     bool
 	aPressed     bool
 	dPressed     bool
 	sPressed     bool
 	spacePressed bool
+	shiftPressed bool
 }
 
 // GamingState is the 3D state
@@ -133,6 +136,17 @@ func (s *GamingState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 			s.keyPressed.sPressed = true
 		} else if key == glfw.KeySpace {
 			s.keyPressed.spacePressed = true
+			if s.worldConfig.Creative {
+				now := time.Now()
+				if now.Sub(s.keyPressed.previousSpacePressed) < s.settings.doublePressDelay {
+					log.Println("flying", s.player.InFlight)
+					s.player.InFlight = !s.player.InFlight
+					s.player.Speed[1] = 0
+				}
+				s.keyPressed.previousSpacePressed = now
+			}
+		} else if key == glfw.KeyLeftShift {
+			s.keyPressed.shiftPressed = true
 		} else if key == glfw.KeyEscape {
 			s.changeState <- state.Switch{ID: state.GameMenu}
 		}
@@ -147,6 +161,8 @@ func (s *GamingState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 			s.keyPressed.sPressed = false
 		} else if key == glfw.KeySpace {
 			s.keyPressed.spacePressed = false
+		} else if key == glfw.KeyLeftShift {
+			s.keyPressed.shiftPressed = false
 		}
 	}
 }
@@ -171,10 +187,11 @@ func (s *GamingState) NextFrame() {
 	backward := s.keyPressed.sPressed
 	right := s.keyPressed.dPressed
 	left := s.keyPressed.aPressed
-	jump := s.keyPressed.spacePressed
+	up := s.keyPressed.spacePressed
+	down := s.keyPressed.shiftPressed
 	touchGround := s.world.TouchesGround(s.player)
-	s.player.Move(forward, backward, jump, touchGround, right, left)
-	s.world.MovePlayer(s.player, forward, backward, jump, touchGround)
+	s.player.Move(forward, backward, up, down, touchGround, right, left)
+	s.world.MovePlayer(s.player, forward, backward, up, touchGround)
 }
 // Update is called every second
 func (s *GamingState) Update() {
