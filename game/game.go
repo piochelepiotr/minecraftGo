@@ -29,11 +29,19 @@ func Start(display *render.DisplayManager) {
 		state: state.Empty,
 	}
 
+	display.ResizeCallBack = gameState.Resize
+
 	gameState.switchState(state.Switch{ID: state.MainMenu})
 
 	gameState.run()
 	// switch to empty state to close correctly everything
 	gameState.switchState(state.Switch{ID: state.Empty})
+}
+
+func (g *Game) Resize(aspectRatio float32) {
+	if g.state == state.GameMenu || g.state == state.Game {
+		g.gamingState.Resize(aspectRatio)
+	}
 }
 
 func (g *Game) run() {

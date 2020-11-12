@@ -94,7 +94,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		doneWriter: doneWriter,
 		display: display,
 		changeState: changeState,
-		bottomBar: ux.NewBottomBar(),
+		bottomBar: ux.NewBottomBar(display.AspectRatio()),
 	}
 	return state
 }
@@ -205,4 +205,8 @@ func (s *GamingState) Update() {
 // pause is used when menu is opened
 func (s *GamingState) pause() {
 	s.keyPressed = keyPressed{}
+}
+
+func (s *GamingState) Resize(aspectRatio float32) {
+	s.bottomBar.Resize(aspectRatio)
 }
