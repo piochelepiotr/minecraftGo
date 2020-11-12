@@ -39,6 +39,15 @@ func NewBottomBar(aspectRatio float32) *BottomBar {
 	return b
 }
 
+func (b *BottomBar) OffsetSelectedItem(offset int) {
+	b.selectedItem += offset
+	b.selectedItem %= bottomBarItems
+	if b.selectedItem < 0 {
+		b.selectedItem += bottomBarItems
+	}
+	b.selectItem(b.selectedItem)
+}
+
 func (b *BottomBar) selectItem(i int) {
 	b.selectedItem = i
 	b.buildItems()

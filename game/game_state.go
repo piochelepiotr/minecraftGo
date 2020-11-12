@@ -40,6 +40,8 @@ type GamingState struct {
 	display     *render.DisplayManager
 	changeState chan<- state.Switch
 	bottomBar *ux.BottomBar
+
+	scroll float64
 }
 // NewGamingState loads a new world
 func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
@@ -169,6 +171,16 @@ func (s *GamingState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 		}
 	}
 }
+
+func (s *GamingState) scrollCallBack(w *glfw.Window, xoff float64, yoff float64) {
+	s.scroll += yoff
+	offset := int(s.scroll / s.settings.scrollStep)
+	if offset != 0 {
+		s.scroll -= float64(offset) * s.settings.scrollStep
+		s.bottomBar.OffsetSelectedItem(offset)
+	}
+}
+
 // Render renders all objects on the screen
 func (s *GamingState) Render(renderer *render.MasterRenderer) {
 	// why here?

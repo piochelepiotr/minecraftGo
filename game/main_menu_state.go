@@ -72,3 +72,6 @@ func (s *MainMenuState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, 
 func (s *MainMenuState) Render(renderer *render.MasterRenderer) {
 	s.menu.Render(renderer)
 }
+
+func (s *MainMenuState) scrollCallBack(w *glfw.Window, xoff float64, yoff float64) {
+}

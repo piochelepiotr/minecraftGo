@@ -97,17 +97,20 @@ func (g *Game) switchState(newState state.Switch) {
 		g.display.Window.SetKeyCallback(g.gamingState.keyCallback)
 		g.display.Window.SetCursorPosCallback(g.gamingState.mouseMoveCallback)
 		g.display.Window.SetMouseButtonCallback(g.gamingState.clickCallback)
+		g.display.Window.SetScrollCallback(g.gamingState.scrollCallBack)
 	case state.GameMenu:
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		g.display.Window.SetKeyCallback(g.inGameMenuState.keyCallback)
 		g.display.Window.SetCursorPosCallback(g.inGameMenuState.mouseMoveCallback)
 		g.display.Window.SetMouseButtonCallback(g.inGameMenuState.clickCallback)
+		g.display.Window.SetScrollCallback(g.inGameMenuState.scrollCallBack)
 	case state.MainMenu:
 		g.mainMenuState = NewMainMenuState(g.display, g.changeState)
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		g.display.Window.SetKeyCallback(g.mainMenuState.keyCallback)
 		g.display.Window.SetCursorPosCallback(g.mainMenuState.mouseMoveCallback)
 		g.display.Window.SetMouseButtonCallback(g.mainMenuState.clickCallback)
+		g.display.Window.SetScrollCallback(g.mainMenuState.scrollCallBack)
 	default:
 	}
 	g.state = newState.ID
