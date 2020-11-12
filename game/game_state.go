@@ -9,6 +9,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/state"
+	"github.com/piochelepiotr/minecraftGo/ux"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
 	"log"
 	"time"
@@ -38,6 +39,7 @@ type GamingState struct {
 	doneWriter <-chan struct{}
 	display     *render.DisplayManager
 	changeState chan<- state.Switch
+	bottomBar *ux.BottomBar
 }
 // NewGamingState loads a new world
 func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
@@ -92,6 +94,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		doneWriter: doneWriter,
 		display: display,
 		changeState: changeState,
+		bottomBar: ux.NewBottomBar(),
 	}
 	return state
 }
@@ -175,6 +178,7 @@ func (s *GamingState) Render(renderer *render.MasterRenderer) {
 	renderer.SetLight(s.light)
 	renderer.SetCamera(s.camera)
 	renderer.ProcessGui(s.cursor)
+	s.bottomBar.Render(renderer)
 }
 // NextFrame makes time pass to move to the next frame of the game
 func (s *GamingState) NextFrame() {
