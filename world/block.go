@@ -37,7 +37,7 @@ var blockFaces = map[Block]map[Face]Block{
 }
 
 var blockColors = map[Block]mgl32.Vec3{
-	Leaves: {0, 1, 0},
+	Leaves: {55.0/255.0, 97.0/255.0, 43.0/255.0},
 }
 
 type Face byte

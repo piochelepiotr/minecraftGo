@@ -59,19 +59,29 @@ func makeStructure(x, y, z int) *Structure {
 }
 
 func makeTree() *Structure {
-	s := makeStructure(3, 5, 3)
-	s.blocks[1][0][1] = Tree
-	s.blocks[1][1][1] = Tree
-	s.blocks[1][2][1] = Tree
-	s.blocks[1][3][1] = Tree
-	s.blocks[1][4][1] = Leaves
-	s.blocks[1][3][0] = Leaves
-	s.blocks[1][3][2] = Leaves
-	s.blocks[0][3][1] = Leaves
-	s.blocks[2][3][1] = Leaves
+	s := makeStructure(5, 7, 5)
+	for x := 0; x < 5; x++ {
+		for y := 3; y < 5; y++ {
+			for z := 0; z < 5; z++ {
+				s.blocks[x][y][z] = Leaves
+			}
+		}
+	}
+	for x := 1; x < 4; x++ {
+		for z := 1; z < 4; z++ {
+			s.blocks[x][5][z] = Leaves
+		}
+	}
+	for y := 0; y < 6; y++ {
+		s.blocks[2][y][2] = Tree
+	}
+	for i := 1; i < 4; i++ {
+		s.blocks[i][6][2] = Leaves
+		s.blocks[2][6][i] = Leaves
+	}
 	s.p = treeProbability
-	s.originX = 1
-	s.originZ = 1
+	s.originX = 2
+	s.originZ = 2
 	return s
 }
 

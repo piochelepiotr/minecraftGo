@@ -12,6 +12,8 @@ import (
 const nearPlane = 0.1
 const farPlane = 1000
 
+var skyColor = mgl32.Vec3{130.0/255.0, 166.0/255.0, 255.0/255.0}
+
 var Fov = mgl32.DegToRad(70.0)
 
 type Renderer struct {
@@ -42,7 +44,7 @@ func DisableCulling() {
 func (r *Renderer) Prepare() {
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.ClearColor(0.12, 0.65, 1, 1)
+	gl.ClearColor(skyColor[0], skyColor[1], skyColor[2], 1)
 }
 
 func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
