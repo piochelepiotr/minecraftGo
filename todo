@@ -30,9 +30,6 @@ create structure generator
 ## doing
 Add Inventory
 
-- Add square item renderer
-- Add opacity box
-- Add 9 squares
 - Add selected square
 - Scrolling changes selected square
 - Add 3d model of block? how to do that?
