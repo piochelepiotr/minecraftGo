@@ -17,6 +17,13 @@ type RawChunk struct {
 	Start            geometry.Point
 }
 
+func NewOneBlockChunk(b Block) RawChunk{
+	return RawChunk{
+		size: 1,
+		blocks: []Block{b},
+	}
+}
+
 func (c *RawChunk) encode() []byte {
 	encoded := make([]byte, 1, len(c.blocks) + 1)
 	encoded[0] = chunkFormatV1

@@ -9,23 +9,21 @@ import (
 	"github.com/piochelepiotr/minecraftGo/toolbox"
 )
 
-const nearPlane = 0.1
-const farPlane = 1000
+const guiNearPlane = 0.1
+const guiFarPlane = 1000
 
-var skyColor = mgl32.Vec3{130.0/255.0, 166.0/255.0, 255.0/255.0}
 
-var Fov = mgl32.DegToRad(70.0)
+var gui3dFov = mgl32.DegToRad(70.0)
 
-type Renderer struct {
+type gui3dRenderer struct {
 	projectionMatrix mgl32.Mat4
-	shader           shaders.StaticShader
+	shader           shaders.Gui3dShader
 }
 
-func CreateRenderer() Renderer {
-	shader := shaders.CreateStaticShader()
-	EnableCulling()
-	var r Renderer
-	r.projectionMatrix = mgl32.Perspective(Fov, float32(800.0)/600.0, nearPlane, farPlane)
+func createGui3dRenderer() gui3dRenderer {
+	shader := shaders.CreateGui3dShader()
+	var r gui3dRenderer
+	r.projectionMatrix = mgl32.Perspective(Fov, float32(800.0)/600.0, guiNearPlane, guiFarPlane)
 	r.shader = shader
 	shader.Program.Start()
 	shader.LoadProjectionMatrix(r.projectionMatrix)
@@ -33,16 +31,7 @@ func CreateRenderer() Renderer {
 	return r
 }
 
-func EnableCulling() {
-	gl.Enable(gl.CULL_FACE)
-	gl.CullFace(gl.BACK)
-}
-
-func DisableCulling() {
-	gl.Disable(gl.CULL_FACE)
-}
-
-func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
+func (r *gui3dRenderer) prepareTexturedModel(model models.TexturedModel) {
 	if model.Transparent {
 		DisableCulling()
 	}
@@ -55,7 +44,7 @@ func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
 	gl.BindTexture(gl.TEXTURE_2D, model.ModelTexture.Id)
 }
 
-func (r *Renderer) unbindTexturedModel() {
+func (r *gui3dRenderer) unbindTexturedModel() {
 	EnableCulling()
 	gl.DisableVertexAttribArray(0)
 	gl.DisableVertexAttribArray(1)
@@ -64,17 +53,18 @@ func (r *Renderer) unbindTexturedModel() {
 	gl.BindVertexArray(0)
 }
 
-func (r *Renderer) prepareEntity(entity entities.Entity) {
+func (r *gui3dRenderer) prepareEntity(entity entities.Entity) {
 	transformationMatrix := toolbox.CreateTransformationMatrix(entity.Position, entity.Rotation, 1)
 	r.shader.LoadTransformationMatrix(transformationMatrix)
 }
 
-func (r *Renderer) Render(allEntities map[models.TexturedModel][]entities.Entity, camera *entities.Camera) {
+func (r *gui3dRenderer) render(allEntities map[models.TexturedModel][]entities.Entity) {
+	// clear depth buffer before displaying 3d guis or they could be rendered behind the world
+	gl.Clear(gl.DEPTH_BUFFER_BIT)
 	r.shader.Program.Start()
 	defer r.shader.Program.Stop()
-	if camera != nil {
-		r.shader.LoadViewMatrix(camera)
-	}
+	camera := entities.Camera{Position: mgl32.Vec3{0, 0, 0}, Rotation: mgl32.Vec3{0, 0, 0}}
+	r.shader.LoadViewMatrix(&camera)
 	for model := range allEntities {
 		r.prepareTexturedModel(model)
 		for _, entity := range allEntities[model] {
@@ -85,6 +75,6 @@ func (r *Renderer) Render(allEntities map[models.TexturedModel][]entities.Entity
 	}
 }
 // CleanUp frees memory for the shader
-func (r *Renderer) CleanUp() {
+func (r *gui3dRenderer) cleanUp() {
 		r.shader.CleanUp()
 }

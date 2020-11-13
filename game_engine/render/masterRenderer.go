@@ -1,6 +1,8 @@
 package render
 
 import (
+	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
 	"github.com/piochelepiotr/minecraftGo/game_engine/font"
 	pguis "github.com/piochelepiotr/minecraftGo/game_engine/guis"
@@ -11,12 +13,14 @@ import (
 // MasterRenderer is the main renderer that will render
 // everything on the screen
 type MasterRenderer struct {
-	light        *entities.Light
 	camera       *entities.Camera
 	renderer     Renderer
 	fontRenderer FontRenderer
 	guiRenderer  pguis.GuiRenderer
-	entities     map[models.TexturedModel][]entities.Entity //keep an eye on the key
+	// gui3DRenderer is used to render cubes in the inventory
+	gui3DRenderer gui3dRenderer
+	entities     map[models.TexturedModel][]entities.Entity
+	guis3D     map[models.TexturedModel][]entities.Entity
 	guis         []pguis.GuiTexture
 	texts        []font.GUIText
 }
@@ -27,27 +31,32 @@ func CreateMasterRenderer() *MasterRenderer {
 	r.fontRenderer = CreateFontRenderer()
 	r.guiRenderer = loader.CreateGuiRenderer()
 	r.renderer = CreateRenderer()
+	r.gui3DRenderer = createGui3dRenderer()
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
+	r.guis3D = make(map[models.TexturedModel][]entities.Entity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
 	return &r
 }
 
-// Render renders everything on the screen
-func (r *MasterRenderer) Render() {
-	r.renderer.Prepare()
-	r.renderer.Render(r.entities, r.light, r.camera)
-	r.guiRenderer.Render(r.guis)
-	r.fontRenderer.Render(r.texts)
-	r.entities = make(map[models.TexturedModel][]entities.Entity)
-	r.guis = make([]pguis.GuiTexture, 0)
-	r.texts = make([]font.GUIText, 0)
-	r.light = nil
-	r.camera = nil
+func (r *MasterRenderer) Prepare() {
+	gl.Enable(gl.DEPTH_TEST)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.ClearColor(skyColor[0], skyColor[1], skyColor[2], 1)
 }
 
-func (r *MasterRenderer) SetLight(light *entities.Light) {
-	r.light = light
+// Render renders everything on the screen
+func (r *MasterRenderer) Render() {
+	r.Prepare()
+	r.renderer.Render(r.entities, r.camera)
+	r.guiRenderer.Render(r.guis)
+	r.fontRenderer.Render(r.texts)
+	r.gui3DRenderer.render(r.guis3D)
+	r.entities = make(map[models.TexturedModel][]entities.Entity)
+	r.guis3D = make(map[models.TexturedModel][]entities.Entity)
+	r.guis = make([]pguis.GuiTexture, 0)
+	r.texts = make([]font.GUIText, 0)
+	r.camera = nil
 }
 
 func (r *MasterRenderer) SetCamera(camera *entities.Camera) {
@@ -86,9 +95,16 @@ func (r *MasterRenderer) ProcessTexts(texts []font.GUIText) {
 	r.texts = append(r.texts, texts...)
 }
 
+func (r *MasterRenderer) Process3DGui(entity entities.Entity) {
+	entity.Position = mgl32.Vec3{0, 0, -10}
+	entity.Rotation = mgl32.Vec3{0.5, 0.5, 0}
+	r.guis3D[entity.TexturedModel] = append(r.entities[entity.TexturedModel], entity)
+}
+
 // CleanUp frees memory for the shader and the renderers
 func (r *MasterRenderer) CleanUp() {
 	r.renderer.CleanUp()
 	r.fontRenderer.CleanUp()
 	r.guiRenderer.CleanUp()
+	r.gui3DRenderer.cleanUp()
 }

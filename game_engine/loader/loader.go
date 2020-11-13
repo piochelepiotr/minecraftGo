@@ -143,8 +143,6 @@ func LoadModelTexture(file string, numberOfRows uint32) texturesPackage.ModelTex
 	}
 	return texturesPackage.ModelTexture{
 		Id:           textureID,
-		Reflectivity: 1,
-		ShineDamper:  10,
 		NumberOfRows: numberOfRows,
 	}
 }
