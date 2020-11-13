@@ -50,7 +50,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	}
 	generator := pworld.NewGenerator(worldConfig)
 	chunkLoader := pworld.NewChunkLoader(worldConfig, generator)
-	world := pworld.CreateWorld(worldConfig, generator)
+	world := pworld.NewWorld(worldConfig, display.AspectRatio(), generator)
 	doneWriter := pworld.NewChunkWriter(worldConfig, world.OutChunksToWrite())
 	chunkLoader.Run(world.ChunkLoadDecisions)
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
@@ -210,5 +210,6 @@ func (s *GamingState) pause() {
 }
 
 func (s *GamingState) Resize(aspectRatio float32) {
+	s.world.Resize(aspectRatio)
 	s.bottomBar.Resize(aspectRatio)
 }

@@ -1,13 +1,12 @@
 package world
 
 import (
-	"fmt"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
-	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
+	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/textures"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
 	"log"
@@ -28,7 +27,6 @@ const (
 
 // todo: fov isn't the same vertically and horizontally, so something is wrong with that. It depends on
 // aspectRatio
-var cosAngle = float32(math.Cos(float64(render.Fov/2 + mgl32.DegToRad(10))))
 var alwaysRenderDistance = float32(20)//float32(ChunkSize)/ float32( 2 * math.Tan(float64(render.Fov/2)))
 
 // World contains all the blocks of the world in chunks that load around the player
@@ -39,6 +37,16 @@ type World struct {
 	ChunkLoadDecisions chan geometry.Point
 	chunksToWrite chan *RawChunk
 	worldConfig Config
+	cosFovAngle float32
+}
+
+func (w *World) Resize(aspectRatio float32) {
+	fovY := render.Fov
+	fovX := fovY * aspectRatio
+	// fov := float32(math.Max(float64(fovX), float64(fovY)))
+	fov := float32(math.Sqrt(math.Pow(float64(fovX), 2) + math.Pow(float64(fovY), 2)))
+	// log.Println("fov", mgl32.RadToDeg(fov))
+	w.cosFovAngle = float32(math.Cos(float64(fov/2)))
 }
 
 func (w *World) OutChunksToWrite() <-chan *RawChunk {
@@ -49,12 +57,11 @@ func getChunk(x int) int {
 	return int(math.Floor(float64(x)/float64(ChunkSize))) * ChunkSize
 }
 
-// CreateWorld initiate the world
-func CreateWorld(worldConfig Config, generator *Generator) *World {
+// NewWorld initiate the world
+func NewWorld(worldConfig Config, aspectRatio float32, generator *Generator) *World {
 	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
 	chunks := make(map[geometry.Point]*Chunk)
-	fmt.Println(alwaysRenderDistance)
-	return &World{
+	w := &World{
 		chunks:       chunks,
 		modelTexture: modelTexture,
 		generator: generator,
@@ -62,17 +69,19 @@ func CreateWorld(worldConfig Config, generator *Generator) *World {
 		chunksToWrite: make(chan *RawChunk, 200),
 		worldConfig: worldConfig,
 	}
+	w.Resize(aspectRatio)
+	return w
 }
 
-func isVisible(cameraPosition, coneVector, pos mgl32.Vec3) bool {
+func (w *World) isVisible(cameraPosition, coneVector, pos mgl32.Vec3) bool {
 	if cameraPosition.Sub(pos).Len() < alwaysRenderDistance {
 		return true
 	}
 	toPoint := pos.Sub(cameraPosition).Normalize()
 	dotProduct := toPoint.Dot(coneVector)
-	return dotProduct > cosAngle
+	return dotProduct > w.cosFovAngle
 }
-func isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bool {
+func (w *World) isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bool {
 	points := []mgl32.Vec3{
 		{0, 0, 0},
 		{float32(ChunkSize), 0, 0},
@@ -84,7 +93,7 @@ func isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bool {
 		{float32(ChunkSize), float32(ChunkSize), float32(ChunkSize)},
 	}
 	for _, p := range points {
-		if isVisible(cameraPosition, coneVector, corner.Add(p)) {
+		if w.isVisible(cameraPosition, coneVector, corner.Add(p)) {
 			return true
 		}
 	}
@@ -106,7 +115,7 @@ func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 				float32(chunk.Start.Y),
 				float32(chunk.Start.Z),
 		}
-		if !isChunkVisible(camera.Position, coneVector, p) {
+		if !w.isChunkVisible(camera.Position, coneVector, p) {
 			continue
 		}
 		chunkEntity := entities.Entity{
