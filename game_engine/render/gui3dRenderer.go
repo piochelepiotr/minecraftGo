@@ -7,10 +7,11 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/shaders"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
+	"log"
 )
 
 const guiNearPlane = 0.1
-const guiFarPlane = 10
+const guiFarPlane = 100
 
 
 var gui3dFov = mgl32.DegToRad(70.0)
@@ -18,17 +19,30 @@ var gui3dFov = mgl32.DegToRad(70.0)
 type gui3dRenderer struct {
 	projectionMatrix mgl32.Mat4
 	shader           shaders.Gui3dShader
+	camera entities.Camera
+	pos mgl32.Vec3
 }
 
-func createGui3dRenderer() gui3dRenderer {
+func createGui3dRenderer(aspectRatio float32) gui3dRenderer {
 	shader := shaders.CreateGui3dShader()
 	var r gui3dRenderer
-	r.projectionMatrix = mgl32.Perspective(Fov, float32(800.0)/600.0, guiNearPlane, guiFarPlane)
 	r.shader = shader
-	shader.Program.Start()
-	shader.LoadProjectionMatrix(r.projectionMatrix)
-	shader.Program.Stop()
+	r.camera = entities.Camera{Position: mgl32.Vec3{0, 0, 0}, Rotation: mgl32.Vec3{0, 0, 0}}
+	r.shader.Program.Start()
+	r.shader.LoadViewMatrix(&r.camera)
+	r.shader.Program.Stop()
+	r.resize(aspectRatio)
+	r.pos = r.placeItem()
+	log.Print(r.pos)
 	return r
+}
+
+func (r *gui3dRenderer) resize(aspectRatio float32) {
+	r.projectionMatrix = mgl32.Perspective(gui3dFov, aspectRatio, guiNearPlane, guiFarPlane)
+	r.shader.Program.Start()
+	r.shader.LoadProjectionMatrix(r.projectionMatrix)
+	r.shader.LoadAspectRatio(aspectRatio)
+	r.shader.Program.Stop()
 }
 
 func (r *gui3dRenderer) prepareTexturedModel(model models.TexturedModel) {
@@ -53,23 +67,36 @@ func (r *gui3dRenderer) unbindTexturedModel() {
 	gl.BindVertexArray(0)
 }
 
-func (r *gui3dRenderer) prepareEntity(entity entities.Entity) {
-	transformationMatrix := toolbox.CreateTransformationMatrix(entity.Position, entity.Rotation, 1)
+const (
+	itemOffsetX float32 = 0
+	itemOffsetY float32 = 0
+)
+
+func (r *gui3dRenderer) prepareEntity(entity entities.Gui3dEntity) {
+	transformationMatrix := toolbox.CreateTransformationMatrix(mgl32.Vec3{}, mgl32.Vec3{0.5, 0.5, 0.25}, 0.1)
 	r.shader.LoadTransformationMatrix(transformationMatrix)
+	r.shader.LoadTranslation(entity.Translation)
 }
 
-func (r *gui3dRenderer) render(allEntities map[models.TexturedModel][]entities.Entity) {
+func (r *gui3dRenderer) placeItem() mgl32.Vec3{
+	// invView * invProjection * gl_Position = worldPosition;
+	viewMatrix := toolbox.CreateViewMatrix(r.camera.Position, r.camera.Rotation)
+	invView := viewMatrix.Inv()
+	invProjection := r.projectionMatrix.Inv()
+	p := invView.Mul4(invProjection).Mul4x1(mgl32.Vec4{0.5, 0.5, -5, 1})
+	log.Println("p", p)
+	log.Println("and inverted", r.projectionMatrix.Mul4(viewMatrix).Mul4x1(p))
+	return p.Vec3()
+}
+
+func (r *gui3dRenderer) render(allEntities map[models.TexturedModel][]entities.Gui3dEntity) {
 	// clear depth buffer before displaying 3d guis or they could be rendered behind the world
 	gl.Clear(gl.DEPTH_BUFFER_BIT)
 	r.shader.Program.Start()
 	defer r.shader.Program.Stop()
-	camera := entities.Camera{Position: mgl32.Vec3{0, 0, 0}, Rotation: mgl32.Vec3{0, 0, 0}}
-	r.shader.LoadViewMatrix(&camera)
 	for model := range allEntities {
 		r.prepareTexturedModel(model)
 		for _, entity := range allEntities[model] {
-			entity.Position = mgl32.Vec3{0, 0, -1}
-			entity.Rotation = mgl32.Vec3{0.5, 0.5, 0}
 			r.prepareEntity(entity)
 			gl.DrawElements(gl.TRIANGLES, model.RawModel.VertexCount, gl.UNSIGNED_INT, gl.PtrOffset(0))
 		}

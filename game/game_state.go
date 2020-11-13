@@ -39,8 +39,6 @@ type GamingState struct {
 	display     *render.DisplayManager
 	changeState chan<- state.Switch
 	bottomBar *ux.BottomBar
-	testBlock entities.Entity
-
 	scroll float64
 }
 // NewGamingState loads a new world
@@ -91,24 +89,8 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		display: display,
 		changeState: changeState,
 		bottomBar: ux.NewBottomBar(display.AspectRatio()),
-		testBlock: getTestBlock(),
 	}
 	return state
-}
-
-func getTestBlock() entities.Entity {
-	testBlock := pworld.NewChunk(pworld.NewOneBlockChunk(pworld.Grass))
-	testBlock.Load()
-	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
-
-	p := mgl32.Vec3{0, 0, 0}
-	return entities.Entity{
-		TexturedModel: models.TexturedModel{
-			RawModel:     testBlock.Model,
-			ModelTexture: modelTexture,
-		},
-		Position: p,
-	}
 }
 
 func (s *GamingState) Close() {
@@ -198,8 +180,6 @@ func (s *GamingState) Render(renderer *render.MasterRenderer) {
 	renderer.ProcessEntities(s.world.GetChunks(s.camera))
 	renderer.SetCamera(s.camera)
 	renderer.ProcessGui(s.cursor)
-	s.testBlock.Position = s.camera.Position.Add(mgl32.Vec3{10, -5, 10})
-	renderer.Process3DGui(s.testBlock)
 	s.bottomBar.Render(renderer)
 }
 // NextFrame makes time pass to move to the next frame of the game

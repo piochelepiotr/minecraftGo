@@ -2,9 +2,12 @@ package ux
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/piochelepiotr/minecraftGo/entities"
 	"github.com/piochelepiotr/minecraftGo/game_engine/guis"
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
+	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
+	pworld "github.com/piochelepiotr/minecraftGo/world"
 )
 
 const bottomBarHeight float32 = 0.1
@@ -18,12 +21,23 @@ type BottomBar struct {
 	items []guis.GuiTexture
 	selectedItem int
 	aspectRatio float32
+	objects []pworld.Block
+	objectsGuis []entities.Gui3dEntity
 }
 
 func NewBottomBar(aspectRatio float32) *BottomBar {
 	selectedItemTextureID := loader.LoadGuiTexture("textures/selected_item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	itemTextureID := loader.LoadGuiTexture("textures/item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	items := make([]guis.GuiTexture, 0, bottomBarItems)
+	objects := make([]pworld.Block, 0, bottomBarItems)
+	for i := 0; i < bottomBarItems; i++ {
+		objects = append(objects, pworld.Grass)
+	}
+	objects[0] = pworld.Cactus
+	objects[1] = pworld.Dirt
+	objects[2] = pworld.Sand
+	objects[3] = pworld.Stone
+	objects[4] = pworld.Tree
 	for i := 0; i < bottomBarItems; i++ {
 		items = append(items, guis.GuiTexture{})
 	}
@@ -34,9 +48,34 @@ func NewBottomBar(aspectRatio float32) *BottomBar {
 		itemTextureID: itemTextureID,
 		selectItemTextureID: selectedItemTextureID,
 		aspectRatio: aspectRatio,
+		objects: objects,
 	}
+	b.buildObjectsGuis()
 	b.selectItem(2)
 	return b
+}
+
+func (b *BottomBar) buildObjectsGuis() {
+	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
+	b.objectsGuis = make([]entities.Gui3dEntity, bottomBarItems)
+	for i, o := range b.objects {
+		if o != pworld.Air {
+			model := models.TexturedModel{
+				RawModel:     getBlockModel(o),
+				ModelTexture: modelTexture,
+			}
+			b.objectsGuis[i] = entities.Gui3dEntity{
+				Entity: entities.Entity{TexturedModel: model},
+			}
+		}
+	}
+}
+
+func getBlockModel(b pworld.Block) models.RawModel {
+	block := pworld.NewChunk(pworld.NewOneBlockChunk(b))
+	block.ChangeOrigin()
+	block.Load()
+	return block.Model
 }
 
 func (b *BottomBar) OffsetSelectedItem(offset int) {
@@ -67,6 +106,7 @@ func (b *BottomBar) buildItems() {
 	for i := range b.items {
 		b.items[i].Scale = mgl32.Vec2{itemWidth, bottomBarHeight}
 		b.items[i].Position = mgl32.Vec2{float32(i-bottomBarItems/2)*2 * itemWidth, posY}
+		b.objectsGuis[i].Translation = mgl32.Vec2{float32(i-bottomBarItems/2)*2 * itemWidth, posY}
 		if i == b.selectedItem {
 			b.items[i].Id = b.selectItemTextureID
 			s := b.items[i].Scale
@@ -86,4 +126,10 @@ func (b *BottomBar) Render(renderer *render.MasterRenderer) {
 		}
 	}
 	renderer.ProcessGui(b.items[b.selectedItem])
+	for i, gui := range b.objectsGuis {
+		if b.objects[i] != pworld.Air {
+			renderer.Process3DGui(gui)
+		}
+	}
 }
+

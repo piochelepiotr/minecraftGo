@@ -12,11 +12,13 @@ out vec3 surfaceNormal;
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+uniform vec2 translation;
+uniform float aspectRatio;
 
 void main(void) {
-    // vec4 worldPosition = transformationMatrix * vec4(position, 1);
-    gl_Position = transformationMatrix * vec4(position.x*0.5, position.y*0.5, position.z*0.5, 1);
-    // gl_Position = projectionMatrix * viewMatrix * worldPosition + vec4(2, -4, -2, 0);
+    vec4 worldPosition = transformationMatrix * vec4(position, 1);
+    // gl_Position = projectionMatrix * viewMatrix * worldPosition;
+    gl_Position = worldPosition * vec4(1/aspectRatio, 1, 1, 1) + vec4(translation.x, -translation.y, 0, 0);
     pass_textureCoords = textureCoords;
     pass_colors = colors;
     surfaceNormal = (transformationMatrix * vec4(normal, 0)).xyz;

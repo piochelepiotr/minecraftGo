@@ -63,6 +63,16 @@ func NewChunk(raw RawChunk) *Chunk {
 	return &chunk
 }
 
+// Change origin is a hack for the inventory
+func (c *Chunk) ChangeOrigin() {
+	// now the origin of the cube is in the middle
+	for i := range c.model.vertices {
+		c.model.vertices[i][0] -= 0.5
+		c.model.vertices[i][1] -= 0.5
+		c.model.vertices[i][2] -= 0.5
+	}
+}
+
 // NumberRowsTextures is the number number of rows on the texture image
 const NumberRowsTextures int = 16
 

@@ -19,7 +19,7 @@ type MasterRenderer struct {
 	// gui3DRenderer is used to render cubes in the inventory
 	gui3DRenderer gui3dRenderer
 	entities     map[models.TexturedModel][]entities.Entity
-	guis3D     map[models.TexturedModel][]entities.Entity
+	guis3D     map[models.TexturedModel][]entities.Gui3dEntity
 	guis         []pguis.GuiTexture
 	texts        []font.GUIText
 }
@@ -30,9 +30,9 @@ func CreateMasterRenderer(aspectRatio float32) *MasterRenderer {
 	r.fontRenderer = CreateFontRenderer()
 	r.guiRenderer = loader.CreateGuiRenderer()
 	r.renderer = CreateRenderer(aspectRatio)
-	r.gui3DRenderer = createGui3dRenderer()
+	r.gui3DRenderer = createGui3dRenderer(aspectRatio)
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
-	r.guis3D = make(map[models.TexturedModel][]entities.Entity)
+	r.guis3D = make(map[models.TexturedModel][]entities.Gui3dEntity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
 	return &r
@@ -40,6 +40,7 @@ func CreateMasterRenderer(aspectRatio float32) *MasterRenderer {
 
 func (r *MasterRenderer) Resize(aspectRatio float32) {
 	r.renderer.resize(aspectRatio)
+	r.gui3DRenderer.resize(aspectRatio)
 }
 
 func (r *MasterRenderer) Prepare() {
@@ -54,9 +55,9 @@ func (r *MasterRenderer) Render() {
 	r.renderer.Render(r.entities, r.camera)
 	r.guiRenderer.Render(r.guis)
 	r.fontRenderer.Render(r.texts)
-	// r.gui3DRenderer.render(r.guis3D)
+	r.gui3DRenderer.render(r.guis3D)
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
-	r.guis3D = make(map[models.TexturedModel][]entities.Entity)
+	r.guis3D = make(map[models.TexturedModel][]entities.Gui3dEntity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
 }
@@ -97,8 +98,8 @@ func (r *MasterRenderer) ProcessTexts(texts []font.GUIText) {
 	r.texts = append(r.texts, texts...)
 }
 
-func (r *MasterRenderer) Process3DGui(entity entities.Entity) {
-	r.guis3D[entity.TexturedModel] = append(r.entities[entity.TexturedModel], entity)
+func (r *MasterRenderer) Process3DGui(entity entities.Gui3dEntity) {
+	r.guis3D[entity.Entity.TexturedModel] = append(r.guis3D[entity.Entity.TexturedModel], entity)
 }
 
 // CleanUp frees memory for the shader and the renderers

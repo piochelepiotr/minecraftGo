@@ -26,6 +26,8 @@ const (
 	playerHeight float32 = 1.8
 )
 
+// todo: fov isn't the same vertically and horizontally, so something is wrong with that. It depends on
+// aspectRatio
 var cosAngle = float32(math.Cos(float64(render.Fov/2 + mgl32.DegToRad(10))))
 var alwaysRenderDistance = float32(20)//float32(ChunkSize)/ float32( 2 * math.Tan(float64(render.Fov/2)))
 
