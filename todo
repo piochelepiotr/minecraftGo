@@ -2,7 +2,9 @@
 
 ## Nicer
 
-Add background cube
+Add clouds
+when hovering over a block, selects it
+when breaking block, add particules
 
 ## Gameplay
 
@@ -18,7 +20,8 @@ unloading of vaos/vbos should be done when deleting chunks
 fix race condition in loader
 
 Separate UI from world generation
-Only the loader can load blocks
+Only the loader can load chunks
+Don't use hack with chunks for inventory
 Speed of player doesn't depend on refresh rate
 
 ## World
