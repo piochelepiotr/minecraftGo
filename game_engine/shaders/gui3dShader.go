@@ -20,7 +20,7 @@ func CreateGui3dShader() Gui3dShader {
         s.bindAttribute(2, "normal\x00")
         s.bindAttribute(3, "colors\x00")
     }
-    s:= Gui3dShader{Program: CreateShader("vertexGui3dShader.txt", "fragmentShader.txt", bindAttributes)}
+    s:= Gui3dShader{Program: CreateShader("gui3dShader.vert", "fragmentShader.txt", bindAttributes)}
     s.getAllUniformLocations()
     return s
 }

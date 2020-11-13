@@ -21,16 +21,20 @@ type Renderer struct {
 	shader           shaders.StaticShader
 }
 
-func CreateRenderer() Renderer {
+func CreateRenderer(aspectRatio float32) Renderer {
 	shader := shaders.CreateStaticShader()
 	EnableCulling()
 	var r Renderer
-	r.projectionMatrix = mgl32.Perspective(Fov, float32(800.0)/600.0, nearPlane, farPlane)
 	r.shader = shader
-	shader.Program.Start()
-	shader.LoadProjectionMatrix(r.projectionMatrix)
-	shader.Program.Stop()
+	r.resize(aspectRatio)
 	return r
+}
+
+func (r *Renderer) resize(aspectRatio float32) {
+	r.projectionMatrix = mgl32.Perspective(Fov, aspectRatio, nearPlane, farPlane)
+	r.shader.Program.Start()
+	r.shader.LoadProjectionMatrix(r.projectionMatrix)
+	r.shader.Program.Stop()
 }
 
 func EnableCulling() {

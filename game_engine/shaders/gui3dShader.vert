@@ -14,8 +14,9 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
 void main(void) {
-    vec4 worldPosition = transformationMatrix * vec4(position, 1);
-    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+    // vec4 worldPosition = transformationMatrix * vec4(position, 1);
+    gl_Position = transformationMatrix * vec4(position.x*0.5, position.y*0.5, position.z*0.5, 1);
+    // gl_Position = projectionMatrix * viewMatrix * worldPosition + vec4(2, -4, -2, 0);
     pass_textureCoords = textureCoords;
     pass_colors = colors;
     surfaceNormal = (transformationMatrix * vec4(normal, 0)).xyz;

@@ -17,6 +17,7 @@ type Game struct {
 	gamingState *GamingState
 	inGameMenuState *InGameMenuState
 	mainMenuState *MainMenuState
+	renderer *render.MasterRenderer
 }
 
 // Start starts the main event loop of the game
@@ -27,11 +28,13 @@ func Start(display *render.DisplayManager) {
 		changeState: changeState,
 		display:     display,
 		state: state.Empty,
+		renderer: render.CreateMasterRenderer(display.AspectRatio()),
 	}
 
 	display.ResizeCallBack = gameState.Resize
 
-	gameState.switchState(state.Switch{ID: state.MainMenu})
+	// gameState.switchState(state.Switch{ID: state.MainMenu})
+	gameState.switchState(state.Switch{ID: state.Game, WorldName: "World_0"})
 
 	gameState.run()
 	// switch to empty state to close correctly everything
@@ -39,14 +42,14 @@ func Start(display *render.DisplayManager) {
 }
 
 func (g *Game) Resize(aspectRatio float32) {
+	g.renderer.Resize(aspectRatio)
 	if g.state == state.GameMenu || g.state == state.Game {
 		g.gamingState.Resize(aspectRatio)
 	}
 }
 
 func (g *Game) run() {
-	renderer := render.CreateMasterRenderer()
-	defer renderer.CleanUp()
+	defer g.renderer.CleanUp()
 	defer loader.CleanUp()
 
 	updateTicker := time.NewTicker(time.Second)
@@ -66,7 +69,7 @@ func (g *Game) run() {
 			g.switchState(stateID)
 		default:
 			frames++
-			g.Render(renderer)
+			g.Render(g.renderer)
 			g.NextFrame()
 			g.display.UpdateDisplay()
 			glfw.PollEvents()

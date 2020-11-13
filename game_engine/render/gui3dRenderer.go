@@ -10,7 +10,7 @@ import (
 )
 
 const guiNearPlane = 0.1
-const guiFarPlane = 1000
+const guiFarPlane = 10
 
 
 var gui3dFov = mgl32.DegToRad(70.0)
@@ -68,6 +68,8 @@ func (r *gui3dRenderer) render(allEntities map[models.TexturedModel][]entities.E
 	for model := range allEntities {
 		r.prepareTexturedModel(model)
 		for _, entity := range allEntities[model] {
+			entity.Position = mgl32.Vec3{0, 0, -1}
+			entity.Rotation = mgl32.Vec3{0.5, 0.5, 0}
 			r.prepareEntity(entity)
 			gl.DrawElements(gl.TRIANGLES, model.RawModel.VertexCount, gl.UNSIGNED_INT, gl.PtrOffset(0))
 		}

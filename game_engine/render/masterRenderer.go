@@ -2,7 +2,6 @@ package render
 
 import (
 	"github.com/go-gl/gl/v4.1-core/gl"
-	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
 	"github.com/piochelepiotr/minecraftGo/game_engine/font"
 	pguis "github.com/piochelepiotr/minecraftGo/game_engine/guis"
@@ -26,17 +25,21 @@ type MasterRenderer struct {
 }
 
 // CreateMasterRenderer creates a MasterRenderer class
-func CreateMasterRenderer() *MasterRenderer {
+func CreateMasterRenderer(aspectRatio float32) *MasterRenderer {
 	var r MasterRenderer
 	r.fontRenderer = CreateFontRenderer()
 	r.guiRenderer = loader.CreateGuiRenderer()
-	r.renderer = CreateRenderer()
+	r.renderer = CreateRenderer(aspectRatio)
 	r.gui3DRenderer = createGui3dRenderer()
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
 	r.guis3D = make(map[models.TexturedModel][]entities.Entity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
 	return &r
+}
+
+func (r *MasterRenderer) Resize(aspectRatio float32) {
+	r.renderer.resize(aspectRatio)
 }
 
 func (r *MasterRenderer) Prepare() {
@@ -51,12 +54,11 @@ func (r *MasterRenderer) Render() {
 	r.renderer.Render(r.entities, r.camera)
 	r.guiRenderer.Render(r.guis)
 	r.fontRenderer.Render(r.texts)
-	r.gui3DRenderer.render(r.guis3D)
+	// r.gui3DRenderer.render(r.guis3D)
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
 	r.guis3D = make(map[models.TexturedModel][]entities.Entity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
-	r.camera = nil
 }
 
 func (r *MasterRenderer) SetCamera(camera *entities.Camera) {
@@ -96,8 +98,6 @@ func (r *MasterRenderer) ProcessTexts(texts []font.GUIText) {
 }
 
 func (r *MasterRenderer) Process3DGui(entity entities.Entity) {
-	entity.Position = mgl32.Vec3{0, 0, -10}
-	entity.Rotation = mgl32.Vec3{0.5, 0.5, 0}
 	r.guis3D[entity.TexturedModel] = append(r.entities[entity.TexturedModel], entity)
 }
 
