@@ -21,7 +21,8 @@ type Renderer struct {
 	shader           shaders.StaticShader
 }
 
-func CreateRenderer(shader shaders.StaticShader) Renderer {
+func CreateRenderer() Renderer {
+	shader := shaders.CreateStaticShader()
 	EnableCulling()
 	var r Renderer
 	r.projectionMatrix = mgl32.Perspective(Fov, float32(800.0)/600.0, nearPlane, farPlane)
@@ -75,7 +76,15 @@ func (r *Renderer) prepareEntity(entity entities.Entity) {
 	r.shader.LoadTransformationMatrix(transformationMatrix)
 }
 
-func (r *Renderer) Render(allEntities map[models.TexturedModel][]entities.Entity) {
+func (r *Renderer) Render(allEntities map[models.TexturedModel][]entities.Entity, light *entities.Light, camera *entities.Camera) {
+	r.shader.Program.Start()
+	defer r.shader.Program.Stop()
+	if light != nil {
+		r.shader.LoadLight(light)
+	}
+	if camera != nil {
+		r.shader.LoadViewMatrix(camera)
+	}
 	for model := range allEntities {
 		r.prepareTexturedModel(model)
 		for _, entity := range allEntities[model] {
@@ -84,4 +93,8 @@ func (r *Renderer) Render(allEntities map[models.TexturedModel][]entities.Entity
 		}
 		r.unbindTexturedModel()
 	}
+}
+// CleanUp frees memory for the shader
+func (r *Renderer) CleanUp() {
+		r.shader.CleanUp()
 }

@@ -15,6 +15,7 @@ type GuiRenderer struct {
 
 func (r *GuiRenderer) Render(guis []GuiTexture) {
     r.Shader.Program.Start()
+    defer r.Shader.Program.Stop()
     gl.BindVertexArray(r.Quad.VaoID)
     gl.EnableVertexAttribArray(0)
     gl.Enable(gl.BLEND)
@@ -31,7 +32,6 @@ func (r *GuiRenderer) Render(guis []GuiTexture) {
     gl.Disable(gl.BLEND)
     gl.DisableVertexAttribArray(0)
     gl.BindVertexArray(0)
-    r.Shader.Program.Stop()
 }
 
 func (r *GuiRenderer) CleanUp() {

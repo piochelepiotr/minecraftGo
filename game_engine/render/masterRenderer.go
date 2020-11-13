@@ -6,7 +6,6 @@ import (
 	pguis "github.com/piochelepiotr/minecraftGo/game_engine/guis"
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
-	"github.com/piochelepiotr/minecraftGo/game_engine/shaders"
 )
 
 // MasterRenderer is the main renderer that will render
@@ -14,7 +13,6 @@ import (
 type MasterRenderer struct {
 	light        *entities.Light
 	camera       *entities.Camera
-	shader       shaders.StaticShader
 	renderer     Renderer
 	fontRenderer FontRenderer
 	guiRenderer  pguis.GuiRenderer
@@ -28,8 +26,7 @@ func CreateMasterRenderer() *MasterRenderer {
 	var r MasterRenderer
 	r.fontRenderer = CreateFontRenderer()
 	r.guiRenderer = loader.CreateGuiRenderer()
-	r.shader = shaders.CreateStaticShader()
-	r.renderer = CreateRenderer(r.shader)
+	r.renderer = CreateRenderer()
 	r.entities = make(map[models.TexturedModel][]entities.Entity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
@@ -39,20 +36,10 @@ func CreateMasterRenderer() *MasterRenderer {
 // Render renders everything on the screen
 func (r *MasterRenderer) Render() {
 	r.renderer.Prepare()
-	r.shader.Program.Start()
-	if r.light != nil {
-		r.shader.LoadLight(r.light)
-	}
-	if r.camera != nil {
-		r.shader.LoadViewMatrix(r.camera)
-	}
-	r.renderer.Render(r.entities)
-	r.shader.Program.Stop()
+	r.renderer.Render(r.entities, r.light, r.camera)
 	r.guiRenderer.Render(r.guis)
 	r.fontRenderer.Render(r.texts)
-	for model := range r.entities {
-		delete(r.entities, model)
-	}
+	r.entities = make(map[models.TexturedModel][]entities.Entity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
 	r.light = nil
@@ -101,7 +88,7 @@ func (r *MasterRenderer) ProcessTexts(texts []font.GUIText) {
 
 // CleanUp frees memory for the shader and the renderers
 func (r *MasterRenderer) CleanUp() {
-	r.shader.CleanUp()
+	r.renderer.CleanUp()
 	r.fontRenderer.CleanUp()
 	r.guiRenderer.CleanUp()
 }
