@@ -7,7 +7,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/shaders"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
-	"log"
 )
 
 const guiNearPlane = 0.1
@@ -20,7 +19,6 @@ type gui3dRenderer struct {
 	projectionMatrix mgl32.Mat4
 	shader           shaders.Gui3dShader
 	camera entities.Camera
-	pos mgl32.Vec3
 }
 
 func createGui3dRenderer(aspectRatio float32) gui3dRenderer {
@@ -32,8 +30,6 @@ func createGui3dRenderer(aspectRatio float32) gui3dRenderer {
 	r.shader.LoadViewMatrix(&r.camera)
 	r.shader.Program.Stop()
 	r.resize(aspectRatio)
-	r.pos = r.placeItem()
-	log.Print(r.pos)
 	return r
 }
 
@@ -67,26 +63,10 @@ func (r *gui3dRenderer) unbindTexturedModel() {
 	gl.BindVertexArray(0)
 }
 
-const (
-	itemOffsetX float32 = 0
-	itemOffsetY float32 = 0
-)
-
 func (r *gui3dRenderer) prepareEntity(entity entities.Gui3dEntity) {
 	transformationMatrix := toolbox.CreateTransformationMatrix(mgl32.Vec3{}, mgl32.Vec3{0.5, 0.5, 0.25}, 0.1)
 	r.shader.LoadTransformationMatrix(transformationMatrix)
 	r.shader.LoadTranslation(entity.Translation)
-}
-
-func (r *gui3dRenderer) placeItem() mgl32.Vec3{
-	// invView * invProjection * gl_Position = worldPosition;
-	viewMatrix := toolbox.CreateViewMatrix(r.camera.Position, r.camera.Rotation)
-	invView := viewMatrix.Inv()
-	invProjection := r.projectionMatrix.Inv()
-	p := invView.Mul4(invProjection).Mul4x1(mgl32.Vec4{0.5, 0.5, -5, 1})
-	log.Println("p", p)
-	log.Println("and inverted", r.projectionMatrix.Mul4(viewMatrix).Mul4x1(p))
-	return p.Vec3()
 }
 
 func (r *gui3dRenderer) render(allEntities map[models.TexturedModel][]entities.Gui3dEntity) {

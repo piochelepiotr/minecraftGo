@@ -395,13 +395,13 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 }
 
 // ClickOnBlock removes or adds a block
-func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool) {
+func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b Block) {
 	xray := geometry.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
 	_, block, previous := w.PlaceInFront(p, xray)
 	if placeBlock {
 		if !block.Equal(previous) {
-			w.SetBlock(previous.X, previous.Y, previous.Z, Tree)
+			w.SetBlock(previous.X, previous.Y, previous.Z, b)
 		}
 	} else {
 		w.SetBlock(block.X, block.Y, block.Z, Air)

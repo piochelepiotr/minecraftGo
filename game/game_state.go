@@ -108,9 +108,9 @@ func (s *GamingState) Close() {
 func (s *GamingState) clickCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 	if action == glfw.Press {
 		if button == glfw.MouseButtonRight {
-			s.world.ClickOnBlock(s.camera, true)
+			s.world.ClickOnBlock(s.camera, true, s.bottomBar.GetSelectedBlock())
 		} else if button == glfw.MouseButtonLeft {
-			s.world.ClickOnBlock(s.camera, false)
+			s.world.ClickOnBlock(s.camera, false, pworld.Air)
 		}
 	}
 }

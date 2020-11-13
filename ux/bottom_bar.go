@@ -55,6 +55,10 @@ func NewBottomBar(aspectRatio float32) *BottomBar {
 	return b
 }
 
+func (b *BottomBar) GetSelectedBlock() pworld.Block {
+	return b.objects[b.selectedItem]
+}
+
 func (b *BottomBar) buildObjectsGuis() {
 	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
 	b.objectsGuis = make([]entities.Gui3dEntity, bottomBarItems)

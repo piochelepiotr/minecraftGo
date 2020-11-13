@@ -7,7 +7,7 @@ Add background cube
 ## Gameplay
 
 Can run in normal mode
-Add Bar at the bottom
+add inventory
 Breaking blocks gives you blocks
 
 ## Robustness
@@ -30,6 +30,3 @@ load structures from json files
 create structure generator
 
 ## doing
-Add Inventory
-
-- Add 3d model of block? how to do that?
