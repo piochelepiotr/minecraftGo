@@ -12,6 +12,7 @@ const (
 )
 
 type RawChunk struct {
+	size int
 	blocks []Block
 	Start            geometry.Point
 }
@@ -28,6 +29,7 @@ func (c *RawChunk) encode() []byte {
 func decode(data []byte, start geometry.Point) (chunk RawChunk) {
 	// for now, we only have v1
 	data = data[1:]
+	chunk.size = ChunkSize
 	chunk.Start = start
 	chunk.blocks = make([]Block, 0, len(data))
 	for _, b := range data {
@@ -47,21 +49,22 @@ type Chunk struct {
 	dirty bool
 }
 
+// NewChunk returns a new graphic chunk
+func NewChunk(raw RawChunk) *Chunk {
+	chunk := Chunk{RawChunk: raw}
+	chunk.buildFaces()
+	return &chunk
+}
+
 // NumberRowsTextures is the number number of rows on the texture image
 const NumberRowsTextures int = 16
 
 // ChunkSize is the size of a chunk in blocks
 const ChunkSize int = 16
 
-// ChunkSize2 is the area of a chunk in blocks
-const ChunkSize2 = ChunkSize * ChunkSize
-
-// ChunkSize3 is the volume of a chunk in blocks
-const ChunkSize3 = ChunkSize2 * ChunkSize
-
 // setBlockNoUpdate sets a block in a chunk, it doesn't refresh the display
 func (c *RawChunk) setBlockNoUpdate(x, y, z int, b Block) {
-	c.blocks[x*ChunkSize2+y*ChunkSize+z] = b
+	c.blocks[x*c.size*c.size+y*c.size+z] = b
 }
 
 // SetBlock sets a block in a chunk and refreshes the model
@@ -74,12 +77,12 @@ func (c *Chunk) SetBlock(x, y, z int, b Block) {
 
 // GetBlock gets the block of a chunk
 func (c *Chunk) GetBlock(x, y, z int) Block {
-	return c.blocks[x*ChunkSize2+y*ChunkSize+z]
+	return c.blocks[x*c.size*c.size+y*c.size+z]
 }
 
 // GetHeight gets the height of the chunk in blocks (not including air)
 func (c *Chunk) GetHeight(x, z int) int {
-	for y := ChunkSize - 1; y >= 0; y-- {
+	for y := c.size - 1; y >= 0; y-- {
 		if c.GetBlock(x, y, z) != Air {
 			return y + 1
 		}
@@ -119,9 +122,9 @@ func (c *Chunk) Load() {
 func (c *Chunk) buildFaces() {
 	c.model = newConstructionChunk()
 	c.transparentModel = newConstructionChunk()
-	for x := 0; x < ChunkSize; x++ {
-		for y := 0; y < ChunkSize; y++ {
-			for z := 0; z < ChunkSize; z++ {
+	for x := 0; x < c.size; x++ {
+		for y := 0; y < c.size; y++ {
+			for z := 0; z < c.size; z++ {
 				b := c.GetBlock(x, y, z)
 				transparent := b.IsTransparent()
 				//add face if the block isn't air and the block next to it is air
@@ -138,7 +141,7 @@ func (c *Chunk) buildFaces() {
 				xF := float32(x)
 				yF := float32(y)
 				zF := float32(z)
-				if b != Air && (y == ChunkSize-1 || c.GetBlock(x, y+1, z).IsTransparent()) {
+				if b != Air && (y == c.size-1 || c.GetBlock(x, y+1, z).IsTransparent()) {
 					n := mgl32.Vec3{0, 1, 0}
 					p1 := mgl32.Vec3{xF, yF + 1, zF}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
@@ -164,7 +167,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//right
-				if b != Air && (x == ChunkSize-1 || c.GetBlock(x+1, y, z).IsTransparent()) {
+				if b != Air && (x == c.size-1 || c.GetBlock(x+1, y, z).IsTransparent()) {
 					n := mgl32.Vec3{1, 0, 0}
 					p1 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
@@ -190,7 +193,7 @@ func (c *Chunk) buildFaces() {
 					}
 				}
 				//front
-				if b != Air && (z == ChunkSize-1 || c.GetBlock(x, y, z+1).IsTransparent()) {
+				if b != Air && (z == c.size-1 || c.GetBlock(x, y, z+1).IsTransparent()) {
 					n := mgl32.Vec3{0, 0, 1}
 					p1 := mgl32.Vec3{xF, yF + 1, zF + 1}
 					p2 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}

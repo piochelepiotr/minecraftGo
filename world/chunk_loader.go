@@ -39,9 +39,7 @@ func GetChunk(worldConfig Config, start geometry.Point, generator *Generator) Ra
 }
 
 func GetGraphicChunk(worldConfig Config, start geometry.Point, generator *Generator) *Chunk {
-	chunk := Chunk{RawChunk: GetChunk(worldConfig, start, generator)}
-	chunk.buildFaces()
-	return &chunk
+	return NewChunk(GetChunk(worldConfig, start, generator))
 }
 
 func LoadChunkFromSaves(worldConfig Config, start geometry.Point) (chunk RawChunk, err error) {

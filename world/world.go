@@ -90,6 +90,7 @@ func isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bool {
 }
 
 //GetChunks returns all chunks that are going to be rendered
+// no need to render chunks behind the player
 func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 	chunks := make([]entities.Entity, 0)
 	for _, chunk := range w.chunks {
