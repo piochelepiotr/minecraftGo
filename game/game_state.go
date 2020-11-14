@@ -91,8 +91,8 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		changeState: changeState,
 		bottomBar: ux.NewBottomBar(display.AspectRatio()),
 	}
-	// world.LoadChunks(player.Entity.Position)
-	state.loadChunks(player.Entity.Position)
+	world.LoadChunks(player.Entity.Position)
+	// state.loadChunks(player.Entity.Position)
 	return state
 }
 

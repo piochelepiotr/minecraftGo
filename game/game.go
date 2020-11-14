@@ -33,8 +33,8 @@ func Start(display *render.DisplayManager) {
 
 	display.ResizeCallBack = gameState.Resize
 
-	gameState.switchState(state.Switch{ID: state.MainMenu})
-	// gameState.switchState(state.Switch{ID: state.Game, WorldName: "World_0"})
+	// gameState.switchState(state.Switch{ID: state.MainMenu})
+	gameState.switchState(state.Switch{ID: state.Game, WorldName: "World_0"})
 
 	gameState.run()
 	// switch to empty state to close correctly everything
