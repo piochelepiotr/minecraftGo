@@ -33,8 +33,8 @@ func Start(display *render.DisplayManager) {
 
 	display.ResizeCallBack = gameState.Resize
 
-	// gameState.switchState(state.Switch{ID: state.MainMenu})
-	gameState.switchState(state.Switch{ID: state.Game, WorldName: "World_0"})
+	gameState.switchState(state.Switch{ID: state.MainMenu})
+	// gameState.switchState(state.Switch{ID: state.Game, WorldName: "World_0"})
 
 	gameState.run()
 	// switch to empty state to close correctly everything
@@ -59,10 +59,7 @@ func (g *Game) run() {
 	for !g.display.Window.ShouldClose() {
 		select {
 		case <-updateTicker.C:
-			start := time.Now()
 			g.Update()
-			stopTime := time.Now().Sub(start)
-			fmt.Println(stopTime)
 			fmt.Printf("FPS is %d\n", frames)
 			frames = 0
 		case stateID := <-g.changeState:

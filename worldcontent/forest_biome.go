@@ -1,29 +1,30 @@
-package world
+package worldcontent
 
 import (
 	"github.com/aquilax/go-perlin"
+	"github.com/piochelepiotr/minecraftGo/world/block"
 )
 
 const (
 	forestMinElevation = 1
 	// max is not reached, max - 1 is reached
-	forestMaxElevation = WorldHeight
+	forestMaxElevation = 16 * 3
 	forestElevationScale = 100
 	dirtLayerThikness int = 5
 )
 
 
 type ForestBiome struct {
-	structures []*Structure
+	structures []*structure
 	perlin *perlin.Perlin
 }
 
-func (f *ForestBiome) getStructures() []*Structure {
+func (f *ForestBiome) getStructures() []*structure {
 	return f.structures
 }
 
 func makeForestBiome() *ForestBiome {
-	structures := make([]*Structure, 0)
+	structures := make([]*structure, 0)
 	structures = append(structures, makeTree())
 	return &ForestBiome{
 		structures: structures,
@@ -31,18 +32,18 @@ func makeForestBiome() *ForestBiome {
 	}
 }
 
-func (f *ForestBiome) blockType(x, y, z int) Block {
+func (f *ForestBiome) blockType(x, y, z int) block.Block {
 	height := f.worldHeight(x, z)
 	if y == height {
-		return Grass
+		return block.Grass
 	}
 	if y < height && y > height - dirtLayerThikness {
-		return Dirt
+		return block.Dirt
 	}
 	if y <= height - dirtLayerThikness {
-		return Stone
+		return block.Stone
 	}
-	return Air
+	return block.Air
 }
 
 func (f *ForestBiome) worldHeight(x, z int) int {

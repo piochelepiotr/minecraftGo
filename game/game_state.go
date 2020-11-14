@@ -8,9 +8,12 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
+	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/state"
 	"github.com/piochelepiotr/minecraftGo/ux"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
+	"github.com/piochelepiotr/minecraftGo/world/block"
+	"github.com/piochelepiotr/minecraftGo/worldcontent"
 	"log"
 	"time"
 )
@@ -27,7 +30,7 @@ type keyPressed struct {
 
 // GamingState is the 3D state
 type GamingState struct {
-	worldConfig pworld.Config
+	worldContent *worldcontent.InMemoryWorld
 	world       *pworld.World
 	player      *entities.Player
 	camera      *entities.Camera
@@ -44,15 +47,14 @@ type GamingState struct {
 // NewGamingState loads a new world
 func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
 	log.Printf("Starting game in world %s\n", worldName)
-	worldConfig, err := pworld.LoadWorld(worldName)
+	worldConfig, err := worldcontent.LoadWorld(worldName)
 	if err != nil {
 		log.Fatalf("Unable to load world %s. Err: %v", worldName, err)
 	}
-	generator := pworld.NewGenerator(worldConfig)
-	chunkLoader := pworld.NewChunkLoader(worldConfig, generator)
-	world := pworld.NewWorld(worldConfig, display.AspectRatio(), generator)
-	doneWriter := pworld.NewChunkWriter(worldConfig, world.OutChunksToWrite())
-	chunkLoader.Run(world.ChunkLoadDecisions)
+	wContent := worldcontent.NewInMemoryWorld(worldConfig)
+	world := pworld.NewWorld(wContent, display.AspectRatio())
+	chunkLoader := pworld.NewChunkLoader(wContent, world.ChunksToLoad())
+	doneWriter := worldcontent.NewChunkWriter(worldConfig, wContent.OutChunksToWrite())
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
 	camera.Rotation = mgl32.Vec3{0, 0, 0}
 
@@ -71,14 +73,13 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	player := &entities.Player{
 		Entity: entity,
 	}
-	world.LoadChunks(player.Entity.Position, false)
 	if player.Entity.Position.Y() == -1 {
-		player.Entity.Position = mgl32.Vec3{player.Entity.Position.X(), float32(pworld.WorldHeight + 20), player.Entity.Position.Z()}
+		player.Entity.Position = mgl32.Vec3{player.Entity.Position.X(), float32(wContent.WorldHeight() + 20), player.Entity.Position.Z()}
 		world.PlacePlayerOnGround(player)
 	}
 
 	state := &GamingState{
-		worldConfig: worldConfig,
+		worldContent: wContent,
 		cursor:      loader.LoadGuiTexture("textures/cursor.png", mgl32.Vec2{0, 0}, mgl32.Vec2{0.02, 0.03}),
 		world:       world,
 		player:      player,
@@ -90,17 +91,38 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		changeState: changeState,
 		bottomBar: ux.NewBottomBar(display.AspectRatio()),
 	}
+	state.loadChunks(player.Entity.Position)
 	return state
+}
+
+func (s *GamingState) loadChunks(playerPos mgl32.Vec3) {
+	xPlayer := int(playerPos.X())
+	zPlayer := int(playerPos.Z())
+	chunkX := s.worldContent.ChunkStart(xPlayer)
+	chunkZ := s.worldContent.ChunkStart(zPlayer)
+	for x := s.worldContent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= s.worldContent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += s.worldContent.ChunkSize() {
+		for z := s.worldContent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= s.worldContent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += s.worldContent.ChunkSize() {
+			p := geometry.Point{X: x, Y: 0, Z: z}
+			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
+				continue
+			}
+			for y := 0; y < s.worldContent.WorldHeight()/s.worldContent.ChunkSize(); y++ {
+				s.world.AddChunk(s.chunkLoader.GetChunk(geometry.Point{x, y*s.worldContent.ChunkSize(), z}))
+			}
+		}
+	}
 }
 
 func (s *GamingState) Close() {
 	s.world.Close()
+	s.worldContent.Close()
 	<-s.doneWriter
 	pos := s.player.Entity.Position
-	s.worldConfig.Player.PosX = pos.X()
-	s.worldConfig.Player.PosY = pos.Y()
-	s.worldConfig.Player.PosZ = pos.Z()
-	if err := pworld.WriteWorld(s.worldConfig); err != nil {
+	cfg := s.worldContent.Config()
+	cfg.Player.PosX = pos.X()
+	cfg.Player.PosY = pos.Y()
+	cfg.Player.PosZ = pos.Z()
+	if err := worldcontent.WriteWorld(cfg); err != nil {
 		log.Fatalf("Error saving world. %v\n", err)
 	}
 }
@@ -110,7 +132,7 @@ func (s *GamingState) clickCallback(w *glfw.Window, button glfw.MouseButton, act
 		if button == glfw.MouseButtonRight {
 			s.world.ClickOnBlock(s.camera, true, s.bottomBar.GetSelectedBlock())
 		} else if button == glfw.MouseButtonLeft {
-			s.world.ClickOnBlock(s.camera, false, pworld.Air)
+			s.world.ClickOnBlock(s.camera, false, block.Air)
 		}
 	}
 }
@@ -133,7 +155,7 @@ func (s *GamingState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 			s.keyPressed.sPressed = true
 		} else if key == glfw.KeySpace {
 			s.keyPressed.spacePressed = true
-			if s.worldConfig.Creative {
+			if s.worldContent.Config().Creative {
 				now := time.Now()
 				if now.Sub(s.keyPressed.previousSpacePressed) < s.settings.doublePressDelay {
 					s.player.InFlight = !s.player.InFlight
@@ -185,7 +207,7 @@ func (s *GamingState) Render(renderer *render.MasterRenderer) {
 // NextFrame makes time pass to move to the next frame of the game
 func (s *GamingState) NextFrame() {
 	select {
-	case chunk := <-s.chunkLoader.LoadedChunk:
+	case chunk := <-s.chunkLoader.Chunks():
 		s.world.AddChunk(chunk)
 	default:
 	}
@@ -201,7 +223,7 @@ func (s *GamingState) NextFrame() {
 }
 // Update is called every second
 func (s *GamingState) Update() {
-	s.world.LoadChunks(s.player.Entity.Position, true)
+	// s.world.LoadChunks(s.player.Entity.Position)
 }
 
 // pause is used when menu is opened

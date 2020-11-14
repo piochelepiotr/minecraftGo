@@ -8,6 +8,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
+	"github.com/piochelepiotr/minecraftGo/world/block"
 )
 
 const bottomBarHeight float32 = 0.1
@@ -21,7 +22,7 @@ type BottomBar struct {
 	items []guis.GuiTexture
 	selectedItem int
 	aspectRatio float32
-	objects []pworld.Block
+	objects []block.Block
 	objectsGuis []entities.Gui3dEntity
 }
 
@@ -29,15 +30,15 @@ func NewBottomBar(aspectRatio float32) *BottomBar {
 	selectedItemTextureID := loader.LoadGuiTexture("textures/selected_item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	itemTextureID := loader.LoadGuiTexture("textures/item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	items := make([]guis.GuiTexture, 0, bottomBarItems)
-	objects := make([]pworld.Block, 0, bottomBarItems)
+	objects := make([]block.Block, 0, bottomBarItems)
 	for i := 0; i < bottomBarItems; i++ {
-		objects = append(objects, pworld.Grass)
+		objects = append(objects, block.Grass)
 	}
-	objects[0] = pworld.Cactus
-	objects[1] = pworld.Dirt
-	objects[2] = pworld.Sand
-	objects[3] = pworld.Stone
-	objects[4] = pworld.Tree
+	objects[0] = block.Cactus
+	objects[1] = block.Dirt
+	objects[2] = block.Sand
+	objects[3] = block.Stone
+	objects[4] = block.Tree
 	for i := 0; i < bottomBarItems; i++ {
 		items = append(items, guis.GuiTexture{})
 	}
@@ -55,7 +56,7 @@ func NewBottomBar(aspectRatio float32) *BottomBar {
 	return b
 }
 
-func (b *BottomBar) GetSelectedBlock() pworld.Block {
+func (b *BottomBar) GetSelectedBlock() block.Block {
 	return b.objects[b.selectedItem]
 }
 
@@ -63,9 +64,9 @@ func (b *BottomBar) buildObjectsGuis() {
 	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
 	b.objectsGuis = make([]entities.Gui3dEntity, bottomBarItems)
 	for i, o := range b.objects {
-		if o != pworld.Air {
+		if o != block.Air {
 			model := models.TexturedModel{
-				RawModel:     getBlockModel(o),
+				RawModel:     pworld.GetIconBlock(o),
 				ModelTexture: modelTexture,
 			}
 			b.objectsGuis[i] = entities.Gui3dEntity{
@@ -73,13 +74,6 @@ func (b *BottomBar) buildObjectsGuis() {
 			}
 		}
 	}
-}
-
-func getBlockModel(b pworld.Block) models.RawModel {
-	block := pworld.NewChunk(pworld.NewOneBlockChunk(b))
-	block.ChangeOrigin()
-	block.Load()
-	return block.Model
 }
 
 func (b *BottomBar) OffsetSelectedItem(offset int) {
@@ -131,7 +125,7 @@ func (b *BottomBar) Render(renderer *render.MasterRenderer) {
 	}
 	renderer.ProcessGui(b.items[b.selectedItem])
 	for i, gui := range b.objectsGuis {
-		if b.objects[i] != pworld.Air {
+		if b.objects[i] != block.Air {
 			renderer.Process3DGui(gui)
 		}
 	}

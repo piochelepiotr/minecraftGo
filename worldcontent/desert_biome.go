@@ -1,6 +1,9 @@
-package world
+package worldcontent
 
-import "github.com/aquilax/go-perlin"
+import (
+	"github.com/aquilax/go-perlin"
+	"github.com/piochelepiotr/minecraftGo/world/block"
+)
 
 const (
 	desertMinElevation = 1
@@ -10,16 +13,16 @@ const (
 )
 
 type DesertBiome struct {
-	structures []*Structure
+	structures []*structure
 	perlin *perlin.Perlin
 }
 
-func (d *DesertBiome) getStructures() []*Structure {
+func (d *DesertBiome) getStructures() []*structure {
 	return d.structures
 }
 
 func makeDesertBiome() *DesertBiome {
-	structures := make([]*Structure, 0)
+	structures := make([]*structure, 0)
 	structures = append(structures, makeCactus())
 	return &DesertBiome{
 		structures: structures,
@@ -27,22 +30,22 @@ func makeDesertBiome() *DesertBiome {
 	}
 }
 
-func makeCactus() *Structure {
+func makeCactus() *structure {
 	s := makeStructure(1, 4, 1)
-	s.blocks[0][0][0] = Cactus
-	s.blocks[0][1][0] = Cactus
-	s.blocks[0][2][0] = Cactus
-	s.blocks[0][3][0] = Cactus
+	s.blocks[0][0][0] = block.Cactus
+	s.blocks[0][1][0] = block.Cactus
+	s.blocks[0][2][0] = block.Cactus
+	s.blocks[0][3][0] = block.Cactus
 	s.p = 0.005
 	return s
 }
 
-func (d *DesertBiome) blockType(x, y, z int) Block {
+func (d *DesertBiome) blockType(x, y, z int) block.Block {
 	height := d.worldHeight(x, z)
 	if y <= height{
-		return Sand
+		return block.Sand
 	}
-	return Air
+	return block.Air
 }
 
 func (d *DesertBiome) worldHeight(x, z int) int {

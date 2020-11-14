@@ -2,109 +2,31 @@ package world
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
+	"github.com/piochelepiotr/minecraftGo/geometry"
+	"github.com/piochelepiotr/minecraftGo/world/block"
+	"github.com/piochelepiotr/minecraftGo/worldcontent"
 )
 
-const (
-	chunkFormatV1 = 1
-)
-
-type RawChunk struct {
-	size int
-	blocks []Block
-	Start            geometry.Point
-}
-
-func NewOneBlockChunk(b Block) RawChunk{
-	return RawChunk{
-		size: 1,
-		blocks: []Block{b},
-	}
-}
-
-func (c *RawChunk) encode() []byte {
-	encoded := make([]byte, 1, len(c.blocks) + 1)
-	encoded[0] = chunkFormatV1
-	for _, b := range c.blocks {
-		encoded = append(encoded, byte(b))
-	}
-	return encoded
-}
-
-func decode(data []byte, start geometry.Point) (chunk RawChunk) {
-	// for now, we only have v1
-	data = data[1:]
-	chunk.size = ChunkSize
-	chunk.Start = start
-	chunk.blocks = make([]Block, 0, len(data))
-	for _, b := range data {
-		chunk.blocks = append(chunk.blocks, Block(b))
-	}
-	return chunk
-}
+// numberRowsTextures is the number number of rows on the texture image
+const numberRowsTextures int = 16
 
 // Chunk is set cube of blocks
 type Chunk struct {
-	RawChunk
+	start geometry.Point
 	model            *constructionChunk
 	transparentModel *constructionChunk
 	Model            models.RawModel
 	TransparentModel models.RawModel
-	// dirty is true when the content of the chunk hasn't been save to disk yet
-	dirty bool
+	world *worldcontent.InMemoryWorld
 }
 
 // NewChunk returns a new graphic chunk
-func NewChunk(raw RawChunk) *Chunk {
-	chunk := Chunk{RawChunk: raw}
+func NewChunk(world *worldcontent.InMemoryWorld, start geometry.Point) *Chunk {
+	chunk := Chunk{world: world, start: start}
 	chunk.buildFaces()
 	return &chunk
-}
-
-// Change origin is a hack for the inventory
-func (c *Chunk) ChangeOrigin() {
-	// now the origin of the cube is in the middle
-	for i := range c.model.vertices {
-		c.model.vertices[i][0] -= 0.5
-		c.model.vertices[i][1] -= 0.5
-		c.model.vertices[i][2] -= 0.5
-	}
-}
-
-// NumberRowsTextures is the number number of rows on the texture image
-const NumberRowsTextures int = 16
-
-// ChunkSize is the size of a chunk in blocks
-const ChunkSize int = 16
-
-// setBlockNoUpdate sets a block in a chunk, it doesn't refresh the display
-func (c *RawChunk) setBlockNoUpdate(x, y, z int, b Block) {
-	c.blocks[x*c.size*c.size+y*c.size+z] = b
-}
-
-// SetBlock sets a block in a chunk and refreshes the model
-func (c *Chunk) SetBlock(x, y, z int, b Block) {
-	c.setBlockNoUpdate(x, y, z, b)
-	c.dirty = true
-	c.buildFaces()
-	c.Load()
-}
-
-// GetBlock gets the block of a chunk
-func (c *Chunk) GetBlock(x, y, z int) Block {
-	return c.blocks[x*c.size*c.size+y*c.size+z]
-}
-
-// GetHeight gets the height of the chunk in blocks (not including air)
-func (c *Chunk) GetHeight(x, z int) int {
-	for y := c.size - 1; y >= 0; y-- {
-		if c.GetBlock(x, y, z) != Air {
-			return y + 1
-		}
-	}
-	return 0
 }
 
 type constructionChunk struct {
@@ -136,131 +58,120 @@ func (c *Chunk) Load() {
 	}
 }
 
+func (c *constructionChunk) buildBlock(x, y, z float32, b block.Block, up, bottom, right, left, front, back bool) {
+	//add face if the block next to it is transparent
+	/*faces are :
+	 * up ( + y)
+	 * bottom (-y)
+	 * right (+x)
+	 * left (-x)
+	 * front (+z)
+	 * back (-z)
+	 * 0 point is : bottom, left, back
+	 */
+	//up
+	if up {
+		n := mgl32.Vec3{0, 1, 0}
+		p1 := mgl32.Vec3{x, y + 1, z}
+		p2 := mgl32.Vec3{x + 1, y + 1, z}
+		p3 := mgl32.Vec3{x + 1, y + 1, z + 1}
+		p4 := mgl32.Vec3{x, y + 1, z + 1}
+		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Top), true)
+	}
+	//bottom
+	if bottom {
+		n := mgl32.Vec3{0, -1, 0}
+		p1 := mgl32.Vec3{x, y, z}
+		p2 := mgl32.Vec3{x + 1, y, z}
+		p3 := mgl32.Vec3{x + 1, y, z + 1}
+		p4 := mgl32.Vec3{x, y, z + 1}
+		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Bottom), false)
+	}
+	//right
+	if right {
+		n := mgl32.Vec3{1, 0, 0}
+		p1 := mgl32.Vec3{x + 1, y + 1, z + 1}
+		p2 := mgl32.Vec3{x + 1, y + 1, z}
+		p3 := mgl32.Vec3{x + 1, y, z}
+		p4 := mgl32.Vec3{x + 1, y, z + 1}
+		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
+	}
+	//left
+	if left {
+		n := mgl32.Vec3{-1, 0, 0}
+		p1 := mgl32.Vec3{x, y + 1, z}
+		p2 := mgl32.Vec3{x, y + 1, z + 1}
+		p3 := mgl32.Vec3{x, y, z + 1}
+		p4 := mgl32.Vec3{x, y, z}
+		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
+	}
+	//front
+	if front {
+		n := mgl32.Vec3{0, 0, 1}
+		p1 := mgl32.Vec3{x, y + 1, z + 1}
+		p2 := mgl32.Vec3{x + 1, y + 1, z + 1}
+		p3 := mgl32.Vec3{x + 1, y, z + 1}
+		p4 := mgl32.Vec3{x, y, z + 1}
+		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
+	}
+	//back
+	if back {
+		n := mgl32.Vec3{0, 0, -1}
+		p1 := mgl32.Vec3{x + 1, y + 1, z}
+		p2 := mgl32.Vec3{x, y + 1, z}
+		p3 := mgl32.Vec3{x, y, z}
+		p4 := mgl32.Vec3{x + 1, y, z}
+		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
+	}
+}
+
 func (c *Chunk) buildFaces() {
 	c.model = newConstructionChunk()
 	c.transparentModel = newConstructionChunk()
-	for x := 0; x < c.size; x++ {
-		for y := 0; y < c.size; y++ {
-			for z := 0; z < c.size; z++ {
-				b := c.GetBlock(x, y, z)
-				transparent := b.IsTransparent()
-				//add face if the block isn't air and the block next to it is air
-				/*faces are :
-				 * up ( + y)
-				 * bottom (-y)
-				 * right (+x)
-				 * left (-x)
-				 * front (+z)
-				 * back (-z)
-				 * 0 point is : bottom, left, back
-				 */
-				//up
-				xF := float32(x)
-				yF := float32(y)
-				zF := float32(z)
-				if b != Air && (y == c.size-1 || c.GetBlock(x, y+1, z).IsTransparent()) {
-					n := mgl32.Vec3{0, 1, 0}
-					p1 := mgl32.Vec3{xF, yF + 1, zF}
-					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
-					p3 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
-					p4 := mgl32.Vec3{xF, yF + 1, zF + 1}
-					if transparent {
-						c.transparentModel.addFace(p1, p2, p3, p4, n, b.GetSide(Top), true)
-					} else {
-						c.model.addFace(p1, p2, p3, p4, n, b.GetSide(Top), true)
-					}
+	for x := 0; x < c.world.ChunkSize(); x++ {
+		for y := 0; y < c.world.ChunkSize(); y++ {
+			for z := 0; z < c.world.ChunkSize(); z++ {
+				b := c.world.GetBlock(c.start.X + x, c.start.Y + y, c.start.Z+ z)
+				if b == block.Air {
+					continue
 				}
-				//bottom
-				if b != Air && (y == 0 || c.GetBlock(x, y-1, z).IsTransparent()) {
-					n := mgl32.Vec3{0, -1, 0}
-					p1 := mgl32.Vec3{xF, yF, zF}
-					p2 := mgl32.Vec3{xF + 1, yF, zF}
-					p3 := mgl32.Vec3{xF + 1, yF, zF + 1}
-					p4 := mgl32.Vec3{xF, yF, zF + 1}
-					if transparent {
-						c.transparentModel.addFace(p1, p2, p3, p4, n, b.GetSide(Bottom), false)
-					} else {
-						c.model.addFace(p1, p2, p3, p4, n, b.GetSide(Bottom), false)
-					}
+				up := c.world.GetBlock(c.start.X + x, c.start.Y + y+1, c.start.Z + z).IsTransparent()
+				bottom := c.world.GetBlock(c.start.X + x, c.start.Y + y-1, c.start.Z + z).IsTransparent()
+				right := c.world.GetBlock(c.start.X + x+1, c.start.Y + y, c.start.Z + z).IsTransparent()
+				left := c.world.GetBlock(c.start.X + x-1, c.start.Y + y, c.start.Z + z).IsTransparent()
+				front := c.world.GetBlock(c.start.X + x, c.start.Y + y, c.start.Z + z+1).IsTransparent()
+				back := c.world.GetBlock(c.start.X + x, c.start.Y + y, c.start.Z + z-1).IsTransparent()
+				cons := c.model
+				if b.IsTransparent() {
+					cons = c.transparentModel
 				}
-				//right
-				if b != Air && (x == c.size-1 || c.GetBlock(x+1, y, z).IsTransparent()) {
-					n := mgl32.Vec3{1, 0, 0}
-					p1 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
-					p2 := mgl32.Vec3{xF + 1, yF + 1, zF}
-					p3 := mgl32.Vec3{xF + 1, yF, zF}
-					p4 := mgl32.Vec3{xF + 1, yF, zF + 1}
-					if transparent {
-						c.transparentModel.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					} else {
-						c.model.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					}
-				}
-				//left
-				if b != Air && (x == 0 || c.GetBlock(x-1, y, z).IsTransparent()) {
-					n := mgl32.Vec3{-1, 0, 0}
-					p1 := mgl32.Vec3{xF, yF + 1, zF}
-					p2 := mgl32.Vec3{xF, yF + 1, zF + 1}
-					p3 := mgl32.Vec3{xF, yF, zF + 1}
-					p4 := mgl32.Vec3{xF, yF, zF}
-					if transparent {
-						c.transparentModel.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					} else {
-						c.model.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					}
-				}
-				//front
-				if b != Air && (z == c.size-1 || c.GetBlock(x, y, z+1).IsTransparent()) {
-					n := mgl32.Vec3{0, 0, 1}
-					p1 := mgl32.Vec3{xF, yF + 1, zF + 1}
-					p2 := mgl32.Vec3{xF + 1, yF + 1, zF + 1}
-					p3 := mgl32.Vec3{xF + 1, yF, zF + 1}
-					p4 := mgl32.Vec3{xF, yF, zF + 1}
-					if transparent {
-						c.transparentModel.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					} else {
-						c.model.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					}
-				}
-				//back
-				if b != Air && (z == 0 || c.GetBlock(x, y, z-1).IsTransparent()) {
-					n := mgl32.Vec3{0, 0, -1}
-					p1 := mgl32.Vec3{xF + 1, yF + 1, zF}
-					p2 := mgl32.Vec3{xF, yF + 1, zF}
-					p3 := mgl32.Vec3{xF, yF, zF}
-					p4 := mgl32.Vec3{xF + 1, yF, zF}
-					if transparent {
-						c.transparentModel.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					} else {
-						c.model.addFace(p1, p2, p3, p4, n, b.GetSide(Side), true)
-					}
-				}
+				cons.buildBlock(float32(x), float32(y), float32(z), b, up, bottom, right, left, front, back)
 			}
 		}
 	}
 }
 
-func (c *constructionChunk) addFace(p1, p2, p3, p4, n mgl32.Vec3, b Block, inverseRotation bool) {
-	if b == Grass {
+func (c *constructionChunk) addFace(p1, p2, p3, p4, n mgl32.Vec3, b block.Block, inverseRotation bool) {
+	if b == block.Grass {
 		if n.ApproxEqual(mgl32.Vec3{0, -1, 0}) {
-			b = Dirt
+			b = block.Dirt
 		} else if !n.ApproxEqual(mgl32.Vec3{0, 1, 0}) {
-			b = Grass
+			b = block.Grass
 		}
 	}
-	textureX := int(b) % NumberRowsTextures
-	textureY := int(b) / NumberRowsTextures
-	offsetTextureX := float32(textureX) / float32(NumberRowsTextures)
-	offsetTextureY := float32(textureY) / float32(NumberRowsTextures)
+	textureX := int(b) % numberRowsTextures
+	textureY := int(b) / numberRowsTextures
+	offsetTextureX := float32(textureX) / float32(numberRowsTextures)
+	offsetTextureY := float32(textureY) / float32(numberRowsTextures)
 	offsetTexture := mgl32.Vec2{offsetTextureX, offsetTextureY}
 	t1 := mgl32.Vec2{0, 0}
 	t2 := mgl32.Vec2{1, 0}
 	t3 := mgl32.Vec2{1, 1}
 	t4 := mgl32.Vec2{0, 1}
-	t1 = t1.Mul(1.0 / float32(NumberRowsTextures)).Add(offsetTexture)
-	t2 = t2.Mul(1.0 / float32(NumberRowsTextures)).Add(offsetTexture)
-	t3 = t3.Mul(1.0 / float32(NumberRowsTextures)).Add(offsetTexture)
-	t4 = t4.Mul(1.0 / float32(NumberRowsTextures)).Add(offsetTexture)
+	t1 = t1.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
+	t2 = t2.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
+	t3 = t3.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
+	t4 = t4.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
 	c.vertices = append(c.vertices, p1)
 	c.vertices = append(c.vertices, p2)
 	c.vertices = append(c.vertices, p3)

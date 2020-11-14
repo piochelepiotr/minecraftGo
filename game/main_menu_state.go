@@ -6,7 +6,7 @@ import (
 	pmenu "github.com/piochelepiotr/minecraftGo/game_engine/menu"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/state"
-	"github.com/piochelepiotr/minecraftGo/world"
+	"github.com/piochelepiotr/minecraftGo/worldcontent"
 	"log"
 )
 type MainMenuState struct {
@@ -33,7 +33,7 @@ func generateWorldName(worlds []string) string {
 
 func NewMainMenuState(display *render.DisplayManager, changeState chan<- state.Switch) *MainMenuState{
 	menu := pmenu.CreateMenu(display.AspectRatio())
-	worlds, err := world.LoadWorlds()
+	worlds, err := worldcontent.LoadWorlds()
 	if err != nil {
 		log.Fatalf("Error loading worlds. err:%v", err)
 	}
@@ -43,7 +43,8 @@ func NewMainMenuState(display *render.DisplayManager, changeState chan<- state.S
 	}
 	menu.AddItem("Create World", func() {
 		name := generateWorldName(worlds)
-		world.GenerateWorld(name)
+		config := worldcontent.GetRandomWorld(name)
+		worldcontent.WriteWorld(config)
 		changeState <- state.Switch{ID: state.Game, WorldName: name}
 	})
 	menu.AddItem("Exit Game", func() { display.Window.SetShouldClose(true) })

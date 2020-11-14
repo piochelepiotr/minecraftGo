@@ -9,6 +9,8 @@ import (
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/textures"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
+	"github.com/piochelepiotr/minecraftGo/world/block"
+	"github.com/piochelepiotr/minecraftGo/worldcontent"
 	"log"
 	"math"
 	"time"
@@ -16,10 +18,6 @@ import (
 
 
 const (
-	deleteChunkDistance  float32 = 120
-	loadChunkDistance    float32 = 100
-	maxWallJump float32 = 0.4
-	backwardJump float32 = 0.4
 	playerWidth float32 = 0.4
 	playerVWidth = playerWidth/1.5
 	playerHeight float32 = 1.8
@@ -31,13 +29,29 @@ var alwaysRenderDistance = float32(20)//float32(ChunkSize)/ float32( 2 * math.Ta
 
 // World contains all the blocks of the world in chunks that load around the player
 type World struct {
-	chunks       map[geometry.Point]*Chunk
-	modelTexture textures.ModelTexture
-	generator *Generator
-	ChunkLoadDecisions chan geometry.Point
-	chunksToWrite chan *RawChunk
-	worldConfig Config
-	cosFovAngle float32
+	chunks        map[geometry.Point]*Chunk
+	modelTexture  textures.ModelTexture
+	chunksToLoad  chan geometry.Point
+	cosFovAngle   float32
+	world         *worldcontent.InMemoryWorld
+}
+
+// NewWorld initiate the world
+func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32) *World {
+	modelTexture := loader.LoadModelTexture("textures/textures2.png", uint32(numberRowsTextures))
+	chunks := make(map[geometry.Point]*Chunk)
+	w := &World{
+		chunks:        chunks,
+		modelTexture:  modelTexture,
+		chunksToLoad:  make(chan geometry.Point, 200),
+		world:         world,
+	}
+	w.Resize(aspectRatio)
+	return w
+}
+
+func (w *World) ChunksToLoad() <-chan geometry.Point {
+	return w.chunksToLoad
 }
 
 func (w *World) Resize(aspectRatio float32) {
@@ -47,30 +61,6 @@ func (w *World) Resize(aspectRatio float32) {
 	fov := float32(math.Sqrt(math.Pow(float64(fovX), 2) + math.Pow(float64(fovY), 2)))
 	// log.Println("fov", mgl32.RadToDeg(fov))
 	w.cosFovAngle = float32(math.Cos(float64(fov/2)))
-}
-
-func (w *World) OutChunksToWrite() <-chan *RawChunk {
-	return w.chunksToWrite
-}
-
-func getChunk(x int) int {
-	return int(math.Floor(float64(x)/float64(ChunkSize))) * ChunkSize
-}
-
-// NewWorld initiate the world
-func NewWorld(worldConfig Config, aspectRatio float32, generator *Generator) *World {
-	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
-	chunks := make(map[geometry.Point]*Chunk)
-	w := &World{
-		chunks:       chunks,
-		modelTexture: modelTexture,
-		generator: generator,
-		ChunkLoadDecisions: make(chan geometry.Point, 200),
-		chunksToWrite: make(chan *RawChunk, 200),
-		worldConfig: worldConfig,
-	}
-	w.Resize(aspectRatio)
-	return w
 }
 
 func (w *World) isVisible(cameraPosition, coneVector, pos mgl32.Vec3) bool {
@@ -84,13 +74,13 @@ func (w *World) isVisible(cameraPosition, coneVector, pos mgl32.Vec3) bool {
 func (w *World) isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bool {
 	points := []mgl32.Vec3{
 		{0, 0, 0},
-		{float32(ChunkSize), 0, 0},
-		{0, float32(ChunkSize), 0},
-		{0, 0, float32(ChunkSize)},
-		{float32(ChunkSize), float32(ChunkSize), 0},
-		{float32(ChunkSize), 0, float32(ChunkSize)},
-		{0, float32(ChunkSize), float32(ChunkSize)},
-		{float32(ChunkSize), float32(ChunkSize), float32(ChunkSize)},
+		{float32(w.world.ChunkSize()), 0, 0},
+		{0, float32(w.world.ChunkSize()), 0},
+		{0, 0, float32(w.world.ChunkSize())},
+		{float32(w.world.ChunkSize()), float32(w.world.ChunkSize()), 0},
+		{float32(w.world.ChunkSize()), 0, float32(w.world.ChunkSize())},
+		{0, float32(w.world.ChunkSize()), float32(w.world.ChunkSize())},
+		{float32(w.world.ChunkSize()), float32(w.world.ChunkSize()), float32(w.world.ChunkSize())},
 	}
 	for _, p := range points {
 		if w.isVisible(cameraPosition, coneVector, corner.Add(p)) {
@@ -111,9 +101,9 @@ func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 		}
 		coneVector := geometry.ComputeCameraRay(camera.Rotation).Normalize()
 		p := mgl32.Vec3{
-				float32(chunk.Start.X),
-				float32(chunk.Start.Y),
-				float32(chunk.Start.Z),
+				float32(chunk.start.X),
+				float32(chunk.start.Y),
+				float32(chunk.start.Z),
 		}
 		if !w.isChunkVisible(camera.Position, coneVector, p) {
 			continue
@@ -132,9 +122,9 @@ func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 				Transparent: true,
 			},
 			Position: mgl32.Vec3{
-				float32(chunk.Start.X),
-				float32(chunk.Start.Y),
-				float32(chunk.Start.Z),
+				float32(chunk.start.X),
+				float32(chunk.start.Y),
+				float32(chunk.start.Z),
 			},
 		}
 		if chunkEntity.TexturedModel.RawModel.VertexCount > 0 {
@@ -147,117 +137,11 @@ func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 	return chunks
 }
 
-// LoadChunk loads a chunk into the world so that it is rendered
-func (w *World) LoadChunk(x, y, z int) {
-	p := geometry.Point{
-		X: x,
-		Y: y,
-		Z: z,
-	}
-	chunk := GetGraphicChunk(w.worldConfig, p, w.generator)
-	chunk.Load()
-	w.chunks[p] = chunk
-}
-
 func (w *World) chunkIsLoaded(x, y, z int) bool {
 	_, ok := w.chunks[geometry.Point{x, y, z}]
 	return ok
 }
 
-// GetHeight returns height of the world in blocks at a x,z position
-func (w *World) GetHeight(x, z int) int {
-	for y := WorldHeight - 1; y >= 0; y-- {
-		if w.GetBlock(x, y, z) != Air {
-			return y + 1
-		}
-	}
-	return 0
-}
-
-//GetBlock returns block x,y,z
-func (w *World) GetBlock(x, y, z int) Block {
-	chunkX := getChunk(x)
-	chunkY := getChunk(y)
-	chunkZ := getChunk(z)
-	p := geometry.Point{
-		X: chunkX,
-		Y: chunkY,
-		Z: chunkZ,
-	}
-	if chunk, ok := w.chunks[p]; ok {
-		return chunk.GetBlock(x-chunkX, y-chunkY, z-chunkZ)
-	}
-	//fmt.Println("ERROR when getting block in chunk ", p)
-	return Air
-}
-
-//SetBlock sets a block and update the chunk
-func (w *World) SetBlock(x, y, z int, b Block) {
-	chunkX := getChunk(x)
-	chunkY := getChunk(y)
-	chunkZ := getChunk(z)
-	p := geometry.Point{
-		X: chunkX,
-		Y: chunkY,
-		Z: chunkZ,
-	}
-	if chunk, ok := w.chunks[p]; ok {
-		chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, b)
-	} else {
-		log.Print("ERROR when setting block in chunk ", p, " chunk isn't loaded")
-	}
-}
-
-
-// even if the point is a bit inside a wall, this is going to return
-func (w *World) PlaceInFrontWithJumps(edges []mgl32.Vec3, dir mgl32.Vec3) float32 {
-	min := float32(1000)
-	for _, p := range edges {
-		place := w.PlaceInFrontWithJumpsOnePoint(p, dir)
-		if place < min {
-			min = place
-		}
-	}
-	return min
-}
-
-// even if the point is a bit inside a wall, this is going to return
-func (w *World) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Vec3) float32 {
-	place, _, _ := w.PlaceInFront(p, dir)
-	if place > 0 {
-		return place
-	}
-	uDir := dir.Mul(1/dir.Len())
-	placeWithJump, _, _ := w.PlaceInFront(p.Add(uDir.Mul(maxWallJump)), dir)
-	if placeWithJump > 0 {
-		return placeWithJump + maxWallJump
-	}
-	if dir.Y() == 0  && (dir.X() == 0 || dir.Z() == 0){
-		orthDir := mgl32.Vec3{uDir.Z(), 0, uDir.X()}
-		placeWithBackJump, _, _ := w.PlaceInFront(p.Add(orthDir.Mul(backwardJump)), dir)
-		if placeWithBackJump > 0 {
-			return placeWithBackJump
-		}
-		placeWithForwardJump, _, _ := w.PlaceInFront(p.Add(orthDir.Mul(-backwardJump)), dir)
-		if placeWithForwardJump > 0 {
-			return placeWithForwardJump
-		}
-	}
-	return 0
-}
-
-//PlaceInFront returns place in front of the player
-func (w *World) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, geometry.Point, geometry.Point) {
-	xray := geometry.NewXray(p, dir)
-	for i := 0; i < 10; i++ {
-		//fmt.Println("POS: ", x, ";", y, ";", z)
-		if w.GetBlock(xray.P.X, xray.P.Y, xray.P.Z) != Air {
-			return xray.Distance, xray.P, xray.Previous
-		}
-		xray.GoToNextBlock()
-	}
-	return xray.Distance, geometry.Point{}, geometry.Point{}
-}
 
 func truncateMovement(move mgl32.Vec3, place float32) mgl32.Vec3 {
 	if move.Len() > place {
@@ -269,7 +153,7 @@ func truncateMovement(move mgl32.Vec3, place float32) mgl32.Vec3 {
 
 // TouchesGround returns true if the player touches the ground
 func (w *World) TouchesGround(player *entities.Player) bool {
-	return w.PlaceInFrontWithJumps(returnPlayerVerticalEdges(player), mgl32.Vec3{0, -1, 0}) == 0
+	return w.world.PlaceInFrontWithJumps(returnPlayerVerticalEdges(player), mgl32.Vec3{0, -1, 0}) == 0
 }
 
 
@@ -313,7 +197,7 @@ func (w *World) PlacePlayerOnGround(player *entities.Player) {
 	dir := float32(-1)
 	for {
 		edges := returnPlayerVerticalEdges(player)
-		place := w.PlaceInFrontWithJumps(edges, mgl32.Vec3{0, dir, 0})
+		place := w.world.PlaceInFrontWithJumps(edges, mgl32.Vec3{0, dir, 0})
 		if place == 0 {
 			return
 		}
@@ -338,7 +222,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 			} else {
 				edges = edges[:4]
 			}
-			place := w.PlaceInFrontWithJumps(edges, mgl32.Vec3{0, dir, 0})
+			place := w.world.PlaceInFrontWithJumps(edges, mgl32.Vec3{0, dir, 0})
 			// fmt.Printf("Speed y is %f\n", player.Speed.Y())
 			if toolbox.Abs(y) > place {
 				player.Speed = mgl32.Vec3{player.Speed.X(), 0, player.Speed.Z()}
@@ -362,7 +246,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 			//forward := mgl32.Vec3{0, -1, 0}
 			forward := hSpeed
 			// first, go as far as we can in the forward direction
-			place := w.PlaceInFrontWithJumps(returnPlayerEdges(player), forward)
+			place := w.world.PlaceInFrontWithJumps(returnPlayerEdges(player), forward)
 			firstMove := truncateMovement(move, place)
 			// fmt.Printf("first move is %f\n", firstMove.Len())
 			player.Entity.Position = player.Entity.Position.Add(firstMove)
@@ -370,7 +254,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 
 			if restMove.Len() > 0 {
 				if restMove.X() != 0 {
-					placeX := w.PlaceInFrontWithJumps(returnPlayerEdges(player), mgl32.Vec3{hSpeed.X(), 0, 0})
+					placeX := w.world.PlaceInFrontWithJumps(returnPlayerEdges(player), mgl32.Vec3{hSpeed.X(), 0, 0})
 					if placeX > toolbox.Abs(restMove.X()) {
 						player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{restMove.X(), 0, 0})
 					} else {
@@ -381,7 +265,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 					}
 				}
 				if restMove.Z() != 0 {
-					placeZ := w.PlaceInFrontWithJumps(returnPlayerEdges(player), mgl32.Vec3{0, 0, hSpeed.Z()})
+					placeZ := w.world.PlaceInFrontWithJumps(returnPlayerEdges(player), mgl32.Vec3{0, 0, hSpeed.Z()})
 					if placeZ > toolbox.Abs(restMove.Z()) {
 						player.Entity.Position = player.Entity.Position.Add(mgl32.Vec3{0, 0, restMove.Z()})
 					} else {
@@ -403,53 +287,59 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 	player.LastMove = now
 }
 
+// setBlock sets a block and updates UI if necessary
+func (w *World) setBlock(x, y, z int, b block.Block) {
+	w.world.SetBlock(x, y, z, b)
+	// c.buildFaces()
+	// c.Load()
+}
+
 // ClickOnBlock removes or adds a block
-func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b Block) {
+func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b block.Block) {
 	xray := geometry.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
-	_, block, previous := w.PlaceInFront(p, xray)
+	_, pos, previous := w.world.PlaceInFront(p, xray)
 	if placeBlock {
-		if !block.Equal(previous) {
-			w.SetBlock(previous.X, previous.Y, previous.Z, b)
+		if !pos.Equal(previous) {
+			w.setBlock(previous.X, previous.Y, previous.Z, b)
 		}
 	} else {
-		w.SetBlock(block.X, block.Y, block.Z, Air)
+		w.setBlock(pos.X, pos.Y, pos.Z, block.Air)
 	}
 }
 
 func (w *World) deleteChunks(playerPos mgl32.Vec3) {
 	for p, chunk := range w.chunks {
-		if chunk.Start.DistanceTo(playerPos) > deleteChunkDistance {
-			if chunk.dirty {
-				w.chunksToWrite <- &chunk.RawChunk
-			}
+		if chunk.start.DistanceTo(playerPos) > worldcontent.UIDeleteChunkDistance {
 			delete(w.chunks, p)
 		}
 	}
 }
 
 //LoadChunks load chunks around the player
-func (w *World) LoadChunks(playerPos mgl32.Vec3, delay bool) {
+func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	w.deleteChunks(playerPos)
+	w.world.ExpireChunks(playerPos)
 	xPlayer := int(playerPos.X())
 	zPlayer := int(playerPos.Z())
-	chunkX := getChunk(xPlayer)
-	chunkZ := getChunk(zPlayer)
-	for x := getChunk(chunkX - int(loadChunkDistance)); x <= getChunk(chunkX + int(loadChunkDistance)); x += ChunkSize {
-		for z := getChunk(chunkZ - int(loadChunkDistance)); z <= getChunk(chunkZ + int(loadChunkDistance)); z += ChunkSize {
+	chunkX := w.world.ChunkStart(xPlayer)
+	chunkZ := w.world.ChunkStart(zPlayer)
+	for x := w.world.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= w.world.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += w.world.ChunkSize() {
+		for z := w.world.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= w.world.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += w.world.ChunkSize() {
 			p := geometry.Point{X: x, Y: 0, Z: z}
-			if p.DistanceTo(playerPos) > loadChunkDistance {
+			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
 				continue
 			}
-			if w.chunkIsLoaded(x, 0, z) {
-				continue
-			}
-			for y := 0; y < WorldHeight/ChunkSize; y++ {
-				if delay {
-					w.ChunkLoadDecisions <- geometry.Point{x, y*ChunkSize, z}
-				} else {
-					w.LoadChunk(x, y*ChunkSize, z)
+			for y := 0; y < w.world.WorldHeight()/w.world.ChunkSize(); y++ {
+				if w.chunkIsLoaded(x, y, z) {
+					continue
 				}
+				w.chunksToLoad <- geometry.Point{x, y*w.world.ChunkSize(), z}
+				// select {
+				// 	case w.chunksToLoad <- geometry.Point{x, y*w.world.ChunkSize(), z}:
+				// 	default:
+				// 		log.Println("couldn't load chunk. Retrying soon")
+				// }
 			}
 		}
 	}
@@ -457,17 +347,13 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3, delay bool) {
 
 func (w *World) AddChunk(chunk *Chunk) {
 	chunk.Load()
-	w.chunks[chunk.Start] = chunk
+	w.chunks[chunk.start] = chunk
 }
 
 // Close saves the world when closing the game
 func (w *World) Close() {
-	close(w.ChunkLoadDecisions)
-	for _, chunk := range w.chunks {
-		if chunk.dirty {
-			w.chunksToWrite <- &chunk.RawChunk
-		}
-	}
-	close(w.chunksToWrite)
+	close(w.chunksToLoad)
 	log.Println("Closed world")
 }
+
+
