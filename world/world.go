@@ -30,6 +30,8 @@ var alwaysRenderDistance = float32(20)//float32(ChunkSize)/ float32( 2 * math.Ta
 // World contains all the blocks of the world in chunks that load around the player
 type World struct {
 	chunks        map[geometry.Point]*Chunk
+	// loading is used to not load two times the same chunk
+	loading map[geometry.Point]struct{}
 	modelTexture  textures.ModelTexture
 	chunksToLoad  chan geometry.Point
 	cosFovAngle   float32
@@ -42,6 +44,7 @@ func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32) *World {
 	chunks := make(map[geometry.Point]*Chunk)
 	w := &World{
 		chunks:        chunks,
+		loading: make(map[geometry.Point]struct{}),
 		modelTexture:  modelTexture,
 		// really big here to avoid dead locks (main goroutines writes to this channel
 		// while loader reads from this one and writes a a channel the main goroutine reads from
@@ -144,6 +147,10 @@ func (w *World) chunkIsLoaded(x, y, z int) bool {
 	return ok
 }
 
+func (w *World) chunkIsLoading(x, y, z int) bool {
+	_, ok := w.loading[geometry.Point{x, y, z}]
+	return ok
+}
 
 func truncateMovement(move mgl32.Vec3, place float32) mgl32.Vec3 {
 	if move.Len() > place {
@@ -289,11 +296,39 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 	player.LastMove = now
 }
 
+func (w *World) rebuild(x, y, z int) {
+	if chunk, ok := w.chunks[geometry.Point{x, y, z}]; ok {
+		chunk.buildFaces()
+		chunk.Load()
+	}
+}
+
 // setBlock sets a block and updates UI if necessary
 func (w *World) setBlock(x, y, z int, b block.Block) {
+	log.Println(y)
 	w.world.SetBlock(x, y, z, b)
-	// c.buildFaces()
-	// c.Load()
+	chunkX := worldcontent.ChunkStart(x)
+	chunkY := worldcontent.ChunkStart(y)
+	chunkZ := worldcontent.ChunkStart(z)
+	w.rebuild(chunkX, chunkY, chunkZ)
+	if chunkX2 := worldcontent.ChunkStart(x-1); chunkX2 != chunkX {
+		w.rebuild(chunkX2, chunkY, chunkZ)
+	}
+	if chunkX2 := worldcontent.ChunkStart(x+1); chunkX2 != chunkX {
+		w.rebuild(chunkX2, chunkY, chunkZ)
+	}
+	if chunkY2 := worldcontent.ChunkStart(y-1); chunkY2 != chunkX {
+		w.rebuild(chunkX, chunkY2, chunkZ)
+	}
+	if chunkY2 := worldcontent.ChunkStart(y+1); chunkY2 != chunkX {
+		w.rebuild(chunkX, chunkY2, chunkZ)
+	}
+	if chunkZ2 := worldcontent.ChunkStart(z-1); chunkZ2 != chunkX {
+		w.rebuild(chunkX, chunkY, chunkZ2)
+	}
+	if chunkZ2 := worldcontent.ChunkStart(z+1); chunkZ2 != chunkX {
+		w.rebuild(chunkX, chunkY, chunkZ2)
+	}
 }
 
 // ClickOnBlock removes or adds a block
@@ -324,19 +359,20 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	w.world.ExpireChunks(playerPos)
 	xPlayer := int(playerPos.X())
 	zPlayer := int(playerPos.Z())
-	chunkX := w.world.ChunkStart(xPlayer)
-	chunkZ := w.world.ChunkStart(zPlayer)
-	for x := w.world.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= w.world.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
-		for z := w.world.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= w.world.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
+	chunkX := worldcontent.ChunkStart(xPlayer)
+	chunkZ := worldcontent.ChunkStart(zPlayer)
+	for x := worldcontent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= worldcontent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
+		for z := worldcontent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= worldcontent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
 			p := geometry.Point{X: x, Y: 0, Z: z}
 			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
 				continue
 			}
-			for y := 0; y < worldcontent.WorldHeight/worldcontent.WorldHeight; y++ {
-				if w.chunkIsLoaded(x, y, z) {
+			for y := 0; y < worldcontent.WorldHeight; y += worldcontent.ChunkSize {
+				if w.chunkIsLoaded(x, y, z) || w.chunkIsLoading(x, y, z) {
 					continue
 				}
-				w.chunksToLoad <- geometry.Point{x, y*worldcontent.ChunkSize, z}
+				w.loading[geometry.Point{x, y, z}] = struct{}{}
+				w.chunksToLoad <- geometry.Point{x, y, z}
 				// select {
 				// 	case w.chunksToLoad <- geometry.Point{x, y*w.world.ChunkSize(), z}:
 				// 	default:
@@ -350,6 +386,7 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 func (w *World) AddChunk(chunk *Chunk) {
 	chunk.Load()
 	w.chunks[chunk.start] = chunk
+	delete(w.loading, chunk.start)
 }
 
 // Close saves the world when closing the game

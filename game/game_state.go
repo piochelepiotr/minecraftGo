@@ -99,10 +99,10 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 func (s *GamingState) loadChunks(playerPos mgl32.Vec3) {
 	xPlayer := int(playerPos.X())
 	zPlayer := int(playerPos.Z())
-	chunkX := s.worldContent.ChunkStart(xPlayer)
-	chunkZ := s.worldContent.ChunkStart(zPlayer)
-	for x := s.worldContent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= s.worldContent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
-		for z := s.worldContent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= s.worldContent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
+	chunkX := worldcontent.ChunkStart(xPlayer)
+	chunkZ := worldcontent.ChunkStart(zPlayer)
+	for x := worldcontent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= worldcontent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
+		for z := worldcontent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= worldcontent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
 			p := geometry.Point{X: x, Y: 0, Z: z}
 			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
 				continue

@@ -57,14 +57,14 @@ func (w *InMemoryWorld) getChunk(p geometry.Point) RawChunk{
 	return chunk
 }
 
-func (w *InMemoryWorld) ChunkStart(x int) int {
+func ChunkStart(x int) int {
 	return int(math.Floor(float64(x)/float64(ChunkSize))) * ChunkSize
 }
 
 func (w *InMemoryWorld) GetBlock(x, y, z int) block.Block {
-	chunkX:= w.ChunkStart(x)
-	chunkY := w.ChunkStart(y)
-	chunkZ := w.ChunkStart(z)
+	chunkX:= ChunkStart(x)
+	chunkY := ChunkStart(y)
+	chunkZ := ChunkStart(z)
 	if y < 0 {
 		return block.Stone
 	}
@@ -89,9 +89,9 @@ func (w *InMemoryWorld) GetHeight(x, z int) int {
 func (w *InMemoryWorld) SetBlock(x, y, z int, b block.Block) {
 	w.chunksLock.Lock()
 	defer w.chunksLock.Unlock()
-	chunkX := w.ChunkStart(x)
-	chunkY := w.ChunkStart(y)
-	chunkZ := w.ChunkStart(z)
+	chunkX := ChunkStart(x)
+	chunkY := ChunkStart(y)
+	chunkZ := ChunkStart(z)
 	p := geometry.Point{
 		X: chunkX,
 		Y: chunkY,
