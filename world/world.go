@@ -13,6 +13,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/worldcontent"
 	"log"
 	"math"
+	"sort"
 	"time"
 )
 
@@ -353,6 +354,25 @@ func (w *World) deleteChunks(playerPos mgl32.Vec3) {
 	}
 }
 
+type chunkToLoad struct {
+	distance float32
+	p geometry.Point
+}
+
+type chunksToLoad []chunkToLoad
+
+func (c chunksToLoad) Len() int {
+	return len(c)
+}
+
+func (c chunksToLoad) Less(i, j int) bool {
+	return c[i].distance < c[j].distance
+}
+
+func (c chunksToLoad) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
 //LoadChunks load chunks around the player
 func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	w.deleteChunks(playerPos)
@@ -361,18 +381,19 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	zPlayer := int(playerPos.Z())
 	chunkX := worldcontent.ChunkStart(xPlayer)
 	chunkZ := worldcontent.ChunkStart(zPlayer)
+	toLoad := make(chunksToLoad, 0)
 	for x := worldcontent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= worldcontent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
 		for z := worldcontent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= worldcontent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
 			p := geometry.Point{X: x, Y: 0, Z: z}
-			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
+			d := p.DistanceTo(playerPos)
+			if d > worldcontent.UILoadChunkDistance {
 				continue
 			}
 			for y := 0; y < worldcontent.WorldHeight; y += worldcontent.ChunkSize {
 				if w.chunkIsLoaded(x, y, z) || w.chunkIsLoading(x, y, z) {
 					continue
 				}
-				w.loading[geometry.Point{x, y, z}] = struct{}{}
-				w.chunksToLoad <- geometry.Point{x, y, z}
+				toLoad = append(toLoad, chunkToLoad{distance: d, p: geometry.Point{x, y, z}})
 				// select {
 				// 	case w.chunksToLoad <- geometry.Point{x, y*w.world.ChunkSize(), z}:
 				// 	default:
@@ -380,6 +401,11 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 				// }
 			}
 		}
+	}
+	sort.Sort(toLoad)
+	for _, chunk := range toLoad {
+		w.loading[chunk.p] = struct{}{}
+		w.chunksToLoad <- chunk.p
 	}
 }
 
