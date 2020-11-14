@@ -74,13 +74,13 @@ func (w *World) isVisible(cameraPosition, coneVector, pos mgl32.Vec3) bool {
 func (w *World) isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bool {
 	points := []mgl32.Vec3{
 		{0, 0, 0},
-		{float32(w.world.ChunkSize()), 0, 0},
-		{0, float32(w.world.ChunkSize()), 0},
-		{0, 0, float32(w.world.ChunkSize())},
-		{float32(w.world.ChunkSize()), float32(w.world.ChunkSize()), 0},
-		{float32(w.world.ChunkSize()), 0, float32(w.world.ChunkSize())},
-		{0, float32(w.world.ChunkSize()), float32(w.world.ChunkSize())},
-		{float32(w.world.ChunkSize()), float32(w.world.ChunkSize()), float32(w.world.ChunkSize())},
+		{float32(worldcontent.ChunkSize), 0, 0},
+		{0, float32(worldcontent.ChunkSize), 0},
+		{0, 0, float32(worldcontent.ChunkSize)},
+		{float32(worldcontent.ChunkSize), float32(worldcontent.ChunkSize), 0},
+		{float32(worldcontent.ChunkSize), 0, float32(worldcontent.ChunkSize)},
+		{0, float32(worldcontent.ChunkSize), float32(worldcontent.ChunkSize)},
+		{float32(worldcontent.ChunkSize), float32(worldcontent.ChunkSize), float32(worldcontent.ChunkSize)},
 	}
 	for _, p := range points {
 		if w.isVisible(cameraPosition, coneVector, corner.Add(p)) {
@@ -324,17 +324,17 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 	zPlayer := int(playerPos.Z())
 	chunkX := w.world.ChunkStart(xPlayer)
 	chunkZ := w.world.ChunkStart(zPlayer)
-	for x := w.world.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= w.world.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += w.world.ChunkSize() {
-		for z := w.world.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= w.world.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += w.world.ChunkSize() {
+	for x := w.world.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= w.world.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
+		for z := w.world.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= w.world.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
 			p := geometry.Point{X: x, Y: 0, Z: z}
 			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
 				continue
 			}
-			for y := 0; y < w.world.WorldHeight()/w.world.ChunkSize(); y++ {
+			for y := 0; y < worldcontent.WorldHeight/worldcontent.WorldHeight; y++ {
 				if w.chunkIsLoaded(x, y, z) {
 					continue
 				}
-				w.chunksToLoad <- geometry.Point{x, y*w.world.ChunkSize(), z}
+				w.chunksToLoad <- geometry.Point{x, y*worldcontent.ChunkSize, z}
 				// select {
 				// 	case w.chunksToLoad <- geometry.Point{x, y*w.world.ChunkSize(), z}:
 				// 	default:

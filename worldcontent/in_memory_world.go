@@ -36,14 +36,6 @@ func (w *InMemoryWorld) OutChunksToWrite() <-chan RawChunk {
 	return w.chunksToWrite
 }
 
-func (w *InMemoryWorld) ChunkSize() int {
-	return w.config.ChunkSize
-}
-
-func (w *InMemoryWorld) WorldHeight() int {
-	return w.config.WorldHeight
-}
-
 func NewInMemoryWorld(config Config) *InMemoryWorld{
 	return &InMemoryWorld{
 		chunks: make(map[geometry.Point]RawChunk),
@@ -60,7 +52,6 @@ func (w *InMemoryWorld) getChunk(p geometry.Point) RawChunk{
 		return chunk
 	}
 	w.cacheMisses++
-	log.Println("cache misses", w.cacheMisses, p.X, p.Y, p.Z)
 	chunk := getChunk(w.config,  p, w.generator)
 	w.chunks[p] = chunk
 	return chunk

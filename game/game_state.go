@@ -74,7 +74,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		Entity: entity,
 	}
 	if player.Entity.Position.Y() == -1 {
-		player.Entity.Position = mgl32.Vec3{player.Entity.Position.X(), float32(wContent.WorldHeight() + 20), player.Entity.Position.Z()}
+		player.Entity.Position = mgl32.Vec3{player.Entity.Position.X(), float32(worldcontent.WorldHeight + 20), player.Entity.Position.Z()}
 		world.PlacePlayerOnGround(player)
 	}
 
@@ -100,14 +100,14 @@ func (s *GamingState) loadChunks(playerPos mgl32.Vec3) {
 	zPlayer := int(playerPos.Z())
 	chunkX := s.worldContent.ChunkStart(xPlayer)
 	chunkZ := s.worldContent.ChunkStart(zPlayer)
-	for x := s.worldContent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= s.worldContent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += s.worldContent.ChunkSize() {
-		for z := s.worldContent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= s.worldContent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += s.worldContent.ChunkSize() {
+	for x := s.worldContent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= s.worldContent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
+		for z := s.worldContent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= s.worldContent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
 			p := geometry.Point{X: x, Y: 0, Z: z}
 			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
 				continue
 			}
-			for y := 0; y < s.worldContent.WorldHeight()/s.worldContent.ChunkSize(); y++ {
-				s.world.AddChunk(s.chunkLoader.GetChunk(geometry.Point{x, y*s.worldContent.ChunkSize(), z}))
+			for y := 0; y < worldcontent.WorldHeight/worldcontent.ChunkSize; y++ {
+				s.world.AddChunk(s.chunkLoader.GetChunk(geometry.Point{x, y*worldcontent.ChunkSize, z}))
 			}
 		}
 	}

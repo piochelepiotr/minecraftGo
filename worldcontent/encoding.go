@@ -14,10 +14,9 @@ func (c *RawChunk) encode() []byte {
 	return encoded
 }
 
-func decode(config Config, data []byte, start geometry.Point) (chunk RawChunk) {
+func decode(data []byte, start geometry.Point) (chunk RawChunk) {
 	// for now, we only have v1
 	data = data[1:]
-	chunk.size = config.ChunkSize
 	chunk.start = start
 	chunk.blocks = make([]block.Block, 0, len(data))
 	for _, b := range data {

@@ -3,9 +3,9 @@ package worldcontent
 import "math/rand"
 
 const (
-	// defaultChunkSize is the size of a chunk in blocks
-	defaultChunkSize = 16
-	defaultWorldHeight = defaultChunkSize*3
+	// ChunkSize is the size of a chunk in blocks
+	ChunkSize = 16
+	WorldHeight = ChunkSize*3
 )
 
 type Player struct {
@@ -33,7 +33,5 @@ func GetRandomWorld(name string) Config {
 		Seed: seed,
 		Name: name,
 		Player: player,
-		ChunkSize: defaultChunkSize,
-		WorldHeight: defaultWorldHeight,
 	}
 }

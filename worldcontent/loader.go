@@ -16,7 +16,7 @@ func loadChunkFromSaves(config Config, start geometry.Point) (chunk RawChunk, er
 	if err != nil {
 		return chunk, err
 	}
-	chunk = decode(config, data, start)
+	chunk = decode(data, start)
 	return chunk, nil
 }
 

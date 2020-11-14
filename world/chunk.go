@@ -128,9 +128,9 @@ func (c *constructionChunk) buildBlock(x, y, z float32, b block.Block, up, botto
 func (c *Chunk) buildFaces() {
 	c.model = newConstructionChunk()
 	c.transparentModel = newConstructionChunk()
-	for x := 0; x < c.world.ChunkSize(); x++ {
-		for y := 0; y < c.world.ChunkSize(); y++ {
-			for z := 0; z < c.world.ChunkSize(); z++ {
+	for x := 0; x < worldcontent.ChunkSize; x++ {
+		for y := 0; y < worldcontent.ChunkSize; y++ {
+			for z := 0; z < worldcontent.ChunkSize; z++ {
 				b := c.world.GetBlock(c.start.X + x, c.start.Y + y, c.start.Z+ z)
 				if b == block.Air {
 					continue

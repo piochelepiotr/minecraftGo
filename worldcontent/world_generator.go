@@ -4,9 +4,7 @@ import (
 	"github.com/aquilax/go-perlin"
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/world/block"
-	"log"
 	"math"
-	"time"
 )
 
 const (
@@ -164,18 +162,15 @@ func (g *Generator) getStructureBlock(b biome, x, y, z int) block.Block {
 	return block.Air
 }
 
+
 // generateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
 func (g *Generator) generateChunk(start geometry.Point, chunkSize int) (chunk RawChunk) {
-	defer func(start time.Time) {
-		log.Println("time to generate chunk ", time.Now().Sub(start))
-	}(time.Now())
-	chunk.size = chunkSize
 	chunk.start = start
-	chunk.blocks = make([]block.Block, chunkSize*chunkSize*chunkSize)
-	for x := 0; x < chunkSize; x++ {
-		for z := 0; z < chunkSize; z++ {
-			for y := 0; y < chunkSize; y++ {
-				chunk.blocks[chunk.index(x, y, z)] = g.blockType(start.X+x, start.Y+y, start.Z+z)
+	chunk.blocks = make([]block.Block, ChunkSize*ChunkSize*ChunkSize)
+	for x := 0; x < ChunkSize; x++ {
+		for z := 0; z < ChunkSize; z++ {
+			for y := 0; y < ChunkSize; y++ {
+				chunk.blocks[index(x, y, z)] = g.blockType(start.X+x, start.Y+y, start.Z+z)
 			}
 		}
 	}
