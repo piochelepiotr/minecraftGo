@@ -19,8 +19,6 @@ type Config struct {
 	Seed   int64  `json:"seed"`
 	Player Player `json:"player"`
 	Creative bool `json:"creative"`
-	ChunkSize int `json:"chunk_size"`
-	WorldHeight int `json:"world_height"`
 }
 
 func GetRandomWorld(name string) Config {

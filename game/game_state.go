@@ -91,6 +91,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		changeState: changeState,
 		bottomBar: ux.NewBottomBar(display.AspectRatio()),
 	}
+	// world.LoadChunks(player.Entity.Position)
 	state.loadChunks(player.Entity.Position)
 	return state
 }
@@ -223,7 +224,7 @@ func (s *GamingState) NextFrame() {
 }
 // Update is called every second
 func (s *GamingState) Update() {
-	// s.world.LoadChunks(s.player.Entity.Position)
+	s.world.LoadChunks(s.player.Entity.Position)
 }
 
 // pause is used when menu is opened

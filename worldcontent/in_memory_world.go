@@ -58,7 +58,7 @@ func (w *InMemoryWorld) getChunk(p geometry.Point) RawChunk{
 }
 
 func (w *InMemoryWorld) ChunkStart(x int) int {
-	return int(math.Floor(float64(x)/float64(w.config.ChunkSize))) * w.config.ChunkSize
+	return int(math.Floor(float64(x)/float64(ChunkSize))) * ChunkSize
 }
 
 func (w *InMemoryWorld) GetBlock(x, y, z int) block.Block {
@@ -68,7 +68,7 @@ func (w *InMemoryWorld) GetBlock(x, y, z int) block.Block {
 	if y < 0 {
 		return block.Stone
 	}
-	if y >= w.config.WorldHeight {
+	if y >= WorldHeight {
 		return block.Air
 	}
 	c := w.getChunk(geometry.Point{chunkX, chunkY, chunkZ})
@@ -77,7 +77,7 @@ func (w *InMemoryWorld) GetBlock(x, y, z int) block.Block {
 
 // GetHeight returns height of the world in blocks at a x,z position
 func (w *InMemoryWorld) GetHeight(x, z int) int {
-	for y := w.config.WorldHeight - 1; y >= 0; y-- {
+	for y := WorldHeight - 1; y >= 0; y-- {
 		if w.GetBlock(x, y, z) != block.Air {
 			return y + 1
 		}

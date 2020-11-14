@@ -25,7 +25,7 @@ func getChunk(worldConfig Config, start geometry.Point, generator *Generator) Ra
 	if chunk, err := loadChunkFromSaves(worldConfig, start); err == nil {
 		return chunk
 	}
-	return generator.generateChunk(start, worldConfig.WorldHeight)
+	return generator.generateChunk(start, WorldHeight)
 }
 
 // LoadWorld loads the world config from local file
