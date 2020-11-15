@@ -12,7 +12,8 @@ const (
 	biomeScale float64 = 200
 )
 
-var maxPerlin = math.Sqrt(2)
+var maxPerlin2D = math.Sqrt(2)
+var maxPerlin3D = math.Sqrt(3)
 
 
 type biome interface {
@@ -85,13 +86,19 @@ func makeTree() *structure {
 
 func noise2d(p *perlin.Perlin, x int, y int, scale float64, min int, max int) int {
 	c := p.Noise2D(float64(x)/scale, float64(y)/scale)
-	c = (c + maxPerlin/2)/maxPerlin
+	c = (c + maxPerlin2D/2)/ maxPerlin2D
 	return min + int(float64(max-min)*c)
+}
+
+func noise3d(perlin *perlin.Perlin, x int, y int, z int, scale float64, p float64) bool {
+	c := perlin.Noise3D(float64(x)/scale, float64(y)/scale, float64(z)/scale)
+	c = (c + maxPerlin3D/2)/ maxPerlin3D
+	return c <= p
 }
 
 func random2d(perlin *perlin.Perlin, x int, y int, p float64) bool {
 	c := perlin.Noise2D(float64(x) + 0.5, float64(y) + 0.5)
-	c = (c + maxPerlin/2)/maxPerlin
+	c = (c + maxPerlin2D/2)/ maxPerlin2D
 	return c <= p
 }
 

@@ -33,17 +33,20 @@ func makeForestBiome() *ForestBiome {
 }
 
 func (f *ForestBiome) blockType(x, y, z int) block.Block {
-	height := f.worldHeight(x, z)
-	if y == height {
-		return block.Grass
+	// height := f.worldHeight(x, z)
+	// if y > height {
+	// 	return block.Air
+	// }
+	// b := block.Stone
+	// if y == height {
+	// 	return block.Grass
+	// } else if y > height - dirtLayerThikness {
+	// 	return block.Dirt
+	// }
+	if noise3d(f.perlin, x, y, z, 40.0, 0.4) {
+		return block.Air
 	}
-	if y < height && y > height - dirtLayerThikness {
-		return block.Dirt
-	}
-	if y <= height - dirtLayerThikness {
-		return block.Stone
-	}
-	return block.Air
+	return block.Stone
 }
 
 func (f *ForestBiome) worldHeight(x, z int) int {
