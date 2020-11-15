@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	UIDeleteChunkDistance  float32 = 120
-	UILoadChunkDistance    float32 = 100
+	UIDeleteChunkDistance  float32 = 220
+	UILoadChunkDistance    float32 = 200
 	deleteChunkDistance float32 = UIDeleteChunkDistance + 20
 	maxWallJump float32 = 0.4
 	backwardJump float32 = 0.4

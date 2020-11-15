@@ -5,7 +5,7 @@ import "math/rand"
 const (
 	// ChunkSize is the size of a chunk in blocks
 	ChunkSize = 16
-	WorldHeight = ChunkSize*3
+	WorldHeight = ChunkSize*16
 )
 
 type Player struct {
