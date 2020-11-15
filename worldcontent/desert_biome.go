@@ -1,7 +1,7 @@
 package worldcontent
 
 import (
-	"github.com/piochelepiotr/minecraftGo/perlin"
+	"github.com/aquilax/go-perlin"
 	"github.com/piochelepiotr/minecraftGo/world/block"
 )
 
@@ -26,7 +26,7 @@ func makeDesertBiome() *DesertBiome {
 	structures = append(structures, makeCactus())
 	return &DesertBiome{
 		structures: structures,
-		perlin:       perlin.NewPerlin(345),
+		perlin:       perlin.NewPerlin(2, 2, 1, 345),
 	}
 }
 
@@ -49,6 +49,5 @@ func (d *DesertBiome) blockType(x, y, z int) block.Block {
 }
 
 func (d *DesertBiome) worldHeight(x, z int) int {
-	c := d.perlin.Noise2D(float64(x)/desertElevationScale, float64(z)/desertElevationScale)
-	return desertMinElevation + int(float64(desertMaxElevation - desertMinElevation)*c)
+	return noise2d(d.perlin, x, z, desertElevationScale, desertMinElevation, desertMaxElevation)
 }
