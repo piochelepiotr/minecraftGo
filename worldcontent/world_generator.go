@@ -1,16 +1,13 @@
 package worldcontent
 
 import (
-	"github.com/aquilax/go-perlin"
+	"github.com/piochelepiotr/minecraftGo/perlin"
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/world/block"
 	"math"
 )
 
 const (
-	alpha float64 = 1
-	beta float64 = 2
-	perlinN int = 3
 	treeProbability float64 = 0.04
 	biomeScale float64 = 200
 )
@@ -98,34 +95,21 @@ type Generator struct {
 func makeBiomes() []biome {
 	biomes := make([]biome, 0)
 	biomes = append(biomes, makeForestBiome())
-	biomes = append(biomes, makeDesertBiome())
+	// biomes = append(biomes, makeDesertBiome())
 	return biomes
 }
 
 func newGenerator(worldConfig Config) *Generator {
 	g := &Generator{
 		seed: worldConfig.Seed,
-		perlin:       perlin.NewPerlin(alpha, beta, perlinN, worldConfig.Seed),
+		perlin: perlin.NewPerlin(worldConfig.Seed),
 		biomes: makeBiomes(),
 	}
 	return g
 }
 
-// returns a number between 0 and 1 generated using perlin noise
-func perlinCoef(p *perlin.Perlin, x, z int, scale float64) float64 {
-	// make sure we don't touch 1
-	c := 0.5 + 0.5*p.Noise2D(float64(x)/scale, float64(z)/scale)
-	if c >= 1 {
-		return 0.999
-	}
-	if c < 0 {
-		return 0
-	}
-	return c
-}
-
 func (g *Generator) getBiome(x, z int) biome {
-	r := perlinCoef(g.perlin, x, z, biomeScale)
+	r := g.perlin.Noise2D(float64(x)/biomeScale, float64(z)/biomeScale)
 	incr := float64(1) / float64(len(g.biomes))
 	n := int(math.Floor(r / incr))
 	return g.biomes[n]

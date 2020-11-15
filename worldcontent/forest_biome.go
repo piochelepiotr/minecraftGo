@@ -1,16 +1,16 @@
 package worldcontent
 
 import (
-	"github.com/aquilax/go-perlin"
+	"github.com/piochelepiotr/minecraftGo/perlin"
 	"github.com/piochelepiotr/minecraftGo/world/block"
 )
 
 const (
 	forestMinElevation = 1
 	// max is not reached, max - 1 is reached
-	forestMaxElevation = 16 * 3
-	forestElevationScale = 100
-	dirtLayerThikness int = 5
+	forestMaxElevation     = 16 * 3
+	forestScale            = 100
+	dirtLayerThikness  int = 5
 )
 
 
@@ -25,10 +25,10 @@ func (f *ForestBiome) getStructures() []*structure {
 
 func makeForestBiome() *ForestBiome {
 	structures := make([]*structure, 0)
-	structures = append(structures, makeTree())
+	// structures = append(structures, makeTree())
 	return &ForestBiome{
 		structures: structures,
-		perlin:       perlin.NewPerlin(alpha, beta, perlinN, 233),
+		perlin:       perlin.NewPerlin(233),
 	}
 }
 
@@ -47,6 +47,6 @@ func (f *ForestBiome) blockType(x, y, z int) block.Block {
 }
 
 func (f *ForestBiome) worldHeight(x, z int) int {
-	c := perlinCoef(f.perlin, x, z, forestElevationScale)
+	c := f.perlin.Noise2D(float64(x)/float64(forestScale), float64(z)/float64(forestScale))
 	return forestMinElevation + int(float64(forestMaxElevation - forestMinElevation)*c)
 }
