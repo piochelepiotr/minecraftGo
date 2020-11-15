@@ -22,9 +22,9 @@ func loadChunkFromSaves(config Config, start geometry.Point) (chunk *RawChunk, e
 
 // getChunk tries to load the chunk from a saved file. If there is nothing, generates one using the generator
 func getChunk(worldConfig Config, start geometry.Point, generator *Generator) *RawChunk {
-	if chunk, err := loadChunkFromSaves(worldConfig, start); err == nil {
-		return chunk
-	}
+	// if chunk, err := loadChunkFromSaves(worldConfig, start); err == nil {
+	// 	 return chunk
+	// }
 	return generator.generateChunk(start)
 }
 

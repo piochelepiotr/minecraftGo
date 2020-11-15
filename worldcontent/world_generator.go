@@ -89,6 +89,12 @@ func noise2d(p *perlin.Perlin, x int, y int, scale float64, min int, max int) in
 	return min + int(float64(max-min)*c)
 }
 
+func random2d(perlin *perlin.Perlin, x int, y int, p float64) bool {
+	c := perlin.Noise2D(float64(x) + 0.5, float64(y) + 0.5)
+	c = (c + maxPerlin/2)/maxPerlin
+	return c <= p
+}
+
 func (g *Generator) random(x int, z int, p float64) bool {
 	n := int(g.seed)*x + z*int(g.seed) + int(g.seed) + x*z*int(g.seed)
 	return n % int(1/p) == 0

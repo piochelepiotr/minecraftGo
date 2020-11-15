@@ -9,9 +9,9 @@ import (
 
 const (
 	//topSpeed in m/s
-	topSpeed             float32 = 5
-	topFlightVSpeed      float32 = 5
-	topVSpeed            float32 = 20
+	topSpeed             float32 = 50
+	topFlightVSpeed      float32 = 15
+	topVSpeed            float32 = 30
 	jumpHeight           float32 = 1.1
 	g                            = 50
 	breakingAcceleration         = 100

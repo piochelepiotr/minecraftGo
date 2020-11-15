@@ -8,7 +8,7 @@ import (
 const (
 	forestMinElevation = 1
 	// max is not reached, max - 1 is reached
-	forestMaxElevation     = 16 * 3
+	forestMaxElevation     = WorldHeight
 	forestScale            = 100
 	dirtLayerThikness  int = 5
 )
@@ -25,10 +25,10 @@ func (f *ForestBiome) getStructures() []*structure {
 
 func makeForestBiome() *ForestBiome {
 	structures := make([]*structure, 0)
-	// structures = append(structures, makeTree())
+	structures = append(structures, makeTree())
 	return &ForestBiome{
 		structures: structures,
-		perlin:       perlin.NewPerlin(2, 2, 1, 233),
+		perlin:       perlin.NewPerlin(2, 2, 2, 233),
 	}
 }
 
