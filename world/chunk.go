@@ -14,6 +14,13 @@ const numberRowsTextures int = 16
 
 // Chunk is set cube of blocks
 type Chunk struct {
+	raw *worldcontent.RawChunk
+	up *worldcontent.RawChunk
+	bottom *worldcontent.RawChunk
+	right *worldcontent.RawChunk
+	left *worldcontent.RawChunk
+	front *worldcontent.RawChunk
+	back *worldcontent.RawChunk
 	start geometry.Point
 	model            *constructionChunk
 	transparentModel *constructionChunk
@@ -24,7 +31,17 @@ type Chunk struct {
 
 // NewChunk returns a new graphic chunk
 func NewChunk(world *worldcontent.InMemoryWorld, start geometry.Point) *Chunk {
-	chunk := Chunk{world: world, start: start}
+	chunk := Chunk{
+		world: world,
+		start: start,
+		raw: world.GetChunk(start),
+		up: world.GetChunk(start.Add(0, worldcontent.ChunkSize, 0)),
+		bottom: world.GetChunk(start.Add(0, -worldcontent.ChunkSize, 0)),
+		right: world.GetChunk(start.Add(worldcontent.ChunkSize, 0, 0)),
+		left: world.GetChunk(start.Add(-worldcontent.ChunkSize, 0, 0)),
+		front: world.GetChunk(start.Add(0, 0, worldcontent.ChunkSize)),
+		back: world.GetChunk(start.Add(0, 0, -worldcontent.ChunkSize)),
+	}
 	chunk.buildFaces()
 	return &chunk
 }
@@ -125,22 +142,44 @@ func (c *constructionChunk) buildBlock(x, y, z float32, b block.Block, up, botto
 	}
 }
 
+func (c *Chunk) getBlock(x, y, z int) block.Block {
+	if x >= worldcontent.ChunkSize {
+		return c.right.GetBlock(x-worldcontent.ChunkSize, y, z)
+	}
+	if x < 0 {
+		return c.left.GetBlock(x+worldcontent.ChunkSize, y, z)
+	}
+	if y >= worldcontent.ChunkSize {
+		return c.up.GetBlock(x, y-worldcontent.ChunkSize, z)
+	}
+	if y < 0 {
+		return c.bottom.GetBlock(x, y+worldcontent.ChunkSize, z)
+	}
+	if z >= worldcontent.ChunkSize {
+		return c.front.GetBlock(x, y, z-worldcontent.ChunkSize)
+	}
+	if z < 0 {
+		return c.back.GetBlock(x, y, z+worldcontent.ChunkSize)
+	}
+	return c.raw.GetBlock(x, y, z)
+}
+
 func (c *Chunk) buildFaces() {
 	c.model = newConstructionChunk()
 	c.transparentModel = newConstructionChunk()
 	for x := 0; x < worldcontent.ChunkSize; x++ {
 		for y := 0; y < worldcontent.ChunkSize; y++ {
 			for z := 0; z < worldcontent.ChunkSize; z++ {
-				b := c.world.GetBlock(c.start.X + x, c.start.Y + y, c.start.Z+ z)
+				b := c.getBlock(x, y, z)
 				if b == block.Air {
 					continue
 				}
-				up := c.world.GetBlock(c.start.X + x, c.start.Y + y+1, c.start.Z + z).IsTransparent()
-				bottom := c.world.GetBlock(c.start.X + x, c.start.Y + y-1, c.start.Z + z).IsTransparent()
-				right := c.world.GetBlock(c.start.X + x+1, c.start.Y + y, c.start.Z + z).IsTransparent()
-				left := c.world.GetBlock(c.start.X + x-1, c.start.Y + y, c.start.Z + z).IsTransparent()
-				front := c.world.GetBlock(c.start.X + x, c.start.Y + y, c.start.Z + z+1).IsTransparent()
-				back := c.world.GetBlock(c.start.X + x, c.start.Y + y, c.start.Z + z-1).IsTransparent()
+				up := c.getBlock(x, y+1, z).IsTransparent()
+				bottom := c.getBlock(x, y-1, z).IsTransparent()
+				right := c.getBlock(x+1, y, z).IsTransparent()
+				left := c.getBlock(x-1, y, z).IsTransparent()
+				front := c.getBlock(x, y, z+1).IsTransparent()
+				back := c.getBlock(x, y, z-1).IsTransparent()
 				cons := c.model
 				if b.IsTransparent() {
 					cons = c.transparentModel

@@ -21,7 +21,7 @@ func (p *Perlin) makePermutation() {
 	for i := 0; i < 256; i++ {
 		p.P[i] = i
 	}
-	rand.Shuffle(256, func(i, j int) {
+	p.rand.Shuffle(256, func(i, j int) {
 		p.P[i], p.P[j] = p.P[j], p.P[i]
 	})
 	copy(p.P[256:], p.P[:256])

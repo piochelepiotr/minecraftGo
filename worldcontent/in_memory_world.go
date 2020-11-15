@@ -45,7 +45,7 @@ func NewInMemoryWorld(config Config) *InMemoryWorld{
 	}
 }
 
-func (w *InMemoryWorld) getChunk(p geometry.Point) *RawChunk{
+func (w *InMemoryWorld) GetChunk(p geometry.Point) *RawChunk{
 	w.chunksLock.Lock()
 	defer w.chunksLock.Unlock()
 	if chunk, ok := w.chunks[p]; ok {
@@ -71,7 +71,7 @@ func (w *InMemoryWorld) GetBlock(x, y, z int) block.Block {
 	if y >= WorldHeight {
 		return block.Air
 	}
-	c := w.getChunk(geometry.Point{chunkX, chunkY, chunkZ})
+	c := w.GetChunk(geometry.Point{chunkX, chunkY, chunkZ})
 	return c.GetBlock(x - chunkX, y - chunkY, z - chunkZ)
 }
 

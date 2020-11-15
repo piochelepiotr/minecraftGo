@@ -188,10 +188,14 @@ func (s *GamingState) Render(renderer *render.MasterRenderer) {
 }
 // NextFrame makes time pass to move to the next frame of the game
 func (s *GamingState) NextFrame() {
-	select {
-	case chunk := <-s.chunkLoader.Chunks():
-		s.world.AddChunk(chunk)
-	default:
+Loop:
+	for {
+		select {
+		case chunk := <-s.chunkLoader.Chunks():
+			s.world.AddChunk(chunk)
+		default:
+			break Loop
+		}
 	}
 	forward := s.keyPressed.wPressed
 	backward := s.keyPressed.sPressed

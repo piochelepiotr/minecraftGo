@@ -3,12 +3,15 @@ package world
 import (
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/worldcontent"
+	"log"
+	"time"
 )
 
 // ChunkLoader loads the chunks in parallel to the main game happening
 type ChunkLoader struct {
 	chunks chan *Chunk
 	world *worldcontent.InMemoryWorld
+	loaded int
 }
 
 func NewChunkLoader(world *worldcontent.InMemoryWorld, chunksToLoad <-chan geometry.Point) *ChunkLoader {
@@ -16,7 +19,7 @@ func NewChunkLoader(world *worldcontent.InMemoryWorld, chunksToLoad <-chan geome
 		world: world,
 		chunks: make(chan *Chunk, 100),
 	}
-	l.start(chunksToLoad)
+	go l.start(chunksToLoad)
 	return l
 }
 
@@ -26,13 +29,22 @@ func (c *ChunkLoader) Chunks() <-chan *Chunk {
 
 func (c *ChunkLoader) start(chunksToLoad <-chan geometry.Point) {
 	// for now, only concurrency of 1
-	go func() {
-		for p := range chunksToLoad {
+	report := time.NewTicker(time.Second*2)
+	defer close(c.chunks)
+	for {
+		select {
+		case p, ok := <-chunksToLoad:
+			if !ok {
+				return
+			}
 			chunk := c.GetChunk(p)
 			c.chunks <- chunk
+			c.loaded++
+		case <-report.C:
+			log.Println("chunks loaded per s", c.loaded/2)
+			c.loaded = 0
 		}
-		close(c.chunks)
-	}()
+	}
 }
 
 func (c *ChunkLoader) GetChunk(p geometry.Point) *Chunk {
