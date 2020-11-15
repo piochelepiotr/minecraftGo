@@ -14,8 +14,9 @@ func (c *RawChunk) encode() []byte {
 	return encoded
 }
 
-func decode(data []byte, start geometry.Point) (chunk RawChunk) {
+func decode(data []byte, start geometry.Point) (chunk *RawChunk) {
 	// for now, we only have v1
+	chunk = &RawChunk{}
 	data = data[1:]
 	chunk.start = start
 	chunk.blocks = make([]block.Block, 0, len(data))

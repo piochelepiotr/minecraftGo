@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func loadChunkFromSaves(config Config, start geometry.Point) (chunk RawChunk, err error) {
+func loadChunkFromSaves(config Config, start geometry.Point) (chunk *RawChunk, err error) {
 	path := savesPath + "/" + config.Name + "/" + "chunk_" + start.GetKey()
 	if _, err := os.Stat(path); err != nil {
 		return chunk, err
@@ -21,11 +21,11 @@ func loadChunkFromSaves(config Config, start geometry.Point) (chunk RawChunk, er
 }
 
 // getChunk tries to load the chunk from a saved file. If there is nothing, generates one using the generator
-func getChunk(worldConfig Config, start geometry.Point, generator *Generator) RawChunk {
+func getChunk(worldConfig Config, start geometry.Point, generator *Generator) *RawChunk {
 	if chunk, err := loadChunkFromSaves(worldConfig, start); err == nil {
 		return chunk
 	}
-	return generator.generateChunk(start, WorldHeight)
+	return generator.generateChunk(start)
 }
 
 // LoadWorld loads the world config from local file

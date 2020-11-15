@@ -164,7 +164,8 @@ func (g *Generator) getStructureBlock(b biome, x, y, z int) block.Block {
 
 
 // generateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
-func (g *Generator) generateChunk(start geometry.Point, chunkSize int) (chunk RawChunk) {
+func (g *Generator) generateChunk(start geometry.Point) (chunk *RawChunk) {
+	chunk = &RawChunk{}
 	chunk.start = start
 	chunk.blocks = make([]block.Block, ChunkSize*ChunkSize*ChunkSize)
 	for x := 0; x < ChunkSize; x++ {

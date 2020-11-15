@@ -11,7 +11,7 @@ const (
 	savesPath = "saves"
 )
 
-func writeChunk(config Config, c RawChunk) {
+func writeChunk(config Config, c *RawChunk) {
 	path := savesPath + "/" + config.Name
 	encoded := c.encode()
 	key := "chunk_" + c.start.GetKey()
@@ -21,12 +21,12 @@ func writeChunk(config Config, c RawChunk) {
 }
 
 type ChunkWriter struct {
-	in <-chan RawChunk
+	in <-chan *RawChunk
 	done chan struct{}
 	worldConfig Config
 }
 
-func NewChunkWriter(worldConfig Config, in <-chan RawChunk) (done <-chan struct{}) {
+func NewChunkWriter(worldConfig Config, in <-chan *RawChunk) (done <-chan struct{}) {
 	w := &ChunkWriter{
 		in: in,
 		done: make(chan struct{}, 0),

@@ -306,7 +306,6 @@ func (w *World) rebuild(x, y, z int) {
 
 // setBlock sets a block and updates UI if necessary
 func (w *World) setBlock(x, y, z int, b block.Block) {
-	log.Println(y)
 	w.world.SetBlock(x, y, z, b)
 	chunkX := worldcontent.ChunkStart(x)
 	chunkY := worldcontent.ChunkStart(y)

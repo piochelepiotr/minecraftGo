@@ -8,7 +8,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
-	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/state"
 	"github.com/piochelepiotr/minecraftGo/ux"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
@@ -94,24 +93,6 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	world.LoadChunks(player.Entity.Position)
 	// state.loadChunks(player.Entity.Position)
 	return state
-}
-
-func (s *GamingState) loadChunks(playerPos mgl32.Vec3) {
-	xPlayer := int(playerPos.X())
-	zPlayer := int(playerPos.Z())
-	chunkX := worldcontent.ChunkStart(xPlayer)
-	chunkZ := worldcontent.ChunkStart(zPlayer)
-	for x := worldcontent.ChunkStart(chunkX - int(worldcontent.UILoadChunkDistance)); x <= worldcontent.ChunkStart(chunkX + int(worldcontent.UILoadChunkDistance)); x += worldcontent.ChunkSize {
-		for z := worldcontent.ChunkStart(chunkZ - int(worldcontent.UILoadChunkDistance)); z <= worldcontent.ChunkStart(chunkZ + int(worldcontent.UILoadChunkDistance)); z += worldcontent.ChunkSize {
-			p := geometry.Point{X: x, Y: 0, Z: z}
-			if p.DistanceTo(playerPos) > worldcontent.UILoadChunkDistance {
-				continue
-			}
-			for y := 0; y < worldcontent.WorldHeight/worldcontent.ChunkSize; y++ {
-				s.world.AddChunk(s.chunkLoader.GetChunk(geometry.Point{x, y*worldcontent.ChunkSize, z}))
-			}
-		}
-	}
 }
 
 func (s *GamingState) Close() {
