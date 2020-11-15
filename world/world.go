@@ -49,7 +49,7 @@ func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32) *World {
 		modelTexture:  modelTexture,
 		// really big here to avoid dead locks (main goroutines writes to this channel
 		// while loader reads from this one and writes a a channel the main goroutine reads from
-		chunksToLoad:  make(chan geometry.Point, 10000),
+		chunksToLoad:  make(chan geometry.Point, 50000),
 		world:         world,
 	}
 	w.Resize(aspectRatio)
