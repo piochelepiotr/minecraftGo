@@ -6,18 +6,26 @@ import "github.com/go-gl/mathgl/mgl32"
 type Block uint8
 
 const (
-	Dirt Block = 2
-	Stone Block = 1
-	Grass Block = 0
-	GrassSide Block = 3
-	Tree Block = 21
-	TreeSide Block = 20
-	Leaves Block = 52
-	Cactus Block = 69
-	CactusSide Block = 70
+	Dirt         Block = 2
+	Stone        Block = 1
+	Grass        Block = 0
+	Coal         Block = 34
+	Iron         Block = 33
+	Gold         Block = 32
+	Plank        Block = 4
+	Tnt          Block = 8
+	TntTop       Block = 9
+	TntBottom    Block = 10
+	GrassSide    Block = 3
+	Tree         Block = 21
+	TreeSide     Block = 20
+	Leaves       Block = 52
+	Cactus       Block = 69
+	CactusSide   Block = 70
 	CactusBottom Block = 71
-	Sand Block = 18
-	Air Block = 255
+	Sand         Block = 18
+	BedRock      Block = 17
+	Air          Block = 255
 )
 
 // blockFaces allows you to put different blocks on sides, top and
@@ -28,22 +36,27 @@ var blockFaces = map[Block]map[Face]Block{
 		Bottom: Dirt,
 	},
 	Tree: {
-		Side:   TreeSide,
+		Side: TreeSide,
 	},
 	Cactus: {
-		Side: CactusSide,
+		Side:   CactusSide,
 		Bottom: CactusBottom,
+	},
+	Tnt: {
+		Top:    TntTop,
+		Bottom: TntBottom,
 	},
 }
 
 var blockColors = map[Block]mgl32.Vec3{
-	Leaves: {55.0/255.0, 97.0/255.0, 43.0/255.0},
+	Leaves: {55.0 / 255.0, 97.0 / 255.0, 43.0 / 255.0},
 }
 
 type Face byte
+
 const (
-	Top Face = 0
-	Side Face = 1
+	Top    Face = 0
+	Side   Face = 1
 	Bottom Face = 2
 )
 

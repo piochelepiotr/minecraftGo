@@ -1,20 +1,21 @@
 package worldcontent
 
 import (
+	"github.com/piochelepiotr/minecraftGo/random"
+	"math"
+
 	"github.com/aquilax/go-perlin"
 	"github.com/piochelepiotr/minecraftGo/geometry"
 	"github.com/piochelepiotr/minecraftGo/world/block"
-	"math"
 )
 
 const (
-	treeProbability float64 = 0.04
-	biomeScale float64 = 200
+	treeProbability float64 = 0.1
+	biomeScale      float64 = 200
 )
 
 var maxPerlin2D = math.Sqrt(2)
 var maxPerlin3D = math.Sqrt(3)
-
 
 type biome interface {
 	blockType(x, y, z int) block.Block
@@ -23,8 +24,8 @@ type biome interface {
 }
 
 type structure struct {
-	blocks [][][]block.Block
-	p float64
+	blocks  [][][]block.Block
+	p       float64
 	originX int
 	originZ int
 }
@@ -44,7 +45,7 @@ func (s *structure) z() int {
 func makeStructure(x, y, z int) *structure {
 	blocks := make([][][]block.Block, x)
 	for ix := 0; ix < x; ix++ {
-		blocks[ix] = make([][]block.Block , y)
+		blocks[ix] = make([][]block.Block, y)
 		for iy := 0; iy < y; iy++ {
 			blocks[ix][iy] = make([]block.Block, z)
 			for iz := 0; iz < z; iz++ {
@@ -86,45 +87,45 @@ func makeTree() *structure {
 
 func noise2d(p *perlin.Perlin, x int, y int, scale float64, min int, max int) int {
 	c := p.Noise2D(float64(x)/scale, float64(y)/scale)
-	c = (c + maxPerlin2D/2)/ maxPerlin2D
+	c = (c + maxPerlin2D/2) / maxPerlin2D
 	return min + int(float64(max-min)*c)
 }
 
-func noise3d(perlin *perlin.Perlin, x int, y int, z int, scale float64, p float64) bool {
+func noise3d(perlin *perlin.Perlin, x int, y int, z int, scale float64) float64 {
 	c := perlin.Noise3D(float64(x)/scale, float64(y)/scale, float64(z)/scale)
-	c = (c + maxPerlin3D/2)/ maxPerlin3D
-	return c <= p
+	return (c + maxPerlin3D/2) / maxPerlin3D
 }
 
 func random2d(perlin *perlin.Perlin, x int, y int, p float64) bool {
-	c := perlin.Noise2D(float64(x) + 0.5, float64(y) + 0.5)
-	c = (c + maxPerlin2D/2)/ maxPerlin2D
+	c := perlin.Noise2D(float64(x)+0.5, float64(y)+0.5)
+	c = (c + maxPerlin2D/2) / maxPerlin2D
 	return c <= p
 }
 
 func (g *Generator) random(x int, z int, p float64) bool {
-	n := int(g.seed)*x + z*int(g.seed) + int(g.seed) + x*z*int(g.seed)
-	return n % int(1/p) == 0
+	return g.noise.Noise2D(x, z) <= p
 }
 
 type Generator struct {
-	seed int64
+	seed   int64
 	perlin *perlin.Perlin
+	noise *random.Noise
 	biomes []biome
 }
 
-func makeBiomes() []biome {
+func makeBiomes(seed int64) []biome {
 	biomes := make([]biome, 0)
-	biomes = append(biomes, makeForestBiome())
+	biomes = append(biomes, makeForestBiome(seed))
 	// biomes = append(biomes, makeDesertBiome())
 	return biomes
 }
 
 func newGenerator(worldConfig Config) *Generator {
 	g := &Generator{
-		seed: worldConfig.Seed,
+		seed:   worldConfig.Seed,
 		perlin: perlin.NewPerlin(2, 2, 1, worldConfig.Seed),
-		biomes: makeBiomes(),
+		noise: random.NewNoise(worldConfig.Seed),
+		biomes: makeBiomes(worldConfig.Seed),
 	}
 	return g
 }
@@ -147,10 +148,10 @@ func (g *Generator) getStructureBlock(b biome, x, y, z int) block.Block {
 		xn := s.x()
 		yn := s.y()
 		zn := s.z()
-		xo := int(math.Floor(float64(x)/float64(xn)))*xn
-		zo := int(math.Floor(float64(z)/float64(zn)))*zn
+		xo := int(math.Floor(float64(x)/float64(xn))) * xn
+		zo := int(math.Floor(float64(z)/float64(zn))) * zn
 		yo := b.worldHeight(xo+s.originX, zo+s.originZ) + 1
-		if y < yo || y >= yo + yn {
+		if y < yo || y >= yo+yn {
 			continue
 		}
 		// fmt.Printf("checking if a tree should be generated xo:%d, zo:%d, x:%d, z:%d\n", xo, zo, x, z)
@@ -164,7 +165,6 @@ func (g *Generator) getStructureBlock(b biome, x, y, z int) block.Block {
 	}
 	return block.Air
 }
-
 
 // generateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
 func (g *Generator) generateChunk(start geometry.Point) (chunk *RawChunk) {
@@ -190,4 +190,3 @@ func (g *Generator) getHeight(x, z, worldHeight int) int {
 	}
 	return 0
 }
-
