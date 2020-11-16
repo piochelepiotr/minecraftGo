@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	treeProbability float64 = 0.1
+	treeProbability float64 = 0.5
 	biomeScale      float64 = 200
 )
 
@@ -85,10 +85,14 @@ func makeTree() *structure {
 	return s
 }
 
-func noise2d(p *perlin.Perlin, x int, y int, scale float64, min int, max int) int {
+func noise2d(p *perlin.Perlin, x int, y int, scale float64) float64 {
 	c := p.Noise2D(float64(x)/scale, float64(y)/scale)
 	c = (c + maxPerlin2D/2) / maxPerlin2D
-	return min + int(float64(max-min)*c)
+	return c
+}
+
+func elevation(p *perlin.Perlin, x int, y int, scale float64, min int, max int) int {
+	return min + int(float64(max-min)*noise2d(p, x, y, scale))
 }
 
 func noise3d(perlin *perlin.Perlin, x int, y int, z int, scale float64) float64 {
@@ -131,7 +135,8 @@ func newGenerator(worldConfig Config) *Generator {
 }
 
 func (g *Generator) getBiome(x, z int) biome {
-	n := noise2d(g.perlin, x, z, biomeScale, 0, len(g.biomes))
+	// change that
+	n := elevation(g.perlin, x, z, biomeScale, 0, len(g.biomes))
 	return g.biomes[n]
 }
 
@@ -155,7 +160,8 @@ func (g *Generator) getStructureBlock(b biome, x, y, z int) block.Block {
 			continue
 		}
 		// fmt.Printf("checking if a tree should be generated xo:%d, zo:%d, x:%d, z:%d\n", xo, zo, x, z)
-		if !g.random(xo, zo, s.p) {
+		p := noise2d(g.perlin, xo, zo, 100)*s.p
+		if !g.random(xo, zo, p) {
 			continue
 		}
 		xi := x - xo

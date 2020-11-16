@@ -21,9 +21,14 @@ func index(x, y, z int) int {
 }
 
 // SetBlock sets a block in a chunk
-func (c *RawChunk) SetBlock(x, y, z int, b block.Block) {
-	c.blocks[index(x, y, z)] = b
+func (c *RawChunk) SetBlock(x, y, z int, b block.Block) (updated bool){
+	i := index(x, y, z)
+	if c.blocks[i] == block.BedRock {
+		return false
+	}
+	c.blocks[i] = b
 	c.dirty = true
+	return true
 }
 
 // GetBlock gets the block of a chunk

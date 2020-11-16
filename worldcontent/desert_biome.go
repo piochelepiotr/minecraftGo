@@ -49,5 +49,5 @@ func (d *DesertBiome) blockType(x, y, z int) block.Block {
 }
 
 func (d *DesertBiome) worldHeight(x, z int) int {
-	return noise2d(d.perlin, x, z, desertElevationScale, desertMinElevation, desertMaxElevation)
+	return elevation(d.perlin, x, z, desertElevationScale, desertMinElevation, desertMaxElevation)
 }

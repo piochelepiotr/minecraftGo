@@ -86,7 +86,7 @@ func (w *InMemoryWorld) GetHeight(x, z int) int {
 }
 
 //SetBlock sets a block and update the chunk
-func (w *InMemoryWorld) SetBlock(x, y, z int, b block.Block) {
+func (w *InMemoryWorld) SetBlock(x, y, z int, b block.Block) (updated bool){
 	w.chunksLock.Lock()
 	defer w.chunksLock.Unlock()
 	chunkX := ChunkStart(x)
@@ -98,10 +98,10 @@ func (w *InMemoryWorld) SetBlock(x, y, z int, b block.Block) {
 		Z: chunkZ,
 	}
 	if chunk, ok := w.chunks[p]; ok {
-		chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, b)
-	} else {
-		log.Print("ERROR when setting block in chunk ", p, " chunk isn't loaded")
+		return chunk.SetBlock(x-chunkX, y-chunkY, z-chunkZ, b)
 	}
+	log.Print("ERROR when setting block in chunk ", p, " chunk isn't loaded")
+	return false
 }
 
 // even if the point is a bit inside a wall, this is going to return

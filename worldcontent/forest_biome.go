@@ -10,7 +10,7 @@ const (
 	forestMinElevation = 60
 	// max is not reached, max - 1 is reached
 	forestMaxElevation     = 100
-	forestScale            = 100
+	forestScale            = 50
 	dirtLayerThikness  int = 5
 	goldProba float64 = 0.01
 	ironProba float64 = 0.05
@@ -81,5 +81,5 @@ func (f *ForestBiome) blockType(x, y, z int) block.Block {
 }
 
 func (f *ForestBiome) worldHeight(x, z int) int {
-	return noise2d(f.perlin, x, z, forestScale, forestMinElevation, forestMaxElevation)
+	return elevation(f.perlin, x, z, forestScale, forestMinElevation, forestMaxElevation)
 }
