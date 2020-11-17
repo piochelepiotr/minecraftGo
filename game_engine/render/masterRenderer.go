@@ -18,7 +18,7 @@ type MasterRenderer struct {
 	guiRenderer  pguis.GuiRenderer
 	// gui3DRenderer is used to render cubes in the inventory
 	gui3DRenderer gui3dRenderer
-	entities     map[models.TexturedModel][]entities.Entity
+	entities     []entities.Entity
 	guis3D     map[models.TexturedModel][]entities.Gui3dEntity
 	guis         []pguis.GuiTexture
 	texts        []font.GUIText
@@ -31,7 +31,7 @@ func CreateMasterRenderer(aspectRatio float32) *MasterRenderer {
 	r.guiRenderer = loader.CreateGuiRenderer()
 	r.renderer = CreateRenderer(aspectRatio)
 	r.gui3DRenderer = createGui3dRenderer(aspectRatio)
-	r.entities = make(map[models.TexturedModel][]entities.Entity)
+	r.entities = nil
 	r.guis3D = make(map[models.TexturedModel][]entities.Gui3dEntity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
@@ -56,7 +56,7 @@ func (r *MasterRenderer) Render() {
 	r.guiRenderer.Render(r.guis)
 	r.fontRenderer.Render(r.texts)
 	r.gui3DRenderer.render(r.guis3D)
-	r.entities = make(map[models.TexturedModel][]entities.Entity)
+	r.entities = nil
 	r.guis3D = make(map[models.TexturedModel][]entities.Gui3dEntity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
@@ -68,7 +68,7 @@ func (r *MasterRenderer) SetCamera(camera *entities.Camera) {
 
 // ProcessEntity adds entity to the list of entities to render
 func (r *MasterRenderer) ProcessEntity(entity entities.Entity) {
-	r.entities[entity.TexturedModel] = append(r.entities[entity.TexturedModel], entity)
+	r.entities= append(r.entities, entity)
 }
 
 // ProcessEntities adds entities to the list of entities to render

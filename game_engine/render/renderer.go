@@ -7,6 +7,7 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/shaders"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
+	"sort"
 )
 
 const nearPlane = 0.1
@@ -73,18 +74,18 @@ func (r *Renderer) prepareEntity(entity entities.Entity) {
 	r.shader.LoadTransformationMatrix(transformationMatrix)
 }
 
-func (r *Renderer) Render(allEntities map[models.TexturedModel][]entities.Entity, camera *entities.Camera) {
+func (r *Renderer) Render(allEntities []entities.Entity, camera *entities.Camera) {
+	// we sort entities to render always in the same order transparent blocks, to avoid flickering
+	sort.Sort(entities.Entities(allEntities))
 	r.shader.Program.Start()
 	defer r.shader.Program.Stop()
 	if camera != nil {
 		r.shader.LoadViewMatrix(camera)
 	}
-	for model := range allEntities {
-		r.prepareTexturedModel(model)
-		for _, entity := range allEntities[model] {
-			r.prepareEntity(entity)
-			gl.DrawElements(gl.TRIANGLES, model.RawModel.VertexCount, gl.UNSIGNED_INT, gl.PtrOffset(0))
-		}
+	for _, entity := range allEntities {
+		r.prepareTexturedModel(entity.TexturedModel)
+		r.prepareEntity(entity)
+		gl.DrawElements(gl.TRIANGLES, entity.TexturedModel.RawModel.VertexCount, gl.UNSIGNED_INT, gl.PtrOffset(0))
 		r.unbindTexturedModel()
 	}
 }
