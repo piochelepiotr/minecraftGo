@@ -41,7 +41,7 @@ type World struct {
 
 // NewWorld initiate the world
 func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32) *World {
-	modelTexture := loader.LoadModelTexture("textures/textures2.png", uint32(numberRowsTextures))
+	modelTexture := loader.LoadModelTexture("textures/textures2.png", uint32(block.NumberRowsTextures))
 	chunks := make(map[geometry.Point]*Chunk)
 	w := &World{
 		chunks:       chunks,

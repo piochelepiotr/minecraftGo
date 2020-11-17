@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	treeProbability float64 = 0.5
 	biomeScale      float64 = 200
 )
 
@@ -56,33 +55,6 @@ func makeStructure(x, y, z int) *structure {
 	return &structure{
 		blocks: blocks,
 	}
-}
-
-func makeTree() *structure {
-	s := makeStructure(5, 7, 5)
-	for x := 0; x < 5; x++ {
-		for y := 3; y < 5; y++ {
-			for z := 0; z < 5; z++ {
-				s.blocks[x][y][z] = block.Leaves
-			}
-		}
-	}
-	for x := 1; x < 4; x++ {
-		for z := 1; z < 4; z++ {
-			s.blocks[x][5][z] = block.Leaves
-		}
-	}
-	for y := 0; y < 6; y++ {
-		s.blocks[2][y][2] = block.Tree
-	}
-	for i := 1; i < 4; i++ {
-		s.blocks[i][6][2] = block.Leaves
-		s.blocks[2][6][i] = block.Leaves
-	}
-	s.p = treeProbability
-	s.originX = 2
-	s.originZ = 2
-	return s
 }
 
 func noise2d(p *perlin.Perlin, x int, y int, scale float64) float64 {

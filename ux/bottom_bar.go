@@ -38,7 +38,9 @@ func NewBottomBar(aspectRatio float32) *BottomBar {
 	objects[1] = block.Dirt
 	objects[2] = block.Sand
 	objects[3] = block.Stone
-	objects[4] = block.Tree
+	objects[4] = block.BirchLeaves
+	objects[5] = block.Birch
+	objects[6] = block.TallGrass
 	for i := 0; i < bottomBarItems; i++ {
 		items = append(items, guis.GuiTexture{})
 	}

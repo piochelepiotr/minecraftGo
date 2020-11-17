@@ -9,9 +9,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/worldcontent"
 )
 
-// numberRowsTextures is the number number of rows on the texture image
-const numberRowsTextures int = 16
-
 // Chunk is set cube of blocks
 type Chunk struct {
 	raw *worldcontent.RawChunk
@@ -76,6 +73,10 @@ func (c *Chunk) Load() {
 }
 
 func (c *constructionChunk) buildBlock(x, y, z float32, b block.Block, up, bottom, right, left, front, back bool) {
+	if b.IsCrossBlock() {
+		c.buildCrossBlock(x, y, z, b)
+		return
+	}
 	//add face if the block next to it is transparent
 	/*faces are :
 	 * up ( + y)
@@ -142,6 +143,31 @@ func (c *constructionChunk) buildBlock(x, y, z float32, b block.Block, up, botto
 	}
 }
 
+func (c *constructionChunk) buildCrossBlock(x, y, z float32, b block.Block) {
+	//add face if the block next to it is transparent
+	/*faces are :
+	 * up ( + y)
+	 * bottom (-y)
+	 * right (+x)
+	 * left (-x)
+	 * front (+z)
+	 * back (-z)
+	 * 0 point is : bottom, left, back
+	 */
+	n := mgl32.Vec3{1, 0, 1}
+	p1 := mgl32.Vec3{x + 1, y + 1, z + 1}
+	p2 := mgl32.Vec3{x, y+1, z}
+	p3 := mgl32.Vec3{x, y, z}
+	p4 := mgl32.Vec3{x + 1, y, z + 1}
+	c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Top), true)
+	n = mgl32.Vec3{-1, 0, 1}
+	p1 = mgl32.Vec3{x, y + 1, z + 1}
+	p2 = mgl32.Vec3{x+1, y+1, z}
+	p3 = mgl32.Vec3{x+1, y, z}
+	p4 = mgl32.Vec3{x, y, z + 1}
+	c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Top), true)
+}
+
 func (c *Chunk) getBlock(x, y, z int) block.Block {
 	if x >= worldcontent.ChunkSize {
 		return c.right.GetBlock(x-worldcontent.ChunkSize, y, z)
@@ -190,27 +216,20 @@ func (c *Chunk) buildFaces() {
 	}
 }
 
-func (c *constructionChunk) addFace(p1, p2, p3, p4, n mgl32.Vec3, b block.Block, inverseRotation bool) {
-	if b == block.Grass {
-		if n.ApproxEqual(mgl32.Vec3{0, -1, 0}) {
-			b = block.Dirt
-		} else if !n.ApproxEqual(mgl32.Vec3{0, 1, 0}) {
-			b = block.Grass
-		}
-	}
-	textureX := int(b) % numberRowsTextures
-	textureY := int(b) / numberRowsTextures
-	offsetTextureX := float32(textureX) / float32(numberRowsTextures)
-	offsetTextureY := float32(textureY) / float32(numberRowsTextures)
+func (c *constructionChunk) addFace(p1, p2, p3, p4, n mgl32.Vec3, b block.TextureID, inverseRotation bool) {
+	textureX := int(b) % block.NumberRowsTextures
+	textureY := int(b) / block.NumberRowsTextures
+	offsetTextureX := float32(textureX) / float32(block.NumberRowsTextures)
+	offsetTextureY := float32(textureY) / float32(block.NumberRowsTextures)
 	offsetTexture := mgl32.Vec2{offsetTextureX, offsetTextureY}
 	t1 := mgl32.Vec2{0, 0}
 	t2 := mgl32.Vec2{1, 0}
 	t3 := mgl32.Vec2{1, 1}
 	t4 := mgl32.Vec2{0, 1}
-	t1 = t1.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
-	t2 = t2.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
-	t3 = t3.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
-	t4 = t4.Mul(1.0 / float32(numberRowsTextures)).Add(offsetTexture)
+	t1 = t1.Mul(1.0 / float32(block.NumberRowsTextures)).Add(offsetTexture)
+	t2 = t2.Mul(1.0 / float32(block.NumberRowsTextures)).Add(offsetTexture)
+	t3 = t3.Mul(1.0 / float32(block.NumberRowsTextures)).Add(offsetTexture)
+	t4 = t4.Mul(1.0 / float32(block.NumberRowsTextures)).Add(offsetTexture)
 	c.vertices = append(c.vertices, p1)
 	c.vertices = append(c.vertices, p2)
 	c.vertices = append(c.vertices, p3)
