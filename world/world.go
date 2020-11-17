@@ -101,8 +101,7 @@ func (w *World) isChunkVisible(cameraPosition, coneVector, corner mgl32.Vec3) bo
 func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 	chunks := make([]entities.Entity, 0)
 	for _, chunk := range w.chunks {
-		model := chunk.Model
-		if model.VertexCount == 0 {
+		if chunk.Model.VertexCount == 0 && chunk.TransparentModel.VertexCount == 0{
 			continue
 		}
 		coneVector := geometry.ComputeCameraRay(camera.Rotation).Normalize()
@@ -114,30 +113,24 @@ func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 		if !w.isChunkVisible(camera.Position, coneVector, p) {
 			continue
 		}
-		chunkEntity := entities.Entity{
-			TexturedModel: models.TexturedModel{
-				RawModel:     chunk.Model,
-				ModelTexture: w.modelTexture,
-			},
-			Position: p,
+		if chunk.Model.VertexCount > 0 {
+			chunks = append(chunks, entities.Entity{
+				TexturedModel: models.TexturedModel{
+					RawModel:     chunk.Model,
+					ModelTexture: w.modelTexture,
+				},
+				Position: p,
+			})
 		}
-		transparentChunkEntity := entities.Entity{
-			TexturedModel: models.TexturedModel{
-				RawModel:     chunk.TransparentModel,
-				ModelTexture: w.modelTexture,
-				Transparent:  true,
-			},
-			Position: mgl32.Vec3{
-				float32(chunk.start.X),
-				float32(chunk.start.Y),
-				float32(chunk.start.Z),
-			},
-		}
-		if chunkEntity.TexturedModel.RawModel.VertexCount > 0 {
-			chunks = append(chunks, chunkEntity)
-		}
-		if transparentChunkEntity.TexturedModel.RawModel.VertexCount > 0 {
-			chunks = append(chunks, transparentChunkEntity)
+		if chunk.TransparentModel.VertexCount > 0 {
+			chunks = append(chunks, entities.Entity{
+				TexturedModel: models.TexturedModel{
+					RawModel:     chunk.TransparentModel,
+					ModelTexture: w.modelTexture,
+					Transparent:  true,
+				},
+				Position: p,
+			})
 		}
 	}
 	return chunks

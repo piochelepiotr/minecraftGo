@@ -146,7 +146,7 @@ func (w *InMemoryWorld) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, geo
 	xray := geometry.NewXray(p, dir)
 	for i := 0; i < 10; i++ {
 		//fmt.Println("POS: ", x, ";", y, ";", z)
-		if w.GetBlock(xray.P.X, xray.P.Y, xray.P.Z) != block.Air {
+		if w.GetBlock(xray.P.X, xray.P.Y, xray.P.Z).IsSolid() {
 			return xray.Distance, xray.P, xray.Previous
 		}
 		xray.GoToNextBlock()

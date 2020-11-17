@@ -438,6 +438,11 @@ var crossBlocks = map[Block]struct{}{
 	BirchSapling: {},
 }
 
+var transparentBlocks = map[Block]struct{}{
+	BirchLeaves: {},
+	Air: {},
+}
+
 type Face byte
 
 const (
@@ -446,8 +451,13 @@ const (
 	Bottom Face = 2
 )
 
+func (b Block) IsSolid() bool {
+	return !(b == Air || b.IsCrossBlock())
+}
+
 func (b Block) IsTransparent() bool {
-	return b == Air || b == BirchLeaves || b.IsCrossBlock()
+	_, ok := transparentBlocks[b]
+	return ok  || b.IsCrossBlock()
 }
 
 func (b Block) IsCrossBlock() bool {
