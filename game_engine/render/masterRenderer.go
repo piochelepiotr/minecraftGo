@@ -25,7 +25,7 @@ type MasterRenderer struct {
 }
 
 // CreateMasterRenderer creates a MasterRenderer class
-func CreateMasterRenderer(aspectRatio float32) *MasterRenderer {
+func CreateMasterRenderer(aspectRatio float32, loader *loader.Loader) *MasterRenderer {
 	var r MasterRenderer
 	r.fontRenderer = CreateFontRenderer()
 	r.guiRenderer = loader.CreateGuiRenderer()

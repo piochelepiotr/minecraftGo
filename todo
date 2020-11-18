@@ -19,7 +19,6 @@ Check out open GL profiler
 ## Robustness
 
 Can't place block if you will occupy that block
-Fix bugs whith some blocks we can't break
 Fix Bugs when jumping, being in tunnels
 unloading of vaos/vbos should be done when deleting chunks
 fix race condition in loader

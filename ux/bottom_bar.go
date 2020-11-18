@@ -26,7 +26,7 @@ type BottomBar struct {
 	objectsGuis []entities.Gui3dEntity
 }
 
-func NewBottomBar(aspectRatio float32) *BottomBar {
+func NewBottomBar(aspectRatio float32, loader *loader.Loader) *BottomBar {
 	selectedItemTextureID := loader.LoadGuiTexture("textures/selected_item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	itemTextureID := loader.LoadGuiTexture("textures/item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	items := make([]guis.GuiTexture, 0, bottomBarItems)
@@ -53,7 +53,7 @@ func NewBottomBar(aspectRatio float32) *BottomBar {
 		aspectRatio: aspectRatio,
 		objects: objects,
 	}
-	b.buildObjectsGuis()
+	b.buildObjectsGuis(loader)
 	b.selectItem(2)
 	return b
 }
@@ -62,13 +62,13 @@ func (b *BottomBar) GetSelectedBlock() block.Block {
 	return b.objects[b.selectedItem]
 }
 
-func (b *BottomBar) buildObjectsGuis() {
+func (b *BottomBar) buildObjectsGuis(loader *loader.Loader) {
 	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
 	b.objectsGuis = make([]entities.Gui3dEntity, bottomBarItems)
 	for i, o := range b.objects {
 		if o != block.Air {
 			model := models.TexturedModel{
-				RawModel:     pworld.GetIconBlock(o),
+				RawModel:     pworld.GetIconBlock(o, loader),
 				ModelTexture: modelTexture,
 			}
 			b.objectsGuis[i] = entities.Gui3dEntity{
@@ -132,4 +132,3 @@ func (b *BottomBar) Render(renderer *render.MasterRenderer) {
 		}
 	}
 }
-

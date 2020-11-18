@@ -30,6 +30,7 @@ var alwaysRenderDistance = float32(20) //float32(ChunkSize)/ float32( 2 * math.T
 
 // World contains all the blocks of the world in chunks that load around the player
 type World struct {
+	loader *loader.Loader
 	chunks map[geometry.Point]*Chunk
 	// loading is used to not load two times the same chunk
 	loading      map[geometry.Point]struct{}
@@ -40,7 +41,7 @@ type World struct {
 }
 
 // NewWorld initiate the world
-func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32) *World {
+func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32, loader *loader.Loader) *World {
 	modelTexture := loader.LoadModelTexture("textures/textures2.png", uint32(block.NumberRowsTextures))
 	chunks := make(map[geometry.Point]*Chunk)
 	w := &World{
@@ -51,6 +52,7 @@ func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32) *World {
 		// while loader reads from this one and writes a a channel the main goroutine reads from
 		chunksToLoad: make(chan geometry.Point, 50000),
 		world:        world,
+		loader: loader,
 	}
 	w.Resize(aspectRatio)
 	return w
@@ -291,7 +293,7 @@ func (w *World) MovePlayer(player *entities.Player, forward, backward, jump, tou
 func (w *World) rebuild(x, y, z int) {
 	if chunk, ok := w.chunks[geometry.Point{x, y, z}]; ok {
 		chunk.buildFaces()
-		chunk.Load()
+		chunk.Load(w.loader)
 	}
 }
 
@@ -404,7 +406,7 @@ func (w *World) LoadChunks(playerPos mgl32.Vec3) {
 }
 
 func (w *World) AddChunk(chunk *Chunk) {
-	chunk.Load()
+	chunk.Load(w.loader)
 	w.chunks[chunk.start] = chunk
 	delete(w.loading, chunk.start)
 }

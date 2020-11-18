@@ -365,6 +365,7 @@ const (
 	Dirt         Block = 2
 	TallGrass Block = 3
 	BirchSapling Block = 4
+	Rose Block = 5
 	BedRock      Block = 17
 	Sand         Block = 18
 	Birch         Block = 21
@@ -424,6 +425,9 @@ var blockFaces = map[Block]map[Face]TextureID{
 	BirchSapling: {
 		Side: saplingBirch,
 	},
+	Rose: {
+		Side: flowerRose,
+	},
 }
 
 var blockColors = map[TextureID]mgl32.Vec3{
@@ -436,6 +440,7 @@ var blockColors = map[TextureID]mgl32.Vec3{
 var crossBlocks = map[Block]struct{}{
 	TallGrass: {},
 	BirchSapling: {},
+	Rose: {},
 }
 
 var transparentBlocks = map[Block]struct{}{

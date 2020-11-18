@@ -26,7 +26,7 @@ func toInt(s string) uint32 {
 }
 
 // LoadObjModel loads a model exported from a 3D modeling tool
-func LoadObjModel(file string) models.RawModel {
+func (l *Loader) LoadObjModel(file string) models.RawModel {
 	dat, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
@@ -79,7 +79,7 @@ func LoadObjModel(file string) models.RawModel {
 	for i := range colors {
 		colors[i] = 1
 	}
-	return LoadToVAO(verticesArray, texturesArray, indicesArray, normalsArray, colors)
+	return l.LoadToVAO(verticesArray, texturesArray, indicesArray, normalsArray, colors)
 }
 
 func processVertex(vertexData []string, indices []uint32, textures []mgl32.Vec2, normals []mgl32.Vec3, vertices []mgl32.Vec3, texturesArray []float32, normalsArray []float32, verticesArray []float32) []uint32 {

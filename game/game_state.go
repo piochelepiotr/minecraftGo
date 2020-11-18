@@ -44,14 +44,13 @@ type GamingState struct {
 	scroll float64
 }
 // NewGamingState loads a new world
-func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch) *GamingState{
-	log.Printf("Starting game in world %s\n", worldName)
+func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch, loader *loader.Loader) *GamingState{
 	worldConfig, err := worldcontent.LoadWorld(worldName)
 	if err != nil {
 		log.Fatalf("Unable to load world %s. Err: %v", worldName, err)
 	}
 	wContent := worldcontent.NewInMemoryWorld(worldConfig)
-	world := pworld.NewWorld(wContent, display.AspectRatio())
+	world := pworld.NewWorld(wContent, display.AspectRatio(), loader)
 	chunkLoader := pworld.NewChunkLoader(wContent, world.ChunksToLoad())
 	doneWriter := worldcontent.NewChunkWriter(worldConfig, wContent.OutChunksToWrite())
 	camera := entities.CreateCamera(-50, 30, -50, -0.2, 1.8)
@@ -88,7 +87,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		doneWriter: doneWriter,
 		display: display,
 		changeState: changeState,
-		bottomBar: ux.NewBottomBar(display.AspectRatio()),
+		bottomBar: ux.NewBottomBar(display.AspectRatio(), loader),
 	}
 	world.LoadChunks(player.Entity.Position)
 	// state.loadChunks(player.Entity.Position)

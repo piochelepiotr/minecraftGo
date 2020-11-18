@@ -12,20 +12,22 @@ type Menu struct {
 	Items        []*Item
 	font         *font.FontType
 	SelectedItem int
+	loader *loader.Loader
 }
 
 // CreateMenu creates the menu of the game
-func CreateMenu(aspectRatio float32) *Menu {
+func CreateMenu(aspectRatio float32, loader *loader.Loader) *Menu {
 	return &Menu{
 		Items:        make([]*Item, 0),
 		font:         loader.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
 		SelectedItem: -1,
+		loader: loader,
 	}
 }
 
 // AddItem adds item to the game menu
 func (m *Menu) AddItem(text string, callback func()) {
-	m.Items = append(m.Items, CreateItem(text, len(m.Items), m.font, callback))
+	m.Items = append(m.Items, CreateItem(text, len(m.Items), m.font, callback, m.loader))
 	for _, item := range m.Items {
 		item.computeYPos(len(m.Items))
 	}

@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	pmenu "github.com/piochelepiotr/minecraftGo/game_engine/menu"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/state"
@@ -31,8 +32,8 @@ func generateWorldName(worlds []string) string {
 	}
 }
 
-func NewMainMenuState(display *render.DisplayManager, changeState chan<- state.Switch) *MainMenuState{
-	menu := pmenu.CreateMenu(display.AspectRatio())
+func NewMainMenuState(display *render.DisplayManager, loader *loader.Loader, changeState chan<- state.Switch) *MainMenuState{
+	menu := pmenu.CreateMenu(display.AspectRatio(), loader)
 	worlds, err := worldcontent.LoadWorlds()
 	if err != nil {
 		log.Fatalf("Error loading worlds. err:%v", err)

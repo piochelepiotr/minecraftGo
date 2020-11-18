@@ -8,7 +8,9 @@ import (
 
 const (
 	treeProbability float64 = 0.5
-	tallGrassProbability float64 = 0.2
+	tallGrassProbability float64 = 0.3
+	birchSaplingProbability float64 = 0.4
+	roseProbability float64 = 0.5
 	forestMinElevation = 60
 	// max is not reached, max - 1 is reached
 	forestMaxElevation     = 100
@@ -56,7 +58,14 @@ func makeTallGrass() *structure {
 func makeBirchSampling() *structure {
 	s := makeStructure(1, 1, 1)
 	s.blocks[0][0][0] = block.BirchSapling
-	s.p = 0.3
+	s.p = birchSaplingProbability
+	return s
+}
+
+func makeRose() *structure {
+	s := makeStructure(1, 1, 1)
+	s.blocks[0][0][0] = block.Rose
+	s.p = roseProbability
 	return s
 }
 
@@ -76,6 +85,7 @@ func makeForestBiome(seed int64) *ForestBiome {
 	structures = append(structures, makeTree())
 	structures = append(structures, makeTallGrass())
 	structures = append(structures, makeBirchSampling())
+	structures = append(structures, makeRose())
 	return &ForestBiome{
 		structures: structures,
 		perlin:     perlin.NewPerlin(1.3, 2, 3, forestSeed),

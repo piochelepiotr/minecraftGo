@@ -63,7 +63,7 @@ func newConstructionChunk() *constructionChunk {
 }
 
 // Load chunk to openGL
-func (c *Chunk) Load() {
+func (c *Chunk) Load(loader *loader.Loader) {
 	if len(c.model.indices) > 0 {
 		c.Model = loader.LoadToVAO(flatten3D(c.model.vertices), flatten2D(c.model.textures), c.model.indices, flatten3D(c.model.normals), flatten3D(c.model.colors))
 	}

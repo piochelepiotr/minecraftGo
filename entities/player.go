@@ -13,8 +13,9 @@ const (
 	topFlightVSpeed      float32 = 15
 	topVSpeed            float32 = 20
 	jumpHeight           float32 = 1.1
-	g                            = 50
+	g                            = 40
 	breakingAcceleration         = 100
+	minJumpPeriod = time.Millisecond * 500
 )
 
 //jumpSpeed is the vertical speed when jumping
@@ -25,6 +26,7 @@ var acceleration = mgl32.Vec3{10, -g, 10}
 
 //Player is the player of the game
 type Player struct {
+	previousJump time.Time
 	Entity   Entity
 	Speed    mgl32.Vec3
 	LastMove time.Time
@@ -123,6 +125,11 @@ func (p *Player) Forward() mgl32.Vec3 {
 
 // Jump makes the player jump
 func (p *Player) Jump() {
+	now := time.Now()
+	if now.Sub(p.previousJump) < minJumpPeriod {
+		return
+	}
+	p.previousJump = now
 	p.Speed = mgl32.Vec3{
 		p.Speed.X(),
 		jumpSpeed,

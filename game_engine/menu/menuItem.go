@@ -29,7 +29,7 @@ type Item struct {
 }
 
 // CreateItem creates text and gui for menu item
-func CreateItem(text string, index int, font *pfont.FontType, callback func()) *Item {
+func CreateItem(text string, index int, font *pfont.FontType, callback func(), loader *loader.Loader) *Item {
 	return &Item{
 		text:            loader.LoadText(pfont.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
 		index:           index,

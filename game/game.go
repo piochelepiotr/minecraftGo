@@ -11,6 +11,7 @@ import (
 
 // Game is the state in which the player is playing
 type Game struct {
+	loader *loader.Loader
 	changeState chan state.Switch
 	display     *render.DisplayManager
 	state state.ID
@@ -23,12 +24,14 @@ type Game struct {
 // Start starts the main event loop of the game
 func Start(display *render.DisplayManager) {
 	changeState :=  make(chan state.Switch, 1)
+	loader := loader.NewLoader()
 	gameState := &Game{
-		inGameMenuState: NewInGameMenuState(display, changeState),
+		loader: loader,
+		inGameMenuState: NewInGameMenuState(display, loader, changeState),
 		changeState: changeState,
 		display:     display,
 		state: state.Empty,
-		renderer: render.CreateMasterRenderer(display.AspectRatio()),
+		renderer: render.CreateMasterRenderer(display.AspectRatio(), loader),
 	}
 
 	display.ResizeCallBack = gameState.Resize
@@ -50,7 +53,7 @@ func (g *Game) Resize(aspectRatio float32) {
 
 func (g *Game) run() {
 	defer g.renderer.CleanUp()
-	defer loader.CleanUp()
+	defer g.loader.CleanUp()
 
 	updateTicker := time.NewTicker(time.Second)
 	defer updateTicker.Stop()
@@ -91,7 +94,7 @@ func (g *Game) switchState(newState state.Switch) {
 	switch newState.ID {
 	case state.Game:
 		if g.state != state.GameMenu {
-			g.gamingState = NewGamingState(newState.WorldName, g.display, g.changeState)
+			g.gamingState = NewGamingState(newState.WorldName, g.display, g.changeState, g.loader)
 		}
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 		g.display.Window.SetKeyCallback(g.gamingState.keyCallback)
@@ -105,7 +108,7 @@ func (g *Game) switchState(newState state.Switch) {
 		g.display.Window.SetMouseButtonCallback(g.inGameMenuState.clickCallback)
 		g.display.Window.SetScrollCallback(g.inGameMenuState.scrollCallBack)
 	case state.MainMenu:
-		g.mainMenuState = NewMainMenuState(g.display, g.changeState)
+		g.mainMenuState = NewMainMenuState(g.display, g.loader, g.changeState)
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		g.display.Window.SetKeyCallback(g.mainMenuState.keyCallback)
 		g.display.Window.SetCursorPosCallback(g.mainMenuState.mouseMoveCallback)

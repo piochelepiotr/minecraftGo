@@ -2,6 +2,7 @@ package game
 
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	pmenu "github.com/piochelepiotr/minecraftGo/game_engine/menu"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/state"
@@ -11,8 +12,8 @@ type InGameMenuState struct {
 	display     *render.DisplayManager
 }
 
-func NewInGameMenuState(display *render.DisplayManager, changeState chan<- state.Switch) *InGameMenuState{
-	menu := pmenu.CreateMenu(display.AspectRatio())
+func NewInGameMenuState(display *render.DisplayManager, loader *loader.Loader, changeState chan<- state.Switch) *InGameMenuState{
+	menu := pmenu.CreateMenu(display.AspectRatio(), loader)
 	menu.AddItem("Resume game", func() { changeState <- state.Switch{ID: state.Game} })
 	menu.AddItem("Exit game", func() { display.Window.SetShouldClose(true) })
 	menu.AddItem("Go to main menu", func() { changeState <- state.Switch{ID: state.MainMenu} })

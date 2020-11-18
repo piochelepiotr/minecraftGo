@@ -17,7 +17,7 @@ func (c *Chunk) ChangeOrigin() {
 	}
 }
 
-func GetIconBlock(b block.Block) models.RawModel {
+func GetIconBlock(b block.Block, loader *loader.Loader) models.RawModel {
 	c := newConstructionChunk()
 	c.buildBlock(-0.5, -0.5, -0.5, b, true, true, true, true, true, true)
 	model := loader.LoadToVAO(flatten3D(c.vertices), flatten2D(c.textures), c.indices, flatten3D(c.normals), flatten3D(c.colors))
