@@ -332,7 +332,7 @@ func (w *World) setBlock(x, y, z int, b block.Block) {
 func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b block.Block) {
 	xray := geometry.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
-	_, pos, previous := w.world.GetPointedBlock(p, xray)
+	_, pos, previous := w.world.GetPointedBlock(p, xray, placeBlock)
 	if placeBlock {
 		if !pos.Equal(previous) {
 			w.setBlock(previous.X, previous.Y, previous.Z, b)
@@ -344,7 +344,7 @@ func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b block.B
 
 func (w *World) GetPointedBlock(camera *entities.Camera) (pointed geometry.Point, previous geometry.Point){
 	xray := geometry.ComputeCameraRay(camera.Rotation)
-	_, pointed, previous = w.world.GetPointedBlock(camera.Position, xray)
+	_, pointed, previous = w.world.GetPointedBlock(camera.Position, xray, false)
 	return pointed, previous
 }
 

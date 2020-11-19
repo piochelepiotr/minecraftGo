@@ -15,6 +15,7 @@ type OutlineRenderer struct {
 }
 
 func NewOutlineRenderer(aspectRatio float32) *OutlineRenderer {
+	gl.Enable(gl.LINE_SMOOTH)
 	r := &OutlineRenderer{
 		shader: shaders.CreateOutlineShader(),
 	}
@@ -48,8 +49,6 @@ func (r *OutlineRenderer) render(models []models.OutlineModel, camera *entities.
 	}
 	r.shader.Program.Start()
 	defer r.shader.Program.Stop()
-	gl.LineWidth(2)
-	gl.Enable(gl.LINE_SMOOTH)
 	r.shader.LoadViewMatrix(camera)
 	for _, m := range models {
 		r.prepareModel(m)
