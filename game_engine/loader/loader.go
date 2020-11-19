@@ -53,6 +53,17 @@ func (l *Loader) LoadToVAO(positions []float32, textureCoord []float32, indices 
 	}
 }
 
+func (l *Loader) LoadLinesToVAO(positions []float32, indices []uint32) models.RawModel{
+	vaoID := l.createVAO()
+	l.bindIndicesBuffer(indices)
+	l.storeDataInAttributeList(0, 3, positions)
+	defer l.unbindVAO()
+	return models.RawModel{
+		VaoID:       vaoID,
+		VertexCount: int32(len(indices)),
+	}
+}
+
 // LoadTexToVAO loads a texture (2D coords) into a VAO
 func (l *Loader) LoadTexToVAO(positions []float32) models.RawModel {
 	vaoID := l.createVAO()

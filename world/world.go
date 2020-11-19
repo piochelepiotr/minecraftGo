@@ -332,7 +332,7 @@ func (w *World) setBlock(x, y, z int, b block.Block) {
 func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b block.Block) {
 	xray := geometry.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
-	_, pos, previous := w.world.PlaceInFront(p, xray)
+	_, pos, previous := w.world.GetPointedBlock(p, xray)
 	if placeBlock {
 		if !pos.Equal(previous) {
 			w.setBlock(previous.X, previous.Y, previous.Z, b)
@@ -340,6 +340,12 @@ func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b block.B
 	} else {
 		w.setBlock(pos.X, pos.Y, pos.Z, block.Air)
 	}
+}
+
+func (w *World) GetPointedBlock(camera *entities.Camera) (pointed geometry.Point, previous geometry.Point){
+	xray := geometry.ComputeCameraRay(camera.Rotation)
+	_, pointed, previous = w.world.GetPointedBlock(camera.Position, xray)
+	return pointed, previous
 }
 
 func (w *World) deleteChunks(playerPos mgl32.Vec3) {

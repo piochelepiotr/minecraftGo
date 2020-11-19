@@ -16,8 +16,10 @@ type MasterRenderer struct {
 	renderer     Renderer
 	fontRenderer FontRenderer
 	guiRenderer  pguis.GuiRenderer
+	outlineRenderer *OutlineRenderer
 	// gui3DRenderer is used to render cubes in the inventory
 	gui3DRenderer gui3dRenderer
+	outlineModels []models.OutlineModel
 	entities     []entities.Entity
 	guis3D     map[models.TexturedModel][]entities.Gui3dEntity
 	guis         []pguis.GuiTexture
@@ -31,6 +33,7 @@ func CreateMasterRenderer(aspectRatio float32, loader *loader.Loader) *MasterRen
 	r.guiRenderer = loader.CreateGuiRenderer()
 	r.renderer = CreateRenderer(aspectRatio)
 	r.gui3DRenderer = createGui3dRenderer(aspectRatio)
+	r.outlineRenderer = NewOutlineRenderer(aspectRatio)
 	r.entities = nil
 	r.guis3D = make(map[models.TexturedModel][]entities.Gui3dEntity)
 	r.guis = make([]pguis.GuiTexture, 0)
@@ -41,6 +44,7 @@ func CreateMasterRenderer(aspectRatio float32, loader *loader.Loader) *MasterRen
 func (r *MasterRenderer) Resize(aspectRatio float32) {
 	r.renderer.resize(aspectRatio)
 	r.gui3DRenderer.resize(aspectRatio)
+	r.outlineRenderer.resize(aspectRatio)
 }
 
 func (r *MasterRenderer) Prepare() {
@@ -53,6 +57,7 @@ func (r *MasterRenderer) Prepare() {
 func (r *MasterRenderer) Render() {
 	r.Prepare()
 	r.renderer.Render(r.entities, r.camera)
+	r.outlineRenderer.render(r.outlineModels, r.camera)
 	r.guiRenderer.Render(r.guis)
 	r.fontRenderer.Render(r.texts)
 	r.gui3DRenderer.render(r.guis3D)
@@ -60,10 +65,15 @@ func (r *MasterRenderer) Render() {
 	r.guis3D = make(map[models.TexturedModel][]entities.Gui3dEntity)
 	r.guis = make([]pguis.GuiTexture, 0)
 	r.texts = make([]font.GUIText, 0)
+	r.outlineModels = nil
 }
 
 func (r *MasterRenderer) SetCamera(camera *entities.Camera) {
 	r.camera = camera
+}
+
+func (r *MasterRenderer) ProcessOutlineModel(outline models.OutlineModel) {
+	r.outlineModels = append(r.outlineModels, outline)
 }
 
 // ProcessEntity adds entity to the list of entities to render
@@ -108,4 +118,5 @@ func (r *MasterRenderer) CleanUp() {
 	r.fontRenderer.CleanUp()
 	r.guiRenderer.CleanUp()
 	r.gui3DRenderer.cleanUp()
+	r.outlineRenderer.cleanUp()
 }

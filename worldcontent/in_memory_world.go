@@ -118,22 +118,22 @@ func (w *InMemoryWorld) PlaceInFrontWithJumps(edges []mgl32.Vec3, dir mgl32.Vec3
 
 // even if the point is a bit inside a wall, this is going to return
 func (w *InMemoryWorld) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Vec3) float32 {
-	place, _, _ := w.PlaceInFront(p, dir)
+	place, _, _ := w.GetPointedBlock(p, dir)
 	if place > 0 {
 		return place
 	}
 	uDir := dir.Mul(1/dir.Len())
-	placeWithJump, _, _ := w.PlaceInFront(p.Add(uDir.Mul(maxWallJump)), dir)
+	placeWithJump, _, _ := w.GetPointedBlock(p.Add(uDir.Mul(maxWallJump)), dir)
 	if placeWithJump > 0 {
 		return placeWithJump + maxWallJump
 	}
 	if dir.Y() == 0  && (dir.X() == 0 || dir.Z() == 0){
 		orthDir := mgl32.Vec3{uDir.Z(), 0, uDir.X()}
-		placeWithBackJump, _, _ := w.PlaceInFront(p.Add(orthDir.Mul(backwardJump)), dir)
+		placeWithBackJump, _, _ := w.GetPointedBlock(p.Add(orthDir.Mul(backwardJump)), dir)
 		if placeWithBackJump > 0 {
 			return placeWithBackJump
 		}
-		placeWithForwardJump, _, _ := w.PlaceInFront(p.Add(orthDir.Mul(-backwardJump)), dir)
+		placeWithForwardJump, _, _ := w.GetPointedBlock(p.Add(orthDir.Mul(-backwardJump)), dir)
 		if placeWithForwardJump > 0 {
 			return placeWithForwardJump
 		}
@@ -141,8 +141,8 @@ func (w *InMemoryWorld) PlaceInFrontWithJumpsOnePoint(p mgl32.Vec3, dir mgl32.Ve
 	return 0
 }
 
-//PlaceInFront returns place in front of the player
-func (w *InMemoryWorld) PlaceInFront(p mgl32.Vec3, dir mgl32.Vec3) (float32, geometry.Point, geometry.Point) {
+//GetPointedBlock returns place in front of the player
+func (w *InMemoryWorld) GetPointedBlock(p mgl32.Vec3, dir mgl32.Vec3) (float32, geometry.Point, geometry.Point) {
 	xray := geometry.NewXray(p, dir)
 	for i := 0; i < 10; i++ {
 		//fmt.Println("POS: ", x, ";", y, ";", z)

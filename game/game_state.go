@@ -29,6 +29,7 @@ type keyPressed struct {
 
 // GamingState is the 3D state
 type GamingState struct {
+	cubeOutline models.OutlineModel
 	worldContent *worldcontent.InMemoryWorld
 	world       *pworld.World
 	player      *entities.Player
@@ -88,6 +89,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		display: display,
 		changeState: changeState,
 		bottomBar: ux.NewBottomBar(display.AspectRatio(), loader),
+		cubeOutline: ux.NewCubeOutline(loader),
 	}
 	world.LoadChunks(player.Entity.Position)
 	// state.loadChunks(player.Entity.Position)
@@ -122,6 +124,8 @@ func (s *GamingState) mouseMoveCallback(w *glfw.Window, xpos float64, ypos float
 	x, y := s.display.GLPos(xpos, ypos)
 	s.player.Entity.Rotation = mgl32.Vec3{0, -x*s.settings.cameraSensitivity, 0}
 	s.camera.Rotation = mgl32.Vec3{y*s.settings.cameraSensitivity, s.camera.Rotation.Y(), s.camera.Rotation.Z()}
+	pointed, _ := s.world.GetPointedBlock(s.camera)
+	s.cubeOutline.Position = mgl32.Vec3{float32(pointed.X), float32(pointed.Y), float32(pointed.Z)}
 }
 
 func (s *GamingState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
@@ -183,6 +187,7 @@ func (s *GamingState) Render(renderer *render.MasterRenderer) {
 	renderer.ProcessEntities(s.world.GetChunks(s.camera))
 	renderer.SetCamera(s.camera)
 	renderer.ProcessGui(s.cursor)
+	renderer.ProcessOutlineModel(s.cubeOutline)
 	s.bottomBar.Render(renderer)
 }
 // NextFrame makes time pass to move to the next frame of the game
