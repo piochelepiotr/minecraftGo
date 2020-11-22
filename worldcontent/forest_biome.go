@@ -73,13 +73,14 @@ type ForestBiome struct {
 	structures []*structure
 	perlin     *perlin.Perlin
 	noise *random.Noise
+	index int
 }
 
 func (f *ForestBiome) getStructures() []*structure {
 	return f.structures
 }
 
-func makeForestBiome(seed int64) *ForestBiome {
+func makeForestBiome(seed int64, index int) *ForestBiome {
 	forestSeed := seed * 2
 	structures := make([]*structure, 0)
 	structures = append(structures, makeTree())
@@ -90,17 +91,18 @@ func makeForestBiome(seed int64) *ForestBiome {
 		structures: structures,
 		perlin:     perlin.NewPerlin(1.3, 2, 3, forestSeed),
 		noise: random.NewNoise(forestSeed),
+		index: index,
 	}
 }
 
-func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64) block.Block {
+func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block {
 	if y >= WorldHeight {
 		return block.Air
 	}
 	if y == 0 {
 		return block.BedRock
 	}
-	height := f.worldHeight(x, z, distanceFromBorder)
+	height := f.worldHeight(x, z, distanceFromBorder, noises)
 	if y > height {
 		return block.Air
 	}
@@ -135,6 +137,6 @@ func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64) block.B
 	return b
 }
 
-func (f *ForestBiome) worldHeight(x, z int, distanceFromBorder float64) int {
-	return elevation(f.perlin, x, z, forestScale, forestMinElevation, forestMaxElevation, distanceFromBorder)
+func (f *ForestBiome) worldHeight(x, z int, distanceFromBorder float64, noises noisesWithNeighbors) int {
+	return elevation(noises.getNoise(x, z).elevationNoises[f.index], forestMinElevation, forestMaxElevation, distanceFromBorder)
 }

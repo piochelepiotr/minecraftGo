@@ -11,15 +11,16 @@ import (
 
 const (
 	biomeScale      float64 = 200
+	nBiomes = 3
 )
 
 var maxPerlin2D = math.Sqrt(2)
 var maxPerlin3D = math.Sqrt(3)
 
 type biome interface {
-	blockType(x, y, z int, distanceFromBorder float64) block.Block
+	blockType(x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block
 	getStructures() []*structure
-	worldHeight(x, z int, distanceFromBorder float64) int
+	worldHeight(x, z int, distanceFromBorder float64, noises noisesWithNeighbors) int
 }
 
 type structure struct {
@@ -57,14 +58,8 @@ func makeStructure(x, y, z int) *structure {
 	}
 }
 
-func noise2d(p *perlin.Perlin, x int, y int, scale float64) float64 {
-	c := p.Noise2D(float64(x)/scale, float64(y)/scale)
-	c = (c + maxPerlin2D/2) / maxPerlin2D
-	return c
-}
-
-func elevation(p *perlin.Perlin, x int, y int, scale float64, min int, max int, distanceToBorder float64) int {
-	return min + int(float64(max-min)*noise2d(p, x, y, scale)*distanceToBorder)
+func elevation(noise float64, min int, max int, distanceToBorder float64) int {
+	return min + int(float64(max-min)*noise*distanceToBorder)
 }
 
 func noise3d(perlin *perlin.Perlin, x int, y int, z int, scale float64) float64 {
@@ -83,32 +78,31 @@ func (g *Generator) random(x int, z int, p float64) bool {
 }
 
 type Generator struct {
-	seed   int64
-	perlin *perlin.Perlin
+	// perlin *perlin.Perlin
+	noises *noisesLoader
 	noise *random.Noise
 	biomes []biome
 }
 
 func makeBiomes(seed int64) []biome {
 	biomes := make([]biome, 0)
-	biomes = append(biomes, makePlainBiome(seed))
-	biomes = append(biomes, makeForestBiome(seed))
-	// biomes = append(biomes, makeDesertBiome())
+	biomes = append(biomes, makePlainBiome(seed, 0))
+	biomes = append(biomes, makeForestBiome(seed, 1))
+	biomes = append(biomes, makeDesertBiome(seed, 2))
 	return biomes
 }
 
 func newGenerator(worldConfig Config) *Generator {
 	g := &Generator{
-		seed:   worldConfig.Seed,
-		perlin: perlin.NewPerlin(2, 2, 1, worldConfig.Seed),
 		noise: random.NewNoise(worldConfig.Seed),
 		biomes: makeBiomes(worldConfig.Seed),
+		noises: newNoisesLoader(worldConfig.Seed),
 	}
 	return g
 }
 
 // if distance != 1, we are at the border
-const borderSize = 0.15
+const borderSize = 0.4
 func distanceFromBiomeBorder(p float64) float64 {
 	lower := float64(int(p))
 	upper := lower + 1
@@ -118,34 +112,33 @@ func distanceFromBiomeBorder(p float64) float64 {
 	return math.Min(minDistance, 1)
 }
 
-func (g *Generator) getBiome(x, z int) (biome biome, distanceFromBorder float64) {
+func (g *Generator) getBiome(x, z int, noises noisesWithNeighbors) (biome biome, distanceFromBorder float64) {
 	// change that
-	p := noise2d(g.perlin, x, z, biomeScale) * float64(len(g.biomes))
+	p := noises.getNoise(x, z).biomeNoise * float64(len(g.biomes))
 	return g.biomes[int(p)], distanceFromBiomeBorder(p)
 }
 
-func (g *Generator) blockType(x, y, z int) block.Block {
-	biome, distanceFromBorder := g.getBiome(x, z)
-	if structureBlock := g.getStructureBlock(biome, x, y, z, distanceFromBorder); structureBlock != block.Air {
+func (g *Generator) blockType(x, y, z int, noises noisesWithNeighbors) block.Block {
+	biome, distanceFromBorder := g.getBiome(x, z, noises)
+	if structureBlock := g.getStructureBlock(biome, x, y, z, distanceFromBorder, noises); structureBlock != block.Air {
 		return structureBlock
 	}
-	return biome.blockType(x, y, z, distanceFromBorder)
+	return biome.blockType(x, y, z, distanceFromBorder, noises)
 }
 
-func (g *Generator) getStructureBlock(b biome, x, y, z int, distanceFromBorder float64) block.Block {
+func (g *Generator) getStructureBlock(b biome, x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block {
 	for _, s := range b.getStructures() {
 		xn := s.x()
 		yn := s.y()
 		zn := s.z()
 		xo := int(math.Floor(float64(x)/float64(xn))) * xn
 		zo := int(math.Floor(float64(z)/float64(zn))) * zn
-		yo := b.worldHeight(xo+s.originX, zo+s.originZ, distanceFromBorder) + 1
+		yo := b.worldHeight(xo+s.originX, zo+s.originZ, distanceFromBorder, noises) + 1
 		if y < yo || y >= yo+yn {
 			continue
 		}
 		// fmt.Printf("checking if a tree should be generated xo:%d, zo:%d, x:%d, z:%d\n", xo, zo, x, z)
-		p := noise2d(g.perlin, xo, zo, 100)*s.p
-		if !g.random(xo, zo, p) {
+		if !g.random(xo, zo, s.p) {
 			continue
 		}
 		xi := x - xo
@@ -161,22 +154,13 @@ func (g *Generator) generateChunk(start geometry.Point) (chunk *RawChunk) {
 	chunk = &RawChunk{}
 	chunk.start = start
 	chunk.blocks = make([]block.Block, ChunkSize*ChunkSize*ChunkSize)
+	noises := g.noises.getNoisesWithNeighbors(start.X, start.Z)
 	for x := 0; x < ChunkSize; x++ {
 		for z := 0; z < ChunkSize; z++ {
 			for y := 0; y < ChunkSize; y++ {
-				chunk.blocks[index(x, y, z)] = g.blockType(start.X+x, start.Y+y, start.Z+z)
+				chunk.blocks[index(x, y, z)] = g.blockType(start.X+x, start.Y+y, start.Z+z, noises)
 			}
 		}
 	}
 	return chunk
-}
-
-// getHeight returns height of the world in blocks at a x,z position
-func (g *Generator) getHeight(x, z, worldHeight int) int {
-	for y := worldHeight - 1; y >= 0; y-- {
-		if g.blockType(x, y, z) != block.Air {
-			return y + 1
-		}
-	}
-	return 0
 }
