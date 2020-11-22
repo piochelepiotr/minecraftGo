@@ -7,21 +7,16 @@ import (
 )
 
 const (
-	treeProbability float64 = 0.5
-	tallGrassProbability float64 = 0.3
-	birchSaplingProbability float64 = 0.4
-	roseProbability float64 = 0.5
-	forestMinElevation = 60
+	plainTreeProbability float64 = 0.05
+	plainTallGrassProbability float64 = 0.1
+	plainMinElevation = 60
 	// max is not reached, max - 1 is reached
-	forestMaxElevation     = 100
-	forestScale            = 50
-	dirtLayerThikness  int = 5
-	goldProba float64 = 0.01
-	ironProba float64 = 0.05
-	coalProba float64 = 0.1
+	plainMaxElevation     = 65
+	plainScale            = 100
+	plainDirtLayerThikness  int = 5
 )
 
-func makeTree() *structure {
+func makePlainTree() *structure {
 	s := makeStructure(5, 7, 5)
 	for x := 0; x < 5; x++ {
 		for y := 3; y < 5; y++ {
@@ -42,58 +37,42 @@ func makeTree() *structure {
 		s.blocks[i][6][2] = block.BirchLeaves
 		s.blocks[2][6][i] = block.BirchLeaves
 	}
-	s.p = treeProbability
+	s.p = plainTreeProbability
 	s.originX = 2
 	s.originZ = 2
 	return s
 }
 
-func makeTallGrass() *structure {
+func makePlainTallGrass() *structure {
 	s := makeStructure(1, 1, 1)
 	s.blocks[0][0][0] = block.TallGrass
-	s.p = tallGrassProbability
+	s.p = plainTallGrassProbability
 	return s
 }
 
-func makeBirchSampling() *structure {
-	s := makeStructure(1, 1, 1)
-	s.blocks[0][0][0] = block.BirchSapling
-	s.p = birchSaplingProbability
-	return s
-}
-
-func makeRose() *structure {
-	s := makeStructure(1, 1, 1)
-	s.blocks[0][0][0] = block.Rose
-	s.p = roseProbability
-	return s
-}
-
-type ForestBiome struct {
+type PlainBiome struct {
 	structures []*structure
 	perlin     *perlin.Perlin
 	noise *random.Noise
 }
 
-func (f *ForestBiome) getStructures() []*structure {
+func (f *PlainBiome) getStructures() []*structure {
 	return f.structures
 }
 
-func makeForestBiome(seed int64) *ForestBiome {
-	forestSeed := seed * 2
+func makePlainBiome(seed int64) *PlainBiome {
+	plainSeed := seed * 3
 	structures := make([]*structure, 0)
-	structures = append(structures, makeTree())
-	structures = append(structures, makeTallGrass())
-	structures = append(structures, makeBirchSampling())
-	structures = append(structures, makeRose())
-	return &ForestBiome{
+	structures = append(structures, makePlainTree())
+	structures = append(structures, makePlainTallGrass())
+	return &PlainBiome{
 		structures: structures,
-		perlin:     perlin.NewPerlin(1.3, 2, 3, forestSeed),
-		noise: random.NewNoise(forestSeed),
+		perlin:     perlin.NewPerlin(2, 2, 3, plainSeed),
+		noise: random.NewNoise(plainSeed),
 	}
 }
 
-func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64) block.Block {
+func (f *PlainBiome) blockType(x, y, z int, distanceFromBorder float64) block.Block {
 	if y >= WorldHeight {
 		return block.Air
 	}
@@ -135,6 +114,6 @@ func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64) block.B
 	return b
 }
 
-func (f *ForestBiome) worldHeight(x, z int, distanceFromBorder float64) int {
-	return elevation(f.perlin, x, z, forestScale, forestMinElevation, forestMaxElevation, distanceFromBorder)
+func (f *PlainBiome) worldHeight(x, z int, distanceFromBorder float64) int {
+	return elevation(f.perlin, x, z, plainScale, plainMinElevation, plainMaxElevation, distanceFromBorder)
 }

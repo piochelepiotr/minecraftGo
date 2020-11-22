@@ -3,7 +3,6 @@
 ## Nicer
 
 Add clouds
-when hovering over a block, selects it
 when breaking block, add particules
 
 ## Gameplay
@@ -19,7 +18,6 @@ Check out open GL profiler
 ## Robustness
 
 Can't place block if you will occupy that block
-Fix Bugs when jumping, being in tunnels
 unloading of vaos/vbos should be done when deleting chunks
 fix race condition in loader
 fix race condition on chunk
