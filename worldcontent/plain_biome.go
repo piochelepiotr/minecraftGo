@@ -8,7 +8,7 @@ import (
 
 const (
 	plainTreeProbability float64 = 0.05
-	plainTallGrassProbability float64 = 0.1
+	plainTallGrassProbability float64 = 0.02
 	plainMinElevation = 60
 	// max is not reached, max - 1 is reached
 	plainMaxElevation     = 65
@@ -74,7 +74,7 @@ func makePlainBiome(seed int64, index int) *PlainBiome {
 	}
 }
 
-func (f *PlainBiome) blockType(x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block {
+func (f *PlainBiome) blockType(x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block {
 	if y >= WorldHeight {
 		return block.Air
 	}
@@ -116,6 +116,6 @@ func (f *PlainBiome) blockType(x, y, z int, distanceFromBorder float64, noises n
 	return b
 }
 
-func (f *PlainBiome) worldHeight(x, z int, distanceFromBorder float64, noises noisesWithNeighbors) int {
+func (f *PlainBiome) worldHeight(x, z int, distanceFromBorder float64, noises *noisesWithNeighbors) int {
 	return elevation(noises.getNoise(x, z).elevationNoises[f.index], plainMinElevation, plainMaxElevation, distanceFromBorder)
 }

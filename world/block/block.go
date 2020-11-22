@@ -437,15 +437,16 @@ var blockColors = map[TextureID]mgl32.Vec3{
 	tallgrass: {71.0 / 255.0, 113.0 / 255.0, 53.0 / 255.0},
 }
 
-var crossBlocks = map[Block]struct{}{
-	TallGrass: {},
-	BirchSapling: {},
-	Rose: {},
-}
+var transparentBlocks [256]bool
+var crossBlocks [256]bool
 
-var transparentBlocks = map[Block]struct{}{
-	BirchLeaves: {},
-	Air: {},
+func init() {
+	crossBlocks[TallGrass] = true
+	crossBlocks[BirchSapling] = true
+	crossBlocks[Rose] = true
+
+	transparentBlocks[BirchLeaves] = true
+	transparentBlocks[Air] = true
 }
 
 type Face byte
@@ -457,17 +458,15 @@ const (
 )
 
 func (b Block) IsSolid() bool {
-	return !(b == Air || b.IsCrossBlock())
+	return b != Air && !b.IsCrossBlock()
 }
 
 func (b Block) IsTransparent() bool {
-	_, ok := transparentBlocks[b]
-	return ok  || b.IsCrossBlock()
+	return transparentBlocks[b] || b.IsCrossBlock()
 }
 
 func (b Block) IsCrossBlock() bool {
-	_, ok := crossBlocks[b]
-	return ok
+	return crossBlocks[b]
 }
 
 func (b Block) GetSide(f Face) TextureID {

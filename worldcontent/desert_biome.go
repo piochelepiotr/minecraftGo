@@ -43,7 +43,7 @@ func makeCactus() *structure {
 	return s
 }
 
-func (d *DesertBiome) blockType(x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block {
+func (d *DesertBiome) blockType(x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block {
 	height := d.worldHeight(x, z, distanceFromBorder, noises)
 	if y <= height{
 		return block.Sand
@@ -51,6 +51,6 @@ func (d *DesertBiome) blockType(x, y, z int, distanceFromBorder float64, noises 
 	return block.Air
 }
 
-func (d *DesertBiome) worldHeight(x, z int, distanceFromBorder float64, noises noisesWithNeighbors) int {
+func (d *DesertBiome) worldHeight(x, z int, distanceFromBorder float64, noises *noisesWithNeighbors) int {
 	return elevation(noises.getNoise(x, z).elevationNoises[d.index], desertMinElevation, desertMaxElevation, distanceFromBorder)
 }

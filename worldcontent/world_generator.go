@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	biomeScale      float64 = 200
+	biomeScale      float64 = 300
 	nBiomes = 3
 )
 
@@ -18,9 +18,9 @@ var maxPerlin2D = math.Sqrt(2)
 var maxPerlin3D = math.Sqrt(3)
 
 type biome interface {
-	blockType(x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block
+	blockType(x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block
 	getStructures() []*structure
-	worldHeight(x, z int, distanceFromBorder float64, noises noisesWithNeighbors) int
+	worldHeight(x, z int, distanceFromBorder float64, noises *noisesWithNeighbors) int
 }
 
 type structure struct {
@@ -112,13 +112,13 @@ func distanceFromBiomeBorder(p float64) float64 {
 	return math.Min(minDistance, 1)
 }
 
-func (g *Generator) getBiome(x, z int, noises noisesWithNeighbors) (biome biome, distanceFromBorder float64) {
+func (g *Generator) getBiome(x, z int, noises *noisesWithNeighbors) (biome biome, distanceFromBorder float64) {
 	// change that
 	p := noises.getNoise(x, z).biomeNoise * float64(len(g.biomes))
 	return g.biomes[int(p)], distanceFromBiomeBorder(p)
 }
 
-func (g *Generator) blockType(x, y, z int, noises noisesWithNeighbors) block.Block {
+func (g *Generator) blockType(x, y, z int, noises *noisesWithNeighbors) block.Block {
 	biome, distanceFromBorder := g.getBiome(x, z, noises)
 	if structureBlock := g.getStructureBlock(biome, x, y, z, distanceFromBorder, noises); structureBlock != block.Air {
 		return structureBlock
@@ -126,7 +126,7 @@ func (g *Generator) blockType(x, y, z int, noises noisesWithNeighbors) block.Blo
 	return biome.blockType(x, y, z, distanceFromBorder, noises)
 }
 
-func (g *Generator) getStructureBlock(b biome, x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block {
+func (g *Generator) getStructureBlock(b biome, x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block {
 	for _, s := range b.getStructures() {
 		xn := s.x()
 		yn := s.y()

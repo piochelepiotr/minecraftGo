@@ -9,7 +9,7 @@ import (
 
 const (
 	//topSpeed in m/s
-	topSpeed             float32 = 20
+	topSpeed             float32 = 40
 	topFlightVSpeed      float32 = 15
 	topVSpeed            float32 = 20
 	jumpHeight           float32 = 1.1

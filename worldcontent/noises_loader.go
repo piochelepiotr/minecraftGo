@@ -20,12 +20,8 @@ func (n chunkNoises2D)set(x, z int, noise noises2D) {
 	n[z*ChunkSize + x] = noise
 }
 
-func newChunkNoises2D() chunkNoises2D {
-	return make(chunkNoises2D, ChunkSize * ChunkSize)
-}
-
 type noisesWithNeighbors struct {
-	chunks [9]chunkNoises2D
+	chunks []chunkNoises2D
 	originX int
 	originZ int
 }
@@ -40,10 +36,11 @@ type noisesLoader struct {
 	scales [nBiomes]int
 }
 
-func (n *noisesLoader) getNoisesWithNeighbors(chunkX, chunkZ int) noisesWithNeighbors {
+func (n *noisesLoader) getNoisesWithNeighbors(chunkX, chunkZ int) *noisesWithNeighbors {
 	noises := noisesWithNeighbors{
 		originX: chunkX,
 		originZ: chunkZ,
+		chunks: make([]chunkNoises2D, 9),
 	}
 	i := 0
 	for x := -1; x <= 1; x++ {
@@ -52,10 +49,10 @@ func (n *noisesLoader) getNoisesWithNeighbors(chunkX, chunkZ int) noisesWithNeig
 			i++
 		}
 	}
-	return noises
+	return &noises
 }
 
-func (n noisesWithNeighbors) getNoise(x, z int) noises2D {
+func (n *noisesWithNeighbors) getNoise(x, z int) noises2D {
 	chunkX := n.originX
 	chunkZ := n.originZ
 	// the middle is the origin chunk
@@ -74,14 +71,13 @@ func (n noisesWithNeighbors) getNoise(x, z int) noises2D {
 		chunkZ += ChunkSize
 		i += 1
 	}
-	c := n.chunks[i]
-	return c.get(x - chunkX, z - chunkZ)
+	return n.chunks[i].get(x - chunkX, z - chunkZ)
 }
 
 func newNoisesLoader(seed int64) *noisesLoader {
 	n := noisesLoader{
 		noises: make(map[point2d]chunkNoises2D),
-		biomePerlin: perlin.NewPerlin(2, 2, 3, seed),
+		biomePerlin: perlin.NewPerlin(1.1, 2, 3, seed),
 	}
 	for i := 0; i < nBiomes; i++ {
 		n.elevationPerlins[i] = perlin.NewPerlin(2, 2, 3, seed*int64(i+2))
@@ -101,7 +97,7 @@ func (n *noisesLoader) get(chunkX, chunkZ int) chunkNoises2D {
 }
 
 func (n *noisesLoader) generateNoises(chunkX, chunkZ int) chunkNoises2D {
-	noises := newChunkNoises2D()
+	noises := make(chunkNoises2D, ChunkSize*ChunkSize)
 	for x := 0; x < ChunkSize; x++ {
 		for z := 0; z < ChunkSize; z++ {
 			noises.set(x, z, n.noiseAt(x + chunkX, z + chunkZ))
@@ -122,6 +118,10 @@ func (n *noisesLoader) noiseAt(x, z int) noises2D {
 func noise2d(p *perlin.Perlin, x int, y int, scale float64) float64 {
 	c := p.Noise2D(float64(x)/scale, float64(y)/scale)
 	c = (c + maxPerlin2D/2) / maxPerlin2D
+	if c < 0 {
+		c = 0
+	} else if c >= 1 {
+		c = 0.9999999
+	}
 	return c
 }
-

@@ -8,9 +8,9 @@ import (
 
 const (
 	treeProbability float64 = 0.5
-	tallGrassProbability float64 = 0.3
-	birchSaplingProbability float64 = 0.4
-	roseProbability float64 = 0.5
+	tallGrassProbability float64 = 0.2
+	birchSaplingProbability float64 = 0.25
+	roseProbability float64 = 0.3
 	forestMinElevation = 60
 	// max is not reached, max - 1 is reached
 	forestMaxElevation     = 100
@@ -95,7 +95,7 @@ func makeForestBiome(seed int64, index int) *ForestBiome {
 	}
 }
 
-func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64, noises noisesWithNeighbors) block.Block {
+func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block {
 	if y >= WorldHeight {
 		return block.Air
 	}
@@ -137,6 +137,6 @@ func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64, noises 
 	return b
 }
 
-func (f *ForestBiome) worldHeight(x, z int, distanceFromBorder float64, noises noisesWithNeighbors) int {
+func (f *ForestBiome) worldHeight(x, z int, distanceFromBorder float64, noises *noisesWithNeighbors) int {
 	return elevation(noises.getNoise(x, z).elevationNoises[f.index], forestMinElevation, forestMaxElevation, distanceFromBorder)
 }
