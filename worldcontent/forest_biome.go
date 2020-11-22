@@ -1,8 +1,6 @@
 package worldcontent
 
 import (
-	"github.com/aquilax/go-perlin"
-	"github.com/piochelepiotr/minecraftGo/random"
 	"github.com/piochelepiotr/minecraftGo/world/block"
 )
 
@@ -69,58 +67,20 @@ func makeRose() *structure {
 	return s
 }
 
-type ForestBiome struct {
-	structures []*structure
-	perlin     *perlin.Perlin
-	noise *random.Noise
-	index int
-}
-
-func (f *ForestBiome) getStructures() []*structure {
-	return f.structures
-}
-
-func makeForestBiome(seed int64, index int) *ForestBiome {
-	forestSeed := seed * 2
-	structures := make([]*structure, 0)
-	structures = append(structures, makeTree())
-	structures = append(structures, makeTallGrass())
-	structures = append(structures, makeBirchSampling())
-	structures = append(structures, makeRose())
-	return &ForestBiome{
-		structures: structures,
-		perlin:     perlin.NewPerlin(1.3, 2, 3, forestSeed),
-		noise: random.NewNoise(forestSeed),
-		index: index,
-	}
-}
-
-func (f *ForestBiome) blockType(x, y, z int, noises *noisesWithNeighbors) block.Block {
-	if y >= WorldHeight {
-		return block.Air
-	}
-	if y == 0 {
-		return block.BedRock
-	}
-	height := noises.getNoise(x, z).elevation
-	if y > height {
-		return block.Air
-	}
+func forestBlockType(y, elevation int, oreNoise, caveNoise float64) block.Block {
 	b := block.Stone
-	if y == height {
+	if y == elevation {
 		b = block.Grass
-	} else if y > height-dirtLayerThikness {
+	} else if y > elevation-dirtLayerThikness {
 		b = block.Dirt
 	}
 	// y and z inverted on purpose, negative 3rd metric doesn't work
-	noise := noise3d(f.perlin, x, z, y, 40.0)
-	if noise < 0.1 {
+	if caveNoise < 0.1 {
 		return block.Air
 	}
 	if b != block.Stone {
 		return b
 	}
-	oreNoise := f.noise.Noise3D(x, y, z)
 	cumulative := float64(0)
 	if oreNoise < cumulative + goldProba {
 		return block.Gold
@@ -135,14 +95,4 @@ func (f *ForestBiome) blockType(x, y, z int, noises *noisesWithNeighbors) block.
 	}
 	cumulative += coalProba
 	return b
-}
-
-func (f *ForestBiome) getScale() int {
-	return forestScale
-}
-func (f *ForestBiome) maxElevation() int {
-	return forestMaxElevation
-}
-func (f *ForestBiome) minElevation() int {
-	return forestMinElevation
 }

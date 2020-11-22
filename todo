@@ -22,10 +22,14 @@ unloading of vaos/vbos should be done when deleting chunks
 fix race condition in loader
 fix race condition on chunk
 
+
+we render stuff that we don't need to render
+
 ## World
 
-better world generation (no sharp edges)
-more biomes
+add trees
+add structure generator
+more biomes: 
 more structures
 load structures from json files
 create structure generator

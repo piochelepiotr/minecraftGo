@@ -53,17 +53,16 @@ type noisesLoader struct {
 	noises           map[point2d]chunkNoises2D
 	biomePerlin      *perlin.Perlin
 	elevationPerlins []*perlin.Perlin
-	biomes           []biome
+	biomes           []*biome
 	structureNoise   *random.Noise
 	structuresCumProbaPerBiome [][]float64
 }
 
 func (n *noisesLoader) computeStructuresCumProbaPerBiome() {
 	for _, b := range n.biomes {
-		structures := b.getStructures()
-		probas := make([]float64, len(structures))
+		probas := make([]float64, len(b.structures))
 		sum := float64(0)
-		for i, s := range structures {
+		for i, s := range b.structures {
 			sum += s.p
 			probas[i] = sum
 		}
@@ -109,7 +108,7 @@ func (n *noisesWithNeighbors) getNoise(x, z int) noises2D {
 	return n.chunks[i].get(x - chunkX, z - chunkZ)
 }
 
-func newNoisesLoader(seed int64, biomes []biome) *noisesLoader {
+func newNoisesLoader(seed int64, biomes []*biome) *noisesLoader {
 	n := noisesLoader{
 		noises:         make(map[point2d]chunkNoises2D),
 		biomePerlin:    perlin.NewPerlin(1.1, 2, 3, seed),
@@ -149,10 +148,10 @@ func (n *noisesLoader) noiseAt(x, z int) noises2D {
 	biomeNoise := noise2d(n.biomePerlin, x, z, biomeScale)*float64(len(n.biomes))
 	noises.biome = int(biomeNoise)
 	distanceToNextBiome := distanceFromBiomeBorder(biomeNoise)
-	noises.elevation = elevation(noise2d(n.elevationPerlins[noises.biome], x, z, float64(n.biomes[noises.biome].getScale()))*distanceToNextBiome, n.biomes[noises.biome].minElevation(), n.biomes[noises.biome].maxElevation())
+	noises.elevation = elevation(noise2d(n.elevationPerlins[noises.biome], x, z, float64(n.biomes[noises.biome].scale))*distanceToNextBiome, n.biomes[noises.biome].minElevation, n.biomes[noises.biome].maxElevation)
 	structureNoise := n.structureNoise.Noise2D(x, z)
 	noises.structure = sort.SearchFloat64s(n.structuresCumProbaPerBiome[noises.biome], structureNoise)
-	if noises.structure == len(n.biomes[noises.biome].getStructures()) {
+	if noises.structure == len(n.biomes[noises.biome].structures) {
 		// nothing
 		noises.structure = -1
 	}

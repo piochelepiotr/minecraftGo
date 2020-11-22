@@ -1,8 +1,6 @@
 package worldcontent
 
 import (
-	"github.com/aquilax/go-perlin"
-	"github.com/piochelepiotr/minecraftGo/random"
 	"github.com/piochelepiotr/minecraftGo/world/block"
 )
 
@@ -50,56 +48,20 @@ func makePlainTallGrass() *structure {
 	return s
 }
 
-type PlainBiome struct {
-	index int
-	structures []*structure
-	perlin     *perlin.Perlin
-	noise *random.Noise
-}
-
-func (f *PlainBiome) getStructures() []*structure {
-	return f.structures
-}
-
-func makePlainBiome(seed int64, index int) *PlainBiome {
-	plainSeed := seed * 3
-	structures := make([]*structure, 0)
-	structures = append(structures, makePlainTree())
-	structures = append(structures, makePlainTallGrass())
-	return &PlainBiome{
-		structures: structures,
-		perlin:     perlin.NewPerlin(2, 2, 3, plainSeed),
-		noise: random.NewNoise(plainSeed),
-		index: index,
-	}
-}
-
-func (f *PlainBiome) blockType(x, y, z int, noises *noisesWithNeighbors) block.Block {
-	if y >= WorldHeight {
-		return block.Air
-	}
-	if y == 0 {
-		return block.BedRock
-	}
-	height := noises.getNoise(x, z).elevation
-	if y > height {
-		return block.Air
-	}
+func plainBlockType(y, elevation int, oreNoise, caveNoise float64) block.Block {
 	b := block.Stone
-	if y == height {
+	if y == elevation {
 		b = block.Grass
-	} else if y > height-dirtLayerThikness {
+	} else if y > elevation-plainDirtLayerThikness {
 		b = block.Dirt
 	}
 	// y and z inverted on purpose, negative 3rd metric doesn't work
-	noise := noise3d(f.perlin, x, z, y, 40.0)
-	if noise < 0.1 {
+	if caveNoise < 0.1 {
 		return block.Air
 	}
 	if b != block.Stone {
 		return b
 	}
-	oreNoise := f.noise.Noise3D(x, y, z)
 	cumulative := float64(0)
 	if oreNoise < cumulative + goldProba {
 		return block.Gold
@@ -114,14 +76,4 @@ func (f *PlainBiome) blockType(x, y, z int, noises *noisesWithNeighbors) block.B
 	}
 	cumulative += coalProba
 	return b
-}
-
-func (f *PlainBiome) getScale() int {
-	return plainScale
-}
-func (f *PlainBiome) maxElevation() int {
-	return plainMaxElevation
-}
-func (f *PlainBiome) minElevation() int {
-	return plainMinElevation
 }
