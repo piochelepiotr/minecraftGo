@@ -32,7 +32,7 @@ type biome struct {
 	minElevation int
 }
 
-func makeBiome(seed int64, name string, blockType func(y, elevation int, oreNoise, caveNoise float64) block.Block, scale, minElevation, maxElevation int, structures []*structure) *biome {
+func makeBiome(seed int64, name string, blockType func(y, elevation int, oreNoise, caveNoise float64) block.Block, scale, minElevation, maxElevation int) *biome {
 	b := biome{
 		name: name,
 		blockType: blockType,
@@ -47,14 +47,6 @@ func makeBiome(seed int64, name string, blockType func(y, elevation int, oreNois
 	if err != nil {
 		log.Fatal("error loading structures", err)
 	}
-	// for _, s := range structures {
-	// 	b.structures = append(b.structures, s.toSavedStructure())
-	// }
-	// for _, s := range b.structures {
-	// 	if err := s.save(s.Name, name); err != nil {
-	// 		log.Fatal("error saving struct", err)
-	// 	}
-	// }
 	return &b
 }
 
@@ -145,82 +137,6 @@ func structIndex(sy, sz, x, y, z int) int {
 	return x * sy * sz + y * sz + z
 }
 
-func (s *savedStructure) toStructure() *structure{
-	structure := structure{
-		originX: s.OriginX,
-		originZ: s.OriginZ,
-		p: s.P,
-		name: s.Name,
-	}
-	structure.blocks = make([][][]block.Block, s.X)
-	for x := 0; x  < s.X; x++ {
-		structure.blocks[x] = make([][]block.Block, s.Y)
-		for y := 0; y < s.Y; y++ {
-			structure.blocks[x][y] = make([]block.Block, s.Z)
-			for z := 0; z < s.Z; z++ {
-				structure.blocks[x][y][z] = block.Block(s.Blocks[structIndex(s.Y, s.Z, x, y, z)])
-			}
-		}
-	}
-	return &structure
-}
-
-func (s *structure) toSavedStructure() (saved *savedStructure) {
-	saved = &savedStructure{}
-	saved.X = s.x()
-	saved.Y = s.y()
-	saved.Z = s.z()
-	saved.P = s.p
-	saved.Name = s.name
-	saved.OriginX = s.originX
-	saved.OriginZ = s.originZ
-	saved.Blocks = make([]byte, s.x() * s.y() * s.z())
-	for x := 0; x  < saved.X; x++ {
-		for y := 0; y < saved.Y; y++ {
-			for z := 0; z < saved.Z; z++ {
-				saved.Blocks[structIndex(saved.Y, saved.Z, x, y, z)] = byte(s.blocks[x][y][z])
-			}
-		}
-	}
-	return saved
-}
-
-type structure struct {
-	name string
-	blocks  [][][]block.Block
-	p       float64
-	originX int
-	originZ int
-}
-
-func (s *structure) x() int {
-	return len(s.blocks)
-}
-
-func (s *structure) y() int {
-	return len(s.blocks[0])
-}
-
-func (s *structure) z() int {
-	return len(s.blocks[0][0])
-}
-
-func makeStructure(x, y, z int) *structure {
-	blocks := make([][][]block.Block, x)
-	for ix := 0; ix < x; ix++ {
-		blocks[ix] = make([][]block.Block, y)
-		for iy := 0; iy < y; iy++ {
-			blocks[ix][iy] = make([]block.Block, z)
-			for iz := 0; iz < z; iz++ {
-				blocks[ix][iy][iz] = block.Air
-			}
-		}
-	}
-	return &structure{
-		blocks: blocks,
-	}
-}
-
 func noise3d(perlin *perlin.Perlin, x int, y int, z int, scale float64) float64 {
 	c := perlin.Noise3D(float64(x)/scale, float64(y)/scale, float64(z)/scale)
 	return (c + maxPerlin3D/2) / maxPerlin3D
@@ -237,9 +153,9 @@ type Generator struct {
 func makeBiomes(seed int64) []*biome {
 	biomes := make([]*biome, 0)
 	// biomes = append(biomes, makeBiome(seed*2, "flat", flatBlockType, plainScale, plainMinElevation, plainMinElevation, nil))
-	biomes = append(biomes, makeBiome(seed*2, "plain", plainBlockType, plainScale, plainMinElevation, plainMaxElevation, []*structure{makePlainTree(), makePlainTallGrass()}))
-	biomes = append(biomes, makeBiome(seed*3, "forest", forestBlockType, forestScale, forestMinElevation, forestMaxElevation, []*structure{makeTree(), makeTallGrass(), makeBirchSampling(), makeRose()}))
-	biomes = append(biomes, makeBiome(seed*4, "desert", desertBlockType, desertScale, desertMinElevation, desertMaxElevation, []*structure{makeCactus()}))
+	biomes = append(biomes, makeBiome(seed*2, "plain", plainBlockType, plainScale, plainMinElevation, plainMaxElevation))
+	biomes = append(biomes, makeBiome(seed*3, "forest", forestBlockType, forestScale, forestMinElevation, forestMaxElevation))
+	biomes = append(biomes, makeBiome(seed*4, "desert", desertBlockType, desertScale, desertMinElevation, desertMaxElevation))
 	return biomes
 }
 
