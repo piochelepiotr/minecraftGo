@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	treeProbability float64 = 0.5
-	tallGrassProbability float64 = 0.2
-	birchSaplingProbability float64 = 0.25
-	roseProbability float64 = 0.3
+	treeProbability float64 = 0.01
+	tallGrassProbability float64 = 0.1
+	birchSaplingProbability float64 = 0.05
+	roseProbability float64 = 0.05
 	forestMinElevation = 60
 	// max is not reached, max - 1 is reached
 	forestMaxElevation     = 100

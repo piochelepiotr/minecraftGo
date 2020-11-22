@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	plainTreeProbability float64 = 0.05
+	plainTreeProbability float64 = 0.001
 	plainTallGrassProbability float64 = 0.02
 	plainMinElevation = 60
 	// max is not reached, max - 1 is reached

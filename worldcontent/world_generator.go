@@ -10,7 +10,6 @@ import (
 
 const (
 	biomeScale      float64 = 300
-	nBiomes = 3
 )
 
 var maxPerlin2D = math.Sqrt(2)
@@ -141,6 +140,9 @@ func (g *Generator) addStructures(chunks []*RawChunk, noises *noisesWithNeighbor
 	startX := chunks[0].start.X
 	startZ := chunks[0].start.Z
 	setBlock := func(x, y, z int, b block.Block) {
+		if b == block.Air {
+			return
+		}
 		if x < startX || x >= startX + ChunkSize || z < startZ || z >= startZ + ChunkSize {
 			return
 		}
