@@ -43,6 +43,7 @@ func makeTree() *structure {
 	s.p = treeProbability
 	s.originX = 2
 	s.originZ = 2
+	s.name = "tree"
 	return s
 }
 
@@ -57,6 +58,7 @@ func makeBirchSampling() *structure {
 	s := makeStructure(1, 1, 1)
 	s.blocks[0][0][0] = block.BirchSapling
 	s.p = birchSaplingProbability
+	s.name = "birch_sapling"
 	return s
 }
 
@@ -64,6 +66,7 @@ func makeRose() *structure {
 	s := makeStructure(1, 1, 1)
 	s.blocks[0][0][0] = block.Rose
 	s.p = roseProbability
+	s.name = "rose"
 	return s
 }
 

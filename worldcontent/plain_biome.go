@@ -38,6 +38,7 @@ func makePlainTree() *structure {
 	s.p = plainTreeProbability
 	s.originX = 2
 	s.originZ = 2
+	s.name = "tree"
 	return s
 }
 
@@ -45,6 +46,7 @@ func makePlainTallGrass() *structure {
 	s := makeStructure(1, 1, 1)
 	s.blocks[0][0][0] = block.TallGrass
 	s.p = plainTallGrassProbability
+	s.name = "tall_grass"
 	return s
 }
 

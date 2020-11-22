@@ -63,7 +63,7 @@ func (n *noisesLoader) computeStructuresCumProbaPerBiome() {
 		probas := make([]float64, len(b.structures))
 		sum := float64(0)
 		for i, s := range b.structures {
-			sum += s.p
+			sum += s.P
 			probas[i] = sum
 		}
 		n.structuresCumProbaPerBiome = append(n.structuresCumProbaPerBiome, probas)

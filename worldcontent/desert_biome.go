@@ -18,6 +18,7 @@ func makeCactus() *structure {
 	s.blocks[0][2][0] = block.Cactus
 	s.blocks[0][3][0] = block.Cactus
 	s.p = 0.005
+	s.name = "cactus"
 	return s
 }
 
