@@ -52,9 +52,15 @@ func (w *InMemoryWorld) GetChunk(p geometry.Point) *RawChunk{
 		return chunk
 	}
 	w.cacheMisses++
-	chunk := getChunk(w.config,  p, w.generator)
-	w.chunks[p] = chunk
-	return chunk
+	// load blocks column by column
+	chunkColumn := getChunkColumn(w.config, geometry.Point2D{p.X, p.Z}, w.generator)
+	for y, chunk := range chunkColumn {
+		p = geometry.Point{p.X, y*ChunkSize, p.Z}
+		if _, ok := w.chunks[p]; !ok {
+			w.chunks[p] = chunk
+		}
+	}
+	return w.chunks[p]
 }
 
 func ChunkStart(x int) int {

@@ -1,7 +1,6 @@
 package worldcontent
 
 import (
-	"github.com/piochelepiotr/minecraftGo/random"
 	"math"
 
 	"github.com/aquilax/go-perlin"
@@ -18,9 +17,11 @@ var maxPerlin2D = math.Sqrt(2)
 var maxPerlin3D = math.Sqrt(3)
 
 type biome interface {
-	blockType(x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block
+	blockType(x, y, z int, noises *noisesWithNeighbors) block.Block
 	getStructures() []*structure
-	worldHeight(x, z int, distanceFromBorder float64, noises *noisesWithNeighbors) int
+	getScale() int
+	maxElevation() int
+	minElevation() int
 }
 
 type structure struct {
@@ -58,30 +59,17 @@ func makeStructure(x, y, z int) *structure {
 	}
 }
 
-func elevation(noise float64, min int, max int, distanceToBorder float64) int {
-	return min + int(float64(max-min)*noise*distanceToBorder)
-}
-
 func noise3d(perlin *perlin.Perlin, x int, y int, z int, scale float64) float64 {
 	c := perlin.Noise3D(float64(x)/scale, float64(y)/scale, float64(z)/scale)
 	return (c + maxPerlin3D/2) / maxPerlin3D
 }
 
-func random2d(perlin *perlin.Perlin, x int, y int, p float64) bool {
-	c := perlin.Noise2D(float64(x)+0.5, float64(y)+0.5)
-	c = (c + maxPerlin2D/2) / maxPerlin2D
-	return c <= p
-}
-
-func (g *Generator) random(x int, z int, p float64) bool {
-	return g.noise.Noise2D(x, z) <= p
-}
-
 type Generator struct {
 	// perlin *perlin.Perlin
 	noises *noisesLoader
-	noise *random.Noise
 	biomes []biome
+	maxStructureSizeX int
+	maxStructureSizeZ int
 }
 
 func makeBiomes(seed int64) []biome {
@@ -93,74 +81,93 @@ func makeBiomes(seed int64) []biome {
 }
 
 func newGenerator(worldConfig Config) *Generator {
+	biomes:= makeBiomes(worldConfig.Seed)
 	g := &Generator{
-		noise: random.NewNoise(worldConfig.Seed),
-		biomes: makeBiomes(worldConfig.Seed),
-		noises: newNoisesLoader(worldConfig.Seed),
+		biomes: biomes,
+		noises: newNoisesLoader(worldConfig.Seed, biomes),
 	}
+	g.computeMaxStructureSizes()
 	return g
 }
 
-// if distance != 1, we are at the border
-const borderSize = 0.4
-func distanceFromBiomeBorder(p float64) float64 {
-	lower := float64(int(p))
-	upper := lower + 1
-	toLower := (p - lower)*(1/borderSize)
-	toUpper := (upper - p)*(1/borderSize)
-	minDistance := math.Min(toLower, toUpper)
-	return math.Min(minDistance, 1)
-}
-
-func (g *Generator) getBiome(x, z int, noises *noisesWithNeighbors) (biome biome, distanceFromBorder float64) {
-	// change that
-	p := noises.getNoise(x, z).biomeNoise * float64(len(g.biomes))
-	return g.biomes[int(p)], distanceFromBiomeBorder(p)
-}
-
+// blockType returns block, without placing structures
 func (g *Generator) blockType(x, y, z int, noises *noisesWithNeighbors) block.Block {
-	biome, distanceFromBorder := g.getBiome(x, z, noises)
-	if structureBlock := g.getStructureBlock(biome, x, y, z, distanceFromBorder, noises); structureBlock != block.Air {
-		return structureBlock
-	}
-	return biome.blockType(x, y, z, distanceFromBorder, noises)
+	biome := g.biomes[noises.getNoise(x, z).biome]
+	// if structureBlock := g.getStructureBlock(biome, x, y, z, distanceFromBorder, noises); structureBlock != block.Air {
+	// 	return structureBlock
+	// }
+	return biome.blockType(x, y, z, noises)
 }
 
-func (g *Generator) getStructureBlock(b biome, x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block {
-	for _, s := range b.getStructures() {
-		xn := s.x()
-		yn := s.y()
-		zn := s.z()
-		xo := int(math.Floor(float64(x)/float64(xn))) * xn
-		zo := int(math.Floor(float64(z)/float64(zn))) * zn
-		yo := b.worldHeight(xo+s.originX, zo+s.originZ, distanceFromBorder, noises) + 1
-		if y < yo || y >= yo+yn {
-			continue
+// generateChunkColumn allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
+func (g *Generator) generateChunkColumn(start geometry.Point2D) (chunks []*RawChunk) {
+	n := WorldHeight/ChunkSize
+	chunks = make([]*RawChunk, 0, n)
+	noises := g.noises.getNoisesWithNeighbors(start[0], start[1])
+	for y := 0; y < n; y ++ {
+		chunk := RawChunk{}
+		chunk.start = geometry.Point{start[0], y*ChunkSize, start[1]}
+		chunk.blocks = make([]block.Block, ChunkSize*ChunkSize*ChunkSize)
+		for x := 0; x < ChunkSize; x++ {
+			for z := 0; z < ChunkSize; z++ {
+				for y := 0; y < ChunkSize; y++ {
+					chunk.blocks[index(x, y, z)] = g.blockType(chunk.start.X+x, chunk.start.Y+y, chunk.start.Z+z, noises)
+				}
+			}
 		}
-		// fmt.Printf("checking if a tree should be generated xo:%d, zo:%d, x:%d, z:%d\n", xo, zo, x, z)
-		if !g.random(xo, zo, s.p) {
-			continue
-		}
-		xi := x - xo
-		yi := y - yo
-		zi := z - zo
-		return s.blocks[xi][yi][zi]
+		chunks = append(chunks, &chunk)
 	}
-	return block.Air
+	g.addStructures(chunks, noises)
+	return chunks
 }
 
-// generateChunk allows you to create a chunk by passing the start point (the second chunk is at position ChunkSize-1)
-func (g *Generator) generateChunk(start geometry.Point) (chunk *RawChunk) {
-	chunk = &RawChunk{}
-	chunk.start = start
-	chunk.blocks = make([]block.Block, ChunkSize*ChunkSize*ChunkSize)
-	noises := g.noises.getNoisesWithNeighbors(start.X, start.Z)
-	for x := 0; x < ChunkSize; x++ {
-		for z := 0; z < ChunkSize; z++ {
-			for y := 0; y < ChunkSize; y++ {
-				chunk.blocks[index(x, y, z)] = g.blockType(start.X+x, start.Y+y, start.Z+z, noises)
+func (g *Generator) computeMaxStructureSizes() {
+	var x, z int
+	for _, b := range g.biomes {
+		for _, s := range b.getStructures() {
+			if s.x() > x {
+				x = s.x()
+			}
+			if s.z() > z {
+				z = s.z()
 			}
 		}
 	}
-	return chunk
+	g.maxStructureSizeX = x
+	g.maxStructureSizeZ = z
+}
+
+func (g *Generator) addStructures(chunks []*RawChunk, noises *noisesWithNeighbors) {
+	startX := chunks[0].start.X
+	startZ := chunks[0].start.Z
+	setBlock := func(x, y, z int, b block.Block) {
+		if x < startX || x >= startX + ChunkSize || z < startZ || z >= startZ + ChunkSize {
+			return
+		}
+		x = x - startX
+		z = z - startZ
+		// works only because y > 0
+		chunkY := y / ChunkSize
+		y = y % ChunkSize
+		chunks[chunkY].blocks[index(x, y, z)] = b
+	}
+	for x := startX - g.maxStructureSizeX; x < startX + ChunkSize + g.maxStructureSizeX; x++ {
+		for z := startZ - g.maxStructureSizeZ; z < startZ + ChunkSize + g.maxStructureSizeZ; z++ {
+			n := noises.getNoise(x, z)
+			if n.structure == -1 {
+				continue
+			}
+			s := g.biomes[n.biome].getStructures()[n.structure]
+			xo := x + s.originX
+			zo := z + s.originZ
+			yo := noises.getNoise(xo, zo).elevation + 1
+			for xs := 0; xs < s.x(); xs++ {
+				for ys := 0; ys < s.y(); ys++ {
+					for zs := 0; zs < s.z(); zs++ {
+						setBlock(xs+x, ys+yo, zs+z, s.blocks[xs][ys][zs])
+					}
+				}
+			}
+		}
+	}
 }

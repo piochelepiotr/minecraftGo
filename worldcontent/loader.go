@@ -21,11 +21,11 @@ func loadChunkFromSaves(config Config, start geometry.Point) (chunk *RawChunk, e
 }
 
 // getChunk tries to load the chunk from a saved file. If there is nothing, generates one using the generator
-func getChunk(worldConfig Config, start geometry.Point, generator *Generator) *RawChunk {
+func getChunkColumn(worldConfig Config, start geometry.Point2D, generator *Generator) []*RawChunk {
 	// if chunk, err := loadChunkFromSaves(worldConfig, start); err == nil {
 	// 	 return chunk
 	// }
-	return generator.generateChunk(start)
+	return generator.generateChunkColumn(start)
 }
 
 // LoadWorld loads the world config from local file

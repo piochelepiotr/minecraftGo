@@ -2,13 +2,33 @@ package worldcontent
 
 import (
 	"github.com/aquilax/go-perlin"
+	"github.com/piochelepiotr/minecraftGo/random"
+	"math"
+	"sort"
 )
 
 type noises2D struct {
-	biomeNoise float64
-	// 1 different elevation for each biome
-	elevationNoises [nBiomes]float64
+	biome int
+	// for the correct biome
+	elevation int
+	structure int
 }
+
+func elevation(noise float64, min int, max int) int {
+	return min + int(float64(max-min)*noise)
+}
+
+// if distance != 1, we are at the border
+const borderSize = 0.4
+func distanceFromBiomeBorder(p float64) float64 {
+	lower := float64(int(p))
+	upper := lower + 1
+	toLower := (p - lower)*(1/borderSize)
+	toUpper := (upper - p)*(1/borderSize)
+	minDistance := math.Min(toLower, toUpper)
+	return math.Min(minDistance, 1)
+}
+
 
 type chunkNoises2D []noises2D
 
@@ -30,10 +50,25 @@ type point2d [2]int
 
 // noisesLoader computes & stores noises for chunks, to avoid computing them multiple times
 type noisesLoader struct {
-	noises map[point2d]chunkNoises2D
-	biomePerlin *perlin.Perlin
-	elevationPerlins [nBiomes]*perlin.Perlin
-	scales [nBiomes]int
+	noises           map[point2d]chunkNoises2D
+	biomePerlin      *perlin.Perlin
+	elevationPerlins []*perlin.Perlin
+	biomes           []biome
+	structureNoise   *random.Noise
+	structuresCumProbaPerBiome [][]float64
+}
+
+func (n *noisesLoader) computeStructuresCumProbaPerBiome() {
+	for _, b := range n.biomes {
+		structures := b.getStructures()
+		probas := make([]float64, len(structures))
+		sum := float64(0)
+		for i, s := range structures {
+			sum += s.p
+			probas[i] = sum
+		}
+		n.structuresCumProbaPerBiome = append(n.structuresCumProbaPerBiome, probas)
+	}
 }
 
 func (n *noisesLoader) getNoisesWithNeighbors(chunkX, chunkZ int) *noisesWithNeighbors {
@@ -74,15 +109,18 @@ func (n *noisesWithNeighbors) getNoise(x, z int) noises2D {
 	return n.chunks[i].get(x - chunkX, z - chunkZ)
 }
 
-func newNoisesLoader(seed int64) *noisesLoader {
+func newNoisesLoader(seed int64, biomes []biome) *noisesLoader {
 	n := noisesLoader{
-		noises: make(map[point2d]chunkNoises2D),
-		biomePerlin: perlin.NewPerlin(1.1, 2, 3, seed),
+		noises:         make(map[point2d]chunkNoises2D),
+		biomePerlin:    perlin.NewPerlin(1.1, 2, 3, seed),
+		biomes:         biomes,
+		structureNoise: random.NewNoise(seed),
 	}
-	for i := 0; i < nBiomes; i++ {
-		n.elevationPerlins[i] = perlin.NewPerlin(2, 2, 3, seed*int64(i+2))
-		n.scales[i] = 100
+	n.elevationPerlins = make([]*perlin.Perlin, 0, len(biomes))
+	for i := 0; i < len(biomes); i++ {
+		n.elevationPerlins = append(n.elevationPerlins, perlin.NewPerlin(2, 2, 3, seed*int64(i+2)))
 	}
+	n.computeStructuresCumProbaPerBiome()
 	return &n
 }
 
@@ -108,9 +146,15 @@ func (n *noisesLoader) generateNoises(chunkX, chunkZ int) chunkNoises2D {
 
 func (n *noisesLoader) noiseAt(x, z int) noises2D {
 	noises := noises2D{}
-	noises.biomeNoise = noise2d(n.biomePerlin, x, z, biomeScale)
-	for i := 0; i < nBiomes; i++ {
-		noises.elevationNoises[i] = noise2d(n.elevationPerlins[i], x, z, float64(n.scales[i]))
+	biomeNoise := noise2d(n.biomePerlin, x, z, biomeScale)*float64(len(n.biomes))
+	noises.biome = int(biomeNoise)
+	distanceToNextBiome := distanceFromBiomeBorder(biomeNoise)
+	noises.elevation = elevation(noise2d(n.elevationPerlins[noises.biome], x, z, float64(n.biomes[noises.biome].getScale()))*distanceToNextBiome, n.biomes[noises.biome].minElevation(), n.biomes[noises.biome].maxElevation())
+	structureNoise := n.structureNoise.Noise2D(x, z)
+	noises.structure = sort.SearchFloat64s(n.structuresCumProbaPerBiome[noises.biome], structureNoise)
+	if noises.structure == len(n.biomes[noises.biome].getStructures()) {
+		// nothing
+		noises.structure = -1
 	}
 	return noises
 }

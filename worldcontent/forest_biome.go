@@ -95,14 +95,14 @@ func makeForestBiome(seed int64, index int) *ForestBiome {
 	}
 }
 
-func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64, noises *noisesWithNeighbors) block.Block {
+func (f *ForestBiome) blockType(x, y, z int, noises *noisesWithNeighbors) block.Block {
 	if y >= WorldHeight {
 		return block.Air
 	}
 	if y == 0 {
 		return block.BedRock
 	}
-	height := f.worldHeight(x, z, distanceFromBorder, noises)
+	height := noises.getNoise(x, z).elevation
 	if y > height {
 		return block.Air
 	}
@@ -137,6 +137,12 @@ func (f *ForestBiome) blockType(x, y, z int, distanceFromBorder float64, noises 
 	return b
 }
 
-func (f *ForestBiome) worldHeight(x, z int, distanceFromBorder float64, noises *noisesWithNeighbors) int {
-	return elevation(noises.getNoise(x, z).elevationNoises[f.index], forestMinElevation, forestMaxElevation, distanceFromBorder)
+func (f *ForestBiome) getScale() int {
+	return forestScale
+}
+func (f *ForestBiome) maxElevation() int {
+	return forestMaxElevation
+}
+func (f *ForestBiome) minElevation() int {
+	return forestMinElevation
 }

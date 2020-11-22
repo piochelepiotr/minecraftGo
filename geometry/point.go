@@ -13,6 +13,8 @@ type Point struct {
 	Z int
 }
 
+type Point2D [2]int
+
 func (p Point) Equal(p2 Point) bool {
 	return p.X == p2.X && p.Y == p2.Y && p.Z == p2.Z
 }
