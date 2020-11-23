@@ -45,12 +45,12 @@ type GamingState struct {
 	scroll float64
 }
 // NewGamingState loads a new world
-func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch, loader *loader.Loader) *GamingState{
+func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch, loader *loader.Loader, structEditing bool) *GamingState{
 	worldConfig, err := worldcontent.LoadWorld(worldName)
 	if err != nil {
 		log.Fatalf("Unable to load world %s. Err: %v", worldName, err)
 	}
-	wContent := worldcontent.NewInMemoryWorld(worldConfig)
+	wContent := worldcontent.NewInMemoryWorld(worldConfig, structEditing)
 	world := pworld.NewWorld(wContent, display.AspectRatio(), loader)
 	chunkLoader := pworld.NewChunkLoader(wContent, world.ChunksToLoad())
 	doneWriter := worldcontent.NewChunkWriter(worldConfig, wContent.OutChunksToWrite())

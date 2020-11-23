@@ -15,6 +15,8 @@ import (
 const windowWidth = 800
 const windowHeight = 600
 
+const structEditing = true
+
 func main() {
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
@@ -31,5 +33,5 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	d := render.NewDisplay(windowWidth, windowHeight)
 	defer d.CloseDisplay()
-	game.Start(d)
+	game.Start(d, structEditing)
 }

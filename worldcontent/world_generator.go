@@ -16,10 +16,21 @@ import (
 const (
 	biomeScale      float64 = 300
 	structuresFolder = "./structures/"
+	biomesFolder = "./biomes/"
 )
 
 var maxPerlin2D = math.Sqrt(2)
 var maxPerlin3D = math.Sqrt(3)
+
+
+type structureConfig struct {
+	Name string `json:"name"`
+	Probability float64 `json:"probability"`
+}
+
+type biomeConfig struct {
+	Structures []structureConfig `json:"structures"`
+}
 
 type biome struct {
 	name string
@@ -73,8 +84,8 @@ type savedStructure struct {
 	OriginZ int     `json:"origin_y"`
 }
 
-func loadStructure(biome, name string) (*savedStructure, error) {
-	path := structuresFolder + biome + "/" + name
+func loadStructure(name string) (*savedStructure, error) {
+	path := structuresFolder + name + ".json"
 	if _, err := os.Stat(path); err != nil {
 		return nil, err
 	}
@@ -91,43 +102,37 @@ func loadStructure(biome, name string) (*savedStructure, error) {
 }
 
 func loadStructures(biome string) ([]*savedStructure, error) {
-	path := structuresFolder + biome
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.Mkdir(path, 0755); err != nil {
-			return nil, err
-		}
+	path := biomesFolder + biome + ".json"
+	if _, err := os.Stat(path); err != nil {
+		return nil, err
 	}
-	files, err := ioutil.ReadDir(path)
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var names []string
-	for _, f := range files {
-		names = append(names, f.Name())
+	var b biomeConfig
+	err = json.Unmarshal(data, &b)
+	if err != nil {
+		return nil, err
 	}
-	structures := make([]*savedStructure, 0, len(names))
-	for _, n := range names {
-		s, err := loadStructure(biome, n)
+	structures := make([]*savedStructure, 0, len(b.Structures))
+	for _, sConfig := range b.Structures {
+		s, err := loadStructure(sConfig.Name)
 		if err != nil {
 			return nil, err
 		}
+		s.P = sConfig.Probability
 		structures = append(structures, s)
 	}
 	return structures, nil
 }
 
-func (s *savedStructure) save(name string, biome string) error {
+func (s *savedStructure) save(name string) error {
 	data, err := json.Marshal(s)
 	if err != nil {
 		return err
 	}
-	path := structuresFolder + biome
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.Mkdir(path, 0755); err != nil {
-			return err
-		}
-	}
-	if err := ioutil.WriteFile(path + "/" + name + ".json", data, 0644); err != nil {
+	if err := ioutil.WriteFile(structuresFolder + name + ".json", data, 0644); err != nil {
 		return err
 	}
 	return nil

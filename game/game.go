@@ -19,10 +19,12 @@ type Game struct {
 	inGameMenuState *InGameMenuState
 	mainMenuState *MainMenuState
 	renderer *render.MasterRenderer
+
+	structEditing bool
 }
 
 // Start starts the main event loop of the game
-func Start(display *render.DisplayManager) {
+func Start(display *render.DisplayManager, structEditing bool) {
 	changeState :=  make(chan state.Switch, 1)
 	loader := loader.NewLoader()
 	gameState := &Game{
@@ -32,6 +34,7 @@ func Start(display *render.DisplayManager) {
 		display:     display,
 		state: state.Empty,
 		renderer: render.CreateMasterRenderer(display.AspectRatio(), loader),
+		structEditing: structEditing,
 	}
 
 	display.ResizeCallBack = gameState.Resize
@@ -94,7 +97,7 @@ func (g *Game) switchState(newState state.Switch) {
 	switch newState.ID {
 	case state.Game:
 		if g.state != state.GameMenu {
-			g.gamingState = NewGamingState(newState.WorldName, g.display, g.changeState, g.loader)
+			g.gamingState = NewGamingState(newState.WorldName, g.display, g.changeState, g.loader, g.structEditing)
 		}
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 		g.display.Window.SetKeyCallback(g.gamingState.keyCallback)
