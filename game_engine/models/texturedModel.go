@@ -1,10 +1,7 @@
 package models
-import (
-    "github.com/piochelepiotr/minecraftGo/textures"
-)
 
 type TexturedModel struct {
-    RawModel RawModel
-    ModelTexture textures.ModelTexture
+    RawModel    RawModel
+    TextureID   uint32
     Transparent bool
 }

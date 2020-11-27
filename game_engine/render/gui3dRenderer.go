@@ -51,7 +51,7 @@ func (r *gui3dRenderer) prepareTexturedModel(model models.TexturedModel) {
 	gl.EnableVertexAttribArray(2)
 	gl.EnableVertexAttribArray(3)
 	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, model.ModelTexture.Id)
+	gl.BindTexture(gl.TEXTURE_2D, model.TextureID)
 }
 
 func (r *gui3dRenderer) unbindTexturedModel() {
@@ -64,7 +64,7 @@ func (r *gui3dRenderer) unbindTexturedModel() {
 }
 
 func (r *gui3dRenderer) prepareEntity(entity entities.Gui3dEntity) {
-	transformationMatrix := toolbox.CreateTransformationMatrix(mgl32.Vec3{}, mgl32.Vec3{0.5, 0.5, 0.25}, 0.1)
+	transformationMatrix := toolbox.CreateTransformationMatrix(mgl32.Vec3{}, mgl32.Vec3{0.5, 0.5, 0.25}, entity.Scale)
 	r.shader.LoadTransformationMatrix(transformationMatrix)
 	r.shader.LoadTranslation(entity.Translation)
 }

@@ -22,28 +22,14 @@ type BottomBar struct {
 	items []guis.GuiTexture
 	selectedItem int
 	aspectRatio float32
-	objects []block.Block
 	objectsGuis []entities.Gui3dEntity
+	content *pworld.Inventory
 }
 
-func NewBottomBar(aspectRatio float32, loader *loader.Loader) *BottomBar {
+func NewBottomBar(aspectRatio float32, loader *loader.Loader, content *pworld.Inventory) *BottomBar {
 	selectedItemTextureID := loader.LoadGuiTexture("textures/selected_item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	itemTextureID := loader.LoadGuiTexture("textures/item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
-	items := make([]guis.GuiTexture, 0, bottomBarItems)
-	objects := make([]block.Block, 0, bottomBarItems)
-	for i := 0; i < bottomBarItems; i++ {
-		objects = append(objects, block.Grass)
-	}
-	objects[0] = block.Cactus
-	objects[1] = block.Dirt
-	objects[2] = block.Sand
-	objects[3] = block.Stone
-	objects[4] = block.BirchLeaves
-	objects[5] = block.Birch
-	objects[6] = block.TallGrass
-	for i := 0; i < bottomBarItems; i++ {
-		items = append(items, guis.GuiTexture{})
-	}
+	items := make([]guis.GuiTexture, bottomBarItems)
 	b := &BottomBar{
 		selectedItem: 0,
 		background:      loader.LoadGuiTexture("textures/black.png", mgl32.Vec2{}, mgl32.Vec2{}),
@@ -51,7 +37,7 @@ func NewBottomBar(aspectRatio float32, loader *loader.Loader) *BottomBar {
 		itemTextureID: itemTextureID,
 		selectItemTextureID: selectedItemTextureID,
 		aspectRatio: aspectRatio,
-		objects: objects,
+		content: content,
 	}
 	b.buildObjectsGuis(loader)
 	b.selectItem(2)
@@ -59,20 +45,21 @@ func NewBottomBar(aspectRatio float32, loader *loader.Loader) *BottomBar {
 }
 
 func (b *BottomBar) GetSelectedBlock() block.Block {
-	return b.objects[b.selectedItem]
+	return b.content.BottomBar()[b.selectedItem].B
 }
 
 func (b *BottomBar) buildObjectsGuis(loader *loader.Loader) {
-	modelTexture := loader.LoadModelTexture("textures/textures2.png", 16)
+	modelTexture := loader.LoadModelTexture("textures/textures2.png")
 	b.objectsGuis = make([]entities.Gui3dEntity, bottomBarItems)
-	for i, o := range b.objects {
-		if o != block.Air {
+	for i, o := range b.content.BottomBar() {
+		if o.B != block.Air {
 			model := models.TexturedModel{
-				RawModel:     pworld.GetIconBlock(o, loader),
-				ModelTexture: modelTexture,
+				RawModel:  pworld.GetIconBlock(o.B, loader),
+				TextureID: modelTexture,
 			}
 			b.objectsGuis[i] = entities.Gui3dEntity{
 				Entity: entities.Entity{TexturedModel: model},
+				Scale: bottomBarHeight,
 			}
 		}
 	}
@@ -126,8 +113,9 @@ func (b *BottomBar) Render(renderer *render.MasterRenderer) {
 		}
 	}
 	renderer.ProcessGui(b.items[b.selectedItem])
+	objects := b.content.BottomBar()
 	for i, gui := range b.objectsGuis {
-		if b.objects[i] != block.Air {
+		if objects[i].B != block.Air {
 			renderer.Process3DGui(gui)
 		}
 	}

@@ -43,6 +43,7 @@ type GamingState struct {
 	changeState chan<- state.Switch
 	bottomBar *ux.BottomBar
 	scroll float64
+	inventory *pworld.Inventory
 }
 // NewGamingState loads a new world
 func NewGamingState(worldName string, display *render.DisplayManager, changeState chan<- state.Switch, loader *loader.Loader, structEditing bool) *GamingState{
@@ -50,6 +51,7 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	if err != nil {
 		log.Fatalf("Unable to load world %s. Err: %v", worldName, err)
 	}
+	inventory := pworld.NewInventory()
 	wContent := worldcontent.NewInMemoryWorld(worldConfig, structEditing)
 	world := pworld.NewWorld(wContent, display.AspectRatio(), loader)
 	chunkLoader := pworld.NewChunkLoader(wContent, world.ChunksToLoad())
@@ -58,10 +60,10 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 	camera.Rotation = mgl32.Vec3{0, 0, 0}
 
 	model := loader.LoadObjModel("objects/steve.obj")
-	t := loader.LoadModelTexture("textures/skin.png", 1)
+	textureID := loader.LoadModelTexture("textures/skin.png")
 	texturedModel := models.TexturedModel{
-		ModelTexture: t,
-		RawModel:     model,
+		TextureID: textureID,
+		RawModel:  model,
 	}
 
 	entity := entities.Entity{
@@ -88,8 +90,9 @@ func NewGamingState(worldName string, display *render.DisplayManager, changeStat
 		doneWriter: doneWriter,
 		display: display,
 		changeState: changeState,
-		bottomBar: ux.NewBottomBar(display.AspectRatio(), loader),
+		bottomBar: ux.NewBottomBar(display.AspectRatio(), loader, inventory),
 		cubeOutline: ux.NewCubeOutline(loader),
+		inventory: inventory,
 	}
 	world.LoadChunks(player.Entity.Position)
 	// state.loadChunks(player.Entity.Position)
@@ -152,6 +155,8 @@ func (s *GamingState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 			s.keyPressed.shiftPressed = true
 		} else if key == glfw.KeyEscape {
 			s.changeState <- state.Switch{ID: state.GameMenu}
+		} else if key == glfw.KeyE {
+			s.changeState <- state.Switch{ID: state.Inventory}
 		}
 	} else if action == glfw.Release {
 		if key == glfw.KeyW {

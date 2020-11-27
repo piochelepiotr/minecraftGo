@@ -15,7 +15,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/guis"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/shaders"
-	texturesPackage "github.com/piochelepiotr/minecraftGo/textures"
 )
 
 type vao struct {
@@ -159,15 +158,12 @@ func (l *Loader) loadTexture(file string) (uint32, error) {
 }
 
 // LoadModelTexture gets a texture from a file and loads it
-func (l *Loader) LoadModelTexture(file string, numberOfRows uint32) texturesPackage.ModelTexture {
+func (l *Loader) LoadModelTexture(file string) uint32 {
 	textureID, err := l.loadTexture(file)
 	if err != nil {
 		panic(err)
 	}
-	return texturesPackage.ModelTexture{
-		Id:           textureID,
-		NumberOfRows: numberOfRows,
-	}
+	return textureID
 }
 
 //LoadGuiTexture loads a texture into a VAO

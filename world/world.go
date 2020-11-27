@@ -12,7 +12,6 @@ import (
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/geometry"
-	"github.com/piochelepiotr/minecraftGo/textures"
 	"github.com/piochelepiotr/minecraftGo/toolbox"
 	"github.com/piochelepiotr/minecraftGo/world/block"
 	"github.com/piochelepiotr/minecraftGo/worldcontent"
@@ -34,7 +33,7 @@ type World struct {
 	chunks map[geometry.Point]*Chunk
 	// loading is used to not load two times the same chunk
 	loading      map[geometry.Point]struct{}
-	modelTexture textures.ModelTexture
+	modelTexture uint32
 	chunksToLoad chan geometry.Point
 	cosFovAngle  float32
 	world        *worldcontent.InMemoryWorld
@@ -42,12 +41,12 @@ type World struct {
 
 // NewWorld initiate the world
 func NewWorld(world *worldcontent.InMemoryWorld, aspectRatio float32, loader *loader.Loader) *World {
-	modelTexture := loader.LoadModelTexture("textures/textures2.png", uint32(block.NumberRowsTextures))
+	textureID := loader.LoadModelTexture("textures/textures2.png")
 	chunks := make(map[geometry.Point]*Chunk)
 	w := &World{
 		chunks:       chunks,
 		loading:      make(map[geometry.Point]struct{}),
-		modelTexture: modelTexture,
+		modelTexture: textureID,
 		// really big here to avoid dead locks (main goroutines writes to this channel
 		// while loader reads from this one and writes a a channel the main goroutine reads from
 		chunksToLoad: make(chan geometry.Point, 50000),
@@ -118,8 +117,8 @@ func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 		if chunk.Model.VertexCount > 0 {
 			chunks = append(chunks, entities.Entity{
 				TexturedModel: models.TexturedModel{
-					RawModel:     chunk.Model,
-					ModelTexture: w.modelTexture,
+					RawModel:  chunk.Model,
+					TextureID: w.modelTexture,
 				},
 				Position: p,
 			})
@@ -127,9 +126,9 @@ func (w *World) GetChunks(camera *entities.Camera) []entities.Entity {
 		if chunk.TransparentModel.VertexCount > 0 {
 			chunks = append(chunks, entities.Entity{
 				TexturedModel: models.TexturedModel{
-					RawModel:     chunk.TransparentModel,
-					ModelTexture: w.modelTexture,
-					Transparent:  true,
+					RawModel:    chunk.TransparentModel,
+					TextureID:   w.modelTexture,
+					Transparent: true,
 				},
 				Position: p,
 			})

@@ -57,7 +57,7 @@ func (r *Renderer) prepareTexturedModel(model models.TexturedModel) {
 	gl.EnableVertexAttribArray(2)
 	gl.EnableVertexAttribArray(3)
 	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, model.ModelTexture.Id)
+	gl.BindTexture(gl.TEXTURE_2D, model.TextureID)
 }
 
 func (r *Renderer) unbindTexturedModel() {

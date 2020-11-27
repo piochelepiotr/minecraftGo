@@ -18,6 +18,7 @@ type Game struct {
 	gamingState *GamingState
 	inGameMenuState *InGameMenuState
 	mainMenuState *MainMenuState
+	inventoryState *InventoryState
 	renderer *render.MasterRenderer
 
 	structEditing bool
@@ -91,13 +92,15 @@ func (g *Game) switchState(newState state.Switch) {
 		if newState.ID != state.Game {
 			g.gamingState.Close()
 			g.gamingState = nil
+			g.inventoryState = nil
 		}
 	default:
 	}
 	switch newState.ID {
 	case state.Game:
-		if g.state != state.GameMenu {
+		if !g.isInGame() {
 			g.gamingState = NewGamingState(newState.WorldName, g.display, g.changeState, g.loader, g.structEditing)
+			g.inventoryState = NewInventoryState(g.display, g.loader, g.gamingState.inventory, g.changeState)
 		}
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 		g.display.Window.SetKeyCallback(g.gamingState.keyCallback)
@@ -117,28 +120,38 @@ func (g *Game) switchState(newState state.Switch) {
 		g.display.Window.SetCursorPosCallback(g.mainMenuState.mouseMoveCallback)
 		g.display.Window.SetMouseButtonCallback(g.mainMenuState.clickCallback)
 		g.display.Window.SetScrollCallback(g.mainMenuState.scrollCallBack)
+	case state.Inventory:
+		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+		g.display.Window.SetKeyCallback(g.inventoryState.keyCallback)
+		g.display.Window.SetCursorPosCallback(g.inventoryState.mouseMoveCallback)
+		g.display.Window.SetMouseButtonCallback(g.inventoryState.clickCallback)
+		g.display.Window.SetScrollCallback(g.inventoryState.scrollCallBack)
 	default:
 	}
 	g.state = newState.ID
 }
 
+func (g *Game) isInGame() bool {
+	return g.state == state.GameMenu || g.state == state.Game || g.state == state.Inventory
+}
+
 // Update is called every second
 func (g *Game) Update() {
-	if g.state == state.GameMenu || g.state == state.Game {
+	if g.isInGame() {
 		g.gamingState.Update()
 	}
 }
 
 // NextFrame makes time pass to move to the next frame of the game
 func (g *Game) NextFrame() {
-	if g.state == state.GameMenu || g.state == state.Game {
+	if g.isInGame() {
 		g.gamingState.NextFrame()
 	}
 }
 
 // Render renders all objects on the screen
 func (g *Game) Render(renderer *render.MasterRenderer) {
-	if g.state == state.Game || g.state == state.GameMenu {
+	if g.isInGame() {
 		g.gamingState.Render(renderer)
 	}
 	if g.state == state.GameMenu {
@@ -146,6 +159,9 @@ func (g *Game) Render(renderer *render.MasterRenderer) {
 	}
 	if g.state == state.MainMenu {
 		g.mainMenuState.Render(renderer)
+	}
+	if g.state == state.Inventory {
+		g.inventoryState.Render(renderer)
 	}
 	renderer.Render()
 }

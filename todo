@@ -7,9 +7,13 @@ when breaking block, add particules
 
 ## Gameplay
 
+-> Bottom bar content comes from inventory
+Add Items to inventory
+Add number of items in inventory
+Breaking blocks gives items
+Placing blocks removes items
+Save items after restart
 Can run in normal mode
-add inventory
-Breaking blocks gives you blocks
 
 ## Performance
 
@@ -23,15 +27,12 @@ fix race condition in loader
 fix race condition on chunk
 
 
-we render stuff that we don't need to render
+we render stuff that we don't need to render (go fast and look behind you to check what)
 
 ## World
 
-add trees
-add structure generator
-more biomes: 
+more trees
+more biomes
 more structures
-load structures from json files
-create structure generator
 
 ## doing
