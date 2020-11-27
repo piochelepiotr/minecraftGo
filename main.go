@@ -15,7 +15,7 @@ import (
 const windowWidth = 800
 const windowHeight = 600
 
-const structEditing = true
+const structEditing = false
 
 func main() {
 	go func() {
