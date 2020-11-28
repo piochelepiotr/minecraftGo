@@ -3,12 +3,14 @@ package ux
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
+	"github.com/piochelepiotr/minecraftGo/game_engine/font"
 	"github.com/piochelepiotr/minecraftGo/game_engine/guis"
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	"github.com/piochelepiotr/minecraftGo/world"
 	"github.com/piochelepiotr/minecraftGo/world/block"
+	"strconv"
 )
 
 const (
@@ -24,12 +26,15 @@ type Inventory struct {
 	itemBackgroundTextureID uint32
 	items3D []entities.Gui3dEntity
 	items3DTextureID uint32
+	font         *font.FontType
+	quantities   []font.GUIText
 }
 
 func NewInventory(aspectRatio float32, loader *loader.Loader, content *world.Inventory) *Inventory {
 	itemBackgroundTextureID := loader.LoadGuiTexture("textures/inventory_item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 
 	i := &Inventory{
+		font:         loader.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
 		background:              loader.LoadGuiTexture("textures/white.png", mgl32.Vec2{}, mgl32.Vec2{}),
 		aspectRatio:             aspectRatio,
 		content:                 content,
@@ -37,6 +42,7 @@ func NewInventory(aspectRatio float32, loader *loader.Loader, content *world.Inv
 		itemBackgroundTextureID: itemBackgroundTextureID,
 		items3DTextureID: loader.LoadModelTexture("textures/textures2.png"),
 		items3D : make([]entities.Gui3dEntity, len(content.Items)),
+		quantities: make([]font.GUIText, len(content.Items)),
 	}
 	i.buildObjectsGuis(loader)
 	i.buildItems()
@@ -54,6 +60,9 @@ func (i *Inventory) buildObjectsGuis(loader *loader.Loader) {
 				Entity: entities.Entity{TexturedModel: model},
 				Scale: itemHeight+0.01,
 			}
+			if o.N > 1 {
+				i.quantities[j] = loader.LoadText(font.CreateGUIText(strconv.Itoa(o.N), 1.3, i.font, mgl32.Vec2{0, 0}, 1, 1, false, mgl32.Vec3{1, 1, 1}))
+			}
 		}
 	}
 }
@@ -63,10 +72,12 @@ func pos(x float32) float32 {
 	return x*2
 }
 
-func (i *Inventory) updatePos(item int, width, height, posX, posY float32) {
+func (i *Inventory) updatePos(item int, width, height, posX, posY, itemWidth float32) {
 	i.itemsBackgrounds[item].Scale = mgl32.Vec2{width, height}
 	i.itemsBackgrounds[item].Position = mgl32.Vec2{posX, posY}
 	i.items3D[item].Translation = mgl32.Vec2{posX, posY}
+	text := i.quantities[item]
+	i.quantities[item].Position = mgl32.Vec2{posX+pos(itemWidth/2-text.Width)+pos(0.007), posY+pos(itemHeight/2-text.GetLineHeight()+pos(0.005))}
 }
 
 func (i *Inventory) buildItems() {
@@ -85,14 +96,14 @@ func (i *Inventory) buildItems() {
 	for x := 0; x < 2; x++ {
 		for y := 0; y < 2; y++ {
 			j := world.MainItemsX*world.MainItemsY+bottomBarItems+y*2+x
-			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+ craftXOffset, pos(float32(y) * itemHeight) + craftYOffset)
+			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+ craftXOffset, pos(float32(y) * itemHeight) + craftYOffset, itemWidth)
 			i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 		}
 	}
 	craftResultX := craftXOffset + pos(2 * itemWidth + borderWidth)
 	craftResultY := craftYOffset + pos(itemHeight/2)
 	j := world.MainItemsX*world.MainItemsY+bottomBarItems+world.Craft
-	i.updatePos(j, itemWidth, itemHeight, craftResultX, craftResultY)
+	i.updatePos(j, itemWidth, itemHeight, craftResultX, craftResultY, itemWidth)
 	i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 
 	// main items
@@ -101,7 +112,7 @@ func (i *Inventory) buildItems() {
 	for x := 0; x < world.MainItemsX; x++ {
 		for y := 0; y < world.MainItemsY; y++ {
 			j := y * world.MainItemsX + x
-			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+mainItemsXOffset, pos(float32(y) * itemHeight) + mainItemsYOffset)
+			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+mainItemsXOffset, pos(float32(y) * itemHeight) + mainItemsYOffset, itemWidth)
 			i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 		}
 	}
@@ -111,7 +122,7 @@ func (i *Inventory) buildItems() {
 	bottomBarXOffset := mainItemsXOffset + pos(itemWidth)
 	for x := 0; x < bottomBarItems; x++ {
 		j := world.MainItemsX*world.MainItemsY+x
-		i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth) + bottomBarXOffset, bottomBarY)
+		i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth) + bottomBarXOffset, bottomBarY, itemWidth)
 		i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 	}
 }
@@ -130,6 +141,11 @@ func (i *Inventory) Render(renderer *render.MasterRenderer) {
 	for j, item3D := range i.items3D {
 		if i.content.Items[j].B != block.Air {
 			renderer.Process3DGui(item3D)
+		}
+	}
+	for j, quantity := range i.quantities {
+		if i.content.Items[j].N > 1 {
+			renderer.ProcessText(quantity)
 		}
 	}
 }

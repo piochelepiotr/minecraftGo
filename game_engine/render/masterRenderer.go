@@ -59,8 +59,8 @@ func (r *MasterRenderer) Render() {
 	r.renderer.Render(r.entities, r.camera)
 	r.outlineRenderer.render(r.outlineModels, r.camera)
 	r.guiRenderer.Render(r.guis)
-	r.fontRenderer.Render(r.texts)
 	r.gui3DRenderer.render(r.guis3D)
+	r.fontRenderer.Render(r.texts)
 	r.entities = nil
 	r.guis3D = make(map[models.TexturedModel][]entities.Gui3dEntity)
 	r.guis = make([]pguis.GuiTexture, 0)

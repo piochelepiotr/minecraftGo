@@ -35,9 +35,9 @@ func NewInventory() *Inventory {
 	i.Items[len(i.Items)-1] = Item{B: block.Iron, N: 1}
 	bar := i.BottomBar()
 	bar[0] = Item{B: block.Cactus, N: 2}
-	bar[1] = Item{B: block.Dirt, N: 1}
-	bar[2] = Item{B: block.Sand, N: 1}
-	bar[3] = Item{B: block.Stone, N: 1}
+	bar[1] = Item{B: block.Dirt, N: 14}
+	bar[2] = Item{B: block.Sand, N: 53}
+	bar[3] = Item{B: block.Stone, N: 64}
 	bar[4] = Item{B: block.BirchLeaves, N: 1}
 	bar[5] = Item{B: block.Birch, N: 1}
 	bar[6] = Item{B: block.TallGrass, N: 1}

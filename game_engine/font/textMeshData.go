@@ -3,6 +3,7 @@ package font
 type TextMeshData struct {
 	VertexPositions []float32
 	TextureCoords   []float32
+	Width float32
 }
 
 func (t *TextMeshData) GetVertexCount() int32 {

@@ -114,6 +114,7 @@ func (l *Loader) LoadText(text font.GUIText) font.GUIText {
 	vao := l.LoadFontVAO(data.VertexPositions, data.TextureCoords)
 	text.TextMeshVao = vao
 	text.VertexCount = data.GetVertexCount()
+	text.Width = data.Width
 	return text
 }
 

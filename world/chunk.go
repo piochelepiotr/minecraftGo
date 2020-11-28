@@ -77,6 +77,11 @@ func (c *constructionChunk) buildBlock(x, y, z float32, b block.Block, up, botto
 		c.buildCrossBlock(x, y, z, b)
 		return
 	}
+	e := float32(1)
+	if b.Small() {
+		e = 15.0/16.0
+	}
+	se := float32(1)-e
 	//add face if the block next to it is transparent
 	/*faces are :
 	 * up ( + y)
@@ -108,37 +113,37 @@ func (c *constructionChunk) buildBlock(x, y, z float32, b block.Block, up, botto
 	//right
 	if right {
 		n := mgl32.Vec3{1, 0, 0}
-		p1 := mgl32.Vec3{x + 1, y + 1, z + 1}
-		p2 := mgl32.Vec3{x + 1, y + 1, z}
-		p3 := mgl32.Vec3{x + 1, y, z}
-		p4 := mgl32.Vec3{x + 1, y, z + 1}
+		p1 := mgl32.Vec3{x + e, y + 1, z + 1}
+		p2 := mgl32.Vec3{x + e, y + 1, z}
+		p3 := mgl32.Vec3{x + e, y, z}
+		p4 := mgl32.Vec3{x + e, y, z + 1}
 		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
 	}
 	//left
 	if left {
 		n := mgl32.Vec3{-1, 0, 0}
-		p1 := mgl32.Vec3{x, y + 1, z}
-		p2 := mgl32.Vec3{x, y + 1, z + 1}
-		p3 := mgl32.Vec3{x, y, z + 1}
-		p4 := mgl32.Vec3{x, y, z}
+		p1 := mgl32.Vec3{x + se, y + 1, z}
+		p2 := mgl32.Vec3{x + se, y + 1, z + 1}
+		p3 := mgl32.Vec3{x + se, y, z + 1}
+		p4 := mgl32.Vec3{x + se, y, z}
 		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
 	}
 	//front
 	if front {
 		n := mgl32.Vec3{0, 0, 1}
-		p1 := mgl32.Vec3{x, y + 1, z + 1}
-		p2 := mgl32.Vec3{x + 1, y + 1, z + 1}
-		p3 := mgl32.Vec3{x + 1, y, z + 1}
-		p4 := mgl32.Vec3{x, y, z + 1}
+		p1 := mgl32.Vec3{x, y + 1, z + e}
+		p2 := mgl32.Vec3{x + 1, y + 1, z + e}
+		p3 := mgl32.Vec3{x + 1, y, z + e}
+		p4 := mgl32.Vec3{x, y, z + e}
 		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
 	}
 	//back
 	if back {
 		n := mgl32.Vec3{0, 0, -1}
-		p1 := mgl32.Vec3{x + 1, y + 1, z}
-		p2 := mgl32.Vec3{x, y + 1, z}
-		p3 := mgl32.Vec3{x, y, z}
-		p4 := mgl32.Vec3{x + 1, y, z}
+		p1 := mgl32.Vec3{x + 1, y + 1, z + se}
+		p2 := mgl32.Vec3{x, y + 1, z + se}
+		p3 := mgl32.Vec3{x, y, z + se}
+		p4 := mgl32.Vec3{x + 1, y, z + se}
 		c.addFace(p1, p2, p3, p4, n, b.GetSide(block.Side), true)
 	}
 }

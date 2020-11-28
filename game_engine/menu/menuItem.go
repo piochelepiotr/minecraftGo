@@ -31,7 +31,7 @@ type Item struct {
 // CreateItem creates text and gui for menu item
 func CreateItem(text string, index int, font *pfont.FontType, callback func(), loader *loader.Loader) *Item {
 	return &Item{
-		text:            loader.LoadText(pfont.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, true, ItemHeight, true)),
+		text:            loader.LoadText(pfont.CreateGUIText(text, 2, font, mgl32.Vec2{0, 0}, 1, ItemHeight, true, mgl32.Vec3{})),
 		index:           index,
 		guiTexture:      loader.LoadGuiTexture("textures/stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
 		selectedTexture: loader.LoadGuiTexture("textures/dark_stone.png", mgl32.Vec2{0, 0}, mgl32.Vec2{ItemWidth, ItemHeight}),
@@ -39,9 +39,9 @@ func CreateItem(text string, index int, font *pfont.FontType, callback func(), l
 	}
 }
 
-func getStartMenu(numberOfItems int) float32 {
-	menuHeight := (float32(numberOfItems) - 1.0) * (ItemHeight + MenuSpacing)
-	return -menuHeight/2 - ItemHeight/2
+func startY(numberOfItems int) float32 {
+	menuHeight := float32(numberOfItems) * ItemHeight + float32(numberOfItems-1) * MenuSpacing
+	return -pos(menuHeight/2)
 }
 
 func blockSize() float32 {
@@ -52,24 +52,28 @@ func itemIndex(x, y float32, numberOfItems int) int {
 	if math.Abs(float64(x)) > float64(ItemWidth/2) {
 		return -1
 	}
-	y = y - getStartMenu(numberOfItems)
+	y = pos(y)
+	y = y - startY(numberOfItems)
 	if y < 0 {
 		return -1
 	}
-	index := int(y / blockSize())
+	index := int(y / pos(blockSize()))
 	if index >= numberOfItems {
 		return -1
 	}
-	if y-float32(index)*blockSize() > ItemHeight {
+	if y-pos(float32(index)*blockSize()) > pos(ItemHeight) {
 		return -1
 	}
 	return index
 }
 
+func pos(x float32) float32 {
+	return x*2
+}
+
 func (i *Item) computeYPos(numberOfItems int) {
-	yPos := getStartMenu(numberOfItems) + float32(i.index)*blockSize()
-	yPos = 2 * yPos
-	i.guiTexture.Position = mgl32.Vec2{0, yPos + ItemHeight}
-	i.selectedTexture.Position = mgl32.Vec2{0, yPos + ItemHeight}
-	i.text.Position = mgl32.Vec2{0, 1 + yPos}
+	yPos := startY(numberOfItems) + pos(float32(i.index)*(ItemHeight+MenuSpacing)) + pos(ItemHeight)/2
+	i.guiTexture.Position = mgl32.Vec2{0, yPos}
+	i.selectedTexture.Position = mgl32.Vec2{0, yPos}
+	i.text.Position = mgl32.Vec2{-pos(i.text.Width/2), yPos-pos(i.text.GetLineHeight()/2)}
 }

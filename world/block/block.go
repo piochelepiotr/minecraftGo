@@ -447,6 +447,7 @@ func init() {
 
 	transparentBlocks[BirchLeaves] = true
 	transparentBlocks[Air] = true
+	transparentBlocks[Cactus] = true
 }
 
 type Face byte
@@ -467,6 +468,10 @@ func (b Block) IsTransparent() bool {
 
 func (b Block) IsCrossBlock() bool {
 	return crossBlocks[b]
+}
+
+func (b Block) Small() bool {
+	return b == Cactus
 }
 
 func (b Block) GetSide(f Face) TextureID {

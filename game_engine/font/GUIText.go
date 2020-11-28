@@ -5,6 +5,8 @@ import (
 )
 
 type GUIText struct {
+	Width float32
+	Height float32
 	TextString    string
 	FontSize      float32
 	TextMeshVao   uint32
@@ -15,20 +17,19 @@ type GUIText struct {
 	MaxTextHeight float32
 	NumberOfLines int
 	Font          *FontType
-	CenterText    bool
 	VCenterText   bool
 }
 
-func CreateGUIText(text string, fontSize float32, font *FontType, position mgl32.Vec2, maxLineLength float32, centered bool, maxTextHeight float32, vCentered bool) GUIText {
+func CreateGUIText(text string, fontSize float32, font *FontType, position mgl32.Vec2, maxLineLength float32, maxTextHeight float32, vCentered bool, color mgl32.Vec3) GUIText {
 	return GUIText{
 		TextString:    text,
 		FontSize:      fontSize,
 		Font:          font,
 		Position:      position,
 		MaxLineSize:   maxLineLength,
-		CenterText:    centered,
 		MaxTextHeight: maxTextHeight,
 		VCenterText:   vCentered,
+		Colour: color,
 	}
 }
 
