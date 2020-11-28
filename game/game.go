@@ -121,6 +121,7 @@ func (g *Game) switchState(newState state.Switch) {
 		g.display.Window.SetMouseButtonCallback(g.mainMenuState.clickCallback)
 		g.display.Window.SetScrollCallback(g.mainMenuState.scrollCallBack)
 	case state.Inventory:
+		g.inventoryState.inventory.ReBuild()
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		g.display.Window.SetKeyCallback(g.inventoryState.keyCallback)
 		g.display.Window.SetCursorPosCallback(g.inventoryState.mouseMoveCallback)

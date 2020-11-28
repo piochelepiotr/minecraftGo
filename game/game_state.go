@@ -116,9 +116,18 @@ func (s *GamingState) Close() {
 func (s *GamingState) clickCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 	if action == glfw.Press {
 		if button == glfw.MouseButtonRight {
-			s.world.ClickOnBlock(s.camera, true, s.bottomBar.GetSelectedBlock())
+			b := s.bottomBar.GetSelectedBlock()
+			if b != block.Air {
+				if s.world.PlaceBlock(s.camera, b) {
+
+				}
+			}
 		} else if button == glfw.MouseButtonLeft {
-			s.world.ClickOnBlock(s.camera, false, block.Air)
+			 broken, brokenBlock := s.world.BreakBlock(s.camera)
+			 if broken {
+			 	s.inventory.Add(brokenBlock)
+			 	s.bottomBar.ReBuild()
+			 }
 		}
 	}
 }

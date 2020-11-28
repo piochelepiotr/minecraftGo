@@ -28,6 +28,7 @@ type Inventory struct {
 	items3DTextureID uint32
 	font         *font.FontType
 	quantities   []font.GUIText
+	loader *loader.Loader
 }
 
 func NewInventory(aspectRatio float32, loader *loader.Loader, content *world.Inventory) *Inventory {
@@ -43,17 +44,17 @@ func NewInventory(aspectRatio float32, loader *loader.Loader, content *world.Inv
 		items3DTextureID: loader.LoadModelTexture("textures/textures2.png"),
 		items3D : make([]entities.Gui3dEntity, len(content.Items)),
 		quantities: make([]font.GUIText, len(content.Items)),
+		loader: loader,
 	}
-	i.buildObjectsGuis(loader)
-	i.buildItems()
+	i.ReBuild()
 	return i
 }
 
-func (i *Inventory) buildObjectsGuis(loader *loader.Loader) {
+func (i *Inventory) ReBuild() {
 	for j, o := range i.content.Items {
 		if o.B != block.Air {
 			model := models.TexturedModel{
-				RawModel:  world.GetIconBlock(o.B, loader),
+				RawModel:  world.GetIconBlock(o.B, i.loader),
 				TextureID: i.items3DTextureID,
 			}
 			i.items3D[j] = entities.Gui3dEntity{
@@ -61,10 +62,11 @@ func (i *Inventory) buildObjectsGuis(loader *loader.Loader) {
 				Scale: itemHeight+0.01,
 			}
 			if o.N > 1 {
-				i.quantities[j] = loader.LoadText(font.CreateGUIText(strconv.Itoa(o.N), 1.3, i.font, mgl32.Vec2{0, 0}, 1, 1, false, mgl32.Vec3{1, 1, 1}))
+				i.quantities[j] = i.loader.LoadText(font.CreateGUIText(strconv.Itoa(o.N), 1.3, i.font, mgl32.Vec2{0, 0}, 1, 1, false, mgl32.Vec3{1, 1, 1}))
 			}
 		}
 	}
+	i.updatePositions()
 }
 
 // pos goes from -1 to 1, so we need to multiply everything by 2
@@ -80,7 +82,7 @@ func (i *Inventory) updatePos(item int, width, height, posX, posY, itemWidth flo
 	i.quantities[item].Position = mgl32.Vec2{posX+pos(itemWidth/2-text.Width)+pos(0.007), posY+pos(itemHeight/2-text.GetLineHeight()+pos(0.005))}
 }
 
-func (i *Inventory) buildItems() {
+func (i *Inventory) updatePositions() {
 	itemWidth := itemHeight / i.aspectRatio
 	borderWidth := inventoryBorderHeight / i.aspectRatio
 	inventoryWidth := float32(world.MainItemsX) * itemWidth + borderWidth * 2
@@ -119,7 +121,7 @@ func (i *Inventory) buildItems() {
 
 	// bottom bar
 	bottomBarY := mainItemsYOffset + pos(float32(world.MainItemsY) * itemHeight + inventoryBorderHeight)
-	bottomBarXOffset := mainItemsXOffset + pos(itemWidth)
+	bottomBarXOffset := mainItemsXOffset + pos(float32(world.MainItemsX-world.BottomBar)*itemWidth/2)
 	for x := 0; x < bottomBarItems; x++ {
 		j := world.MainItemsX*world.MainItemsY+x
 		i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth) + bottomBarXOffset, bottomBarY, itemWidth)
@@ -129,7 +131,7 @@ func (i *Inventory) buildItems() {
 
 func (i *Inventory) Resize(aspectRatio float32) {
 	i.aspectRatio = aspectRatio
-	i.buildItems()
+	i.updatePositions()
 }
 
 // Render renders all objects on the screen

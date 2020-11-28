@@ -28,6 +28,8 @@ type BottomBar struct {
 	content *pworld.Inventory
 	font         *font.FontType
 	quantities   []font.GUIText
+	loader *loader.Loader
+	textureID uint32
 }
 
 func NewBottomBar(aspectRatio float32, loader *loader.Loader, content *pworld.Inventory) *BottomBar {
@@ -44,9 +46,11 @@ func NewBottomBar(aspectRatio float32, loader *loader.Loader, content *pworld.In
 		aspectRatio: aspectRatio,
 		content: content,
 		quantities: make([]font.GUIText, len(content.BottomBar())),
+		objectsGuis: make([]entities.Gui3dEntity, len(content.BottomBar())),
+		textureID: loader.LoadModelTexture("textures/textures2.png"),
+		loader: loader,
 	}
-	b.buildObjectsGuis(loader)
-	b.selectItem(2)
+	b.ReBuild()
 	return b
 }
 
@@ -54,24 +58,20 @@ func (b *BottomBar) GetSelectedBlock() block.Block {
 	return b.content.BottomBar()[b.selectedItem].B
 }
 
-func (b *BottomBar) buildObjectsGuis(loader *loader.Loader) {
-	modelTexture := loader.LoadModelTexture("textures/textures2.png")
-	b.objectsGuis = make([]entities.Gui3dEntity, bottomBarItems)
+func (b *BottomBar) ReBuild() {
 	for i, o := range b.content.BottomBar() {
 		if o.B != block.Air {
 			model := models.TexturedModel{
-				RawModel:  pworld.GetIconBlock(o.B, loader),
-				TextureID: modelTexture,
+				RawModel:  pworld.GetIconBlock(o.B, b.loader),
+				TextureID: b.textureID,
 			}
-			b.objectsGuis[i] = entities.Gui3dEntity{
-				Entity: entities.Entity{TexturedModel: model},
-				Scale: bottomBarHeight,
-			}
+			b.objectsGuis[i].Entity.TexturedModel = model
 			if o.N > 1 {
-				b.quantities[i] = loader.LoadText(font.CreateGUIText(strconv.Itoa(o.N), 1.4, b.font, mgl32.Vec2{0, 0}, 1, 1, false, mgl32.Vec3{1, 1, 1}))
+				b.quantities[i] = b.loader.LoadText(font.CreateGUIText(strconv.Itoa(o.N), 1.4, b.font, mgl32.Vec2{0, 0}, 1, 1, false, mgl32.Vec3{1, 1, 1}))
 			}
 		}
 	}
+	b.buildItems()
 }
 
 func (b *BottomBar) OffsetSelectedItem(offset int) {
@@ -84,7 +84,6 @@ func (b *BottomBar) OffsetSelectedItem(offset int) {
 }
 
 func (b *BottomBar) selectItem(i int) {
-	b.selectedItem = i
 	b.buildItems()
 }
 
@@ -97,6 +96,7 @@ func (b *BottomBar) updatePos(item int, width, height, posX, posY, itemWidth flo
 	b.items[item].Scale = mgl32.Vec2{width, height}
 	b.items[item].Position = mgl32.Vec2{posX, posY}
 	b.objectsGuis[item].Translation = mgl32.Vec2{posX, posY}
+	b.objectsGuis[item].Scale = bottomBarHeight
 	text := b.quantities[item]
 	b.quantities[item].Position = mgl32.Vec2{posX+pos(itemWidth/2-text.Width)+pos(0.007), posY+pos(bottomBarHeight/2-text.GetLineHeight()+pos(0.005))}
 }

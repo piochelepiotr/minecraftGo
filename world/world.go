@@ -297,9 +297,9 @@ func (w *World) rebuild(x, y, z int) {
 }
 
 // setBlock sets a block and updates UI if necessary
-func (w *World) setBlock(x, y, z int, b block.Block) {
+func (w *World) setBlock(x, y, z int, b block.Block) (updated bool) {
 	log.Println("setting block", x, y, z)
-	updated := w.world.SetBlock(x, y, z, b)
+	updated = w.world.SetBlock(x, y, z, b)
 	if !updated {
 		return
 	}
@@ -325,20 +325,28 @@ func (w *World) setBlock(x, y, z int, b block.Block) {
 	if chunkZ2 := worldcontent.ChunkStart(z + 1); chunkZ2 != chunkX {
 		w.rebuild(chunkX, chunkY, chunkZ2)
 	}
+	return updated
 }
 
 // ClickOnBlock removes or adds a block
-func (w *World) ClickOnBlock(camera *entities.Camera, placeBlock bool, b block.Block) {
+func (w *World) PlaceBlock(camera *entities.Camera, b block.Block) (placed bool){
 	xray := geometry.ComputeCameraRay(camera.Rotation)
 	p := camera.Position
-	_, pos, previous := w.world.GetPointedBlock(p, xray, placeBlock)
-	if placeBlock {
-		if !pos.Equal(previous) {
-			w.setBlock(previous.X, previous.Y, previous.Z, b)
-		}
-	} else {
-		w.setBlock(pos.X, pos.Y, pos.Z, block.Air)
+	_, pos, previous := w.world.GetPointedBlock(p, xray, true)
+	if !pos.Equal(previous) {
+		placed = w.setBlock(previous.X, previous.Y, previous.Z, b)
 	}
+	return placed
+}
+
+// ClickOnBlock removes or adds a block
+func (w *World) BreakBlock(camera *entities.Camera) (broken bool, brokenBlock block.Block) {
+	xray := geometry.ComputeCameraRay(camera.Rotation)
+	p := camera.Position
+	_, pos, _ := w.world.GetPointedBlock(p, xray, false)
+	brokenBlock = w.world.GetBlock(pos.X, pos.Y, pos.Z)
+	broken = w.setBlock(pos.X, pos.Y, pos.Z, block.Air)
+	return broken, brokenBlock
 }
 
 func (w *World) GetPointedBlock(camera *entities.Camera) (pointed geometry.Point, previous geometry.Point){
