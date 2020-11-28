@@ -7,8 +7,10 @@ when breaking block, add particules
 
 ## Gameplay
 
-Breaking blocks gives items
-Placing blocks removes items
+can move blocks from inventory to bottom bar
+add craft of planks
+add craft of sticks (so inventory can have objects that are not 3D)
+Add craft table
 Save items after restart
 Can run in normal mode
 

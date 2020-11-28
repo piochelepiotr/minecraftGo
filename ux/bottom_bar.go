@@ -58,6 +58,10 @@ func (b *BottomBar) GetSelectedBlock() block.Block {
 	return b.content.BottomBar()[b.selectedItem].B
 }
 
+func (b *BottomBar) GetSelectedIndex() int {
+	return b.selectedItem
+}
+
 func (b *BottomBar) ReBuild() {
 	for i, o := range b.content.BottomBar() {
 		if o.B != block.Air {
@@ -84,6 +88,7 @@ func (b *BottomBar) OffsetSelectedItem(offset int) {
 }
 
 func (b *BottomBar) selectItem(i int) {
+	b.selectedItem = i
 	b.buildItems()
 }
 

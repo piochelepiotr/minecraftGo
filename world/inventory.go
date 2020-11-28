@@ -33,6 +33,14 @@ func (i *Inventory) MainItems() []Item {
 	return i.Items[:MainItemsX * MainItemsY]
 }
 
+func (i *Inventory) RemoveBottomBar(j int) {
+	bar := i.BottomBar()
+	bar[j].N -= 1
+	if bar[j].N == 0 {
+		bar[j].B = block.Air
+	}
+}
+
 func (i *Inventory) Add(newB block.Block) {
 	// 1. Tries to add it to the bottom bar on the same item
 	bar := i.BottomBar()

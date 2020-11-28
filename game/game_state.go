@@ -119,7 +119,8 @@ func (s *GamingState) clickCallback(w *glfw.Window, button glfw.MouseButton, act
 			b := s.bottomBar.GetSelectedBlock()
 			if b != block.Air {
 				if s.world.PlaceBlock(s.camera, b) {
-
+					s.inventory.RemoveBottomBar(s.bottomBar.GetSelectedIndex())
+					s.bottomBar.ReBuild()
 				}
 			}
 		} else if button == glfw.MouseButtonLeft {
