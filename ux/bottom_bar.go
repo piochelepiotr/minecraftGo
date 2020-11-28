@@ -3,12 +3,14 @@ package ux
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/piochelepiotr/minecraftGo/entities"
+	"github.com/piochelepiotr/minecraftGo/game_engine/font"
 	"github.com/piochelepiotr/minecraftGo/game_engine/guis"
 	"github.com/piochelepiotr/minecraftGo/game_engine/loader"
 	"github.com/piochelepiotr/minecraftGo/game_engine/models"
 	"github.com/piochelepiotr/minecraftGo/game_engine/render"
 	pworld "github.com/piochelepiotr/minecraftGo/world"
 	"github.com/piochelepiotr/minecraftGo/world/block"
+	"strconv"
 )
 
 const bottomBarHeight float32 = 0.1
@@ -24,6 +26,8 @@ type BottomBar struct {
 	aspectRatio float32
 	objectsGuis []entities.Gui3dEntity
 	content *pworld.Inventory
+	font         *font.FontType
+	quantities   []font.GUIText
 }
 
 func NewBottomBar(aspectRatio float32, loader *loader.Loader, content *pworld.Inventory) *BottomBar {
@@ -31,6 +35,7 @@ func NewBottomBar(aspectRatio float32, loader *loader.Loader, content *pworld.In
 	itemTextureID := loader.LoadGuiTexture("textures/item.png", mgl32.Vec2{}, mgl32.Vec2{}).Id
 	items := make([]guis.GuiTexture, bottomBarItems)
 	b := &BottomBar{
+		font:         loader.LoadFont("./res/font.png", "./res/font.fnt", aspectRatio),
 		selectedItem: 0,
 		background:      loader.LoadGuiTexture("textures/black.png", mgl32.Vec2{}, mgl32.Vec2{}),
 		items: items,
@@ -38,6 +43,7 @@ func NewBottomBar(aspectRatio float32, loader *loader.Loader, content *pworld.In
 		selectItemTextureID: selectedItemTextureID,
 		aspectRatio: aspectRatio,
 		content: content,
+		quantities: make([]font.GUIText, len(content.BottomBar())),
 	}
 	b.buildObjectsGuis(loader)
 	b.selectItem(2)
@@ -60,6 +66,9 @@ func (b *BottomBar) buildObjectsGuis(loader *loader.Loader) {
 			b.objectsGuis[i] = entities.Gui3dEntity{
 				Entity: entities.Entity{TexturedModel: model},
 				Scale: bottomBarHeight,
+			}
+			if o.N > 1 {
+				b.quantities[i] = loader.LoadText(font.CreateGUIText(strconv.Itoa(o.N), 1.4, b.font, mgl32.Vec2{0, 0}, 1, 1, false, mgl32.Vec3{1, 1, 1}))
 			}
 		}
 	}
@@ -84,16 +93,23 @@ func (b *BottomBar) Resize(aspectRatio float32) {
 	b.buildItems()
 }
 
+func (b *BottomBar) updatePos(item int, width, height, posX, posY, itemWidth float32) {
+	b.items[item].Scale = mgl32.Vec2{width, height}
+	b.items[item].Position = mgl32.Vec2{posX, posY}
+	b.objectsGuis[item].Translation = mgl32.Vec2{posX, posY}
+	text := b.quantities[item]
+	b.quantities[item].Position = mgl32.Vec2{posX+pos(itemWidth/2-text.Width)+pos(0.007), posY+pos(bottomBarHeight/2-text.GetLineHeight()+pos(0.005))}
+}
+
 func (b *BottomBar) buildItems() {
 	itemWidth := bottomBarHeight / b.aspectRatio
 	bottomBarWidth := float32(bottomBarItems) * itemWidth
-	posY := 1-bottomBarHeight
+	posY := pos(0.5-bottomBarHeight/2)
+	startX := pos(-bottomBarWidth/2+itemWidth/2)
 	b.background.Scale = mgl32.Vec2{bottomBarWidth, bottomBarHeight}
 	b.background.Position = mgl32.Vec2{0, posY}
 	for i := range b.items {
-		b.items[i].Scale = mgl32.Vec2{itemWidth, bottomBarHeight}
-		b.items[i].Position = mgl32.Vec2{float32(i-bottomBarItems/2)*2 * itemWidth, posY}
-		b.objectsGuis[i].Translation = mgl32.Vec2{float32(i-bottomBarItems/2)*2 * itemWidth, posY}
+		b.updatePos(i, itemWidth, bottomBarHeight, startX + pos(itemWidth * float32(i)), posY, itemWidth)
 		if i == b.selectedItem {
 			b.items[i].Id = b.selectItemTextureID
 			s := b.items[i].Scale
@@ -117,6 +133,11 @@ func (b *BottomBar) Render(renderer *render.MasterRenderer) {
 	for i, gui := range b.objectsGuis {
 		if objects[i].B != block.Air {
 			renderer.Process3DGui(gui)
+		}
+	}
+	for i, quantity := range b.quantities {
+		if objects[i].N > 1 {
+			renderer.ProcessText(quantity)
 		}
 	}
 }
