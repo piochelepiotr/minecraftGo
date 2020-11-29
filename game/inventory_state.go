@@ -11,11 +11,14 @@ import (
 type InventoryState struct {
 	display     *render.DisplayManager
 	inventory *ux.Inventory
+	inventoryContent *world.Inventory
+	bottomBar *ux.BottomBar
 	exit func()
 }
 
 func NewInventoryState(display *render.DisplayManager, loader *loader.Loader, inventory *world.Inventory, changeState chan<- state.Switch) *InventoryState{
 	return &InventoryState{
+		inventoryContent: inventory,
 		display: display,
 		inventory: ux.NewInventory(display.AspectRatio(), loader, inventory),
 		exit: func() {
@@ -27,6 +30,9 @@ func NewInventoryState(display *render.DisplayManager, loader *loader.Loader, in
 func (s *InventoryState) clickCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 	if action == glfw.Press {
 		if button == glfw.MouseButtonLeft {
+			s.inventoryContent.Click(s.inventory.GetSelected())
+			s.inventory.ReBuild()
+			s.bottomBar.ReBuild()
 		}
 	}
 }

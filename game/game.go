@@ -101,6 +101,7 @@ func (g *Game) switchState(newState state.Switch) {
 		if !g.isInGame() {
 			g.gamingState = NewGamingState(newState.WorldName, g.display, g.changeState, g.loader, g.structEditing)
 			g.inventoryState = NewInventoryState(g.display, g.loader, g.gamingState.inventory, g.changeState)
+			g.inventoryState.bottomBar = g.gamingState.bottomBar
 		}
 		g.display.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 		g.display.Window.SetKeyCallback(g.gamingState.keyCallback)

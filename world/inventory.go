@@ -51,6 +51,12 @@ func (i *Inventory) GetMoving() (index int, b block.Block) {
 	return i.movingOffset, i.Items[i.movingOffset].B
 }
 
+func (i *Inventory) addN(newB block.Block, n int) {
+	for j := 0; j < n; j++ {
+		i.Add(newB)
+	}
+}
+
 func (i *Inventory) Add(newB block.Block) {
 	// 1. Tries to add it to the bottom bar on the same item
 	bar := i.BottomBar()
@@ -87,6 +93,20 @@ func (i *Inventory) Add(newB block.Block) {
 	log.Print("Full inventory")
 }
 
+func (i *Inventory) Click(ind int) {
+	moving := i.Items[i.movingOffset]
+	if ind == -1 {
+		if moving.B != block.Air {
+			i.Items[i.movingOffset] = Item{B: block.Air}
+			i.addN(moving.B, moving.N)
+		}
+		return
+	}
+	item := i.Items[ind]
+	i.Items[i.movingOffset] = item
+	i.Items[ind] = moving
+}
+
 func NewInventory() *Inventory {
 	i := &Inventory{
 		Items: make([]Item, inventorySize),
@@ -108,6 +128,5 @@ func NewInventory() *Inventory {
 	bar[4] = Item{B: block.BirchLeaves, N: 1}
 	bar[5] = Item{B: block.Birch, N: 1}
 	bar[6] = Item{B: block.TallGrass, N: 1}
-	i.Items[i.movingOffset] = Item{B: block.Iron, N:2}
 	return i
 }

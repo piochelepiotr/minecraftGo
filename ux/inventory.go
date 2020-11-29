@@ -29,6 +29,7 @@ type Inventory struct {
 	font         *font.FontType
 	quantities   []font.GUIText
 	loader *loader.Loader
+	selectedItem int
 }
 
 func NewInventory(aspectRatio float32, loader *loader.Loader, content *world.Inventory) *Inventory {
@@ -45,6 +46,7 @@ func NewInventory(aspectRatio float32, loader *loader.Loader, content *world.Inv
 		items3D : make([]entities.Gui3dEntity, len(content.Items)),
 		quantities: make([]font.GUIText, len(content.Items)),
 		loader: loader,
+		selectedItem: -1,
 	}
 	i.ReBuild()
 	return i
@@ -69,11 +71,16 @@ func (i *Inventory) ReBuild() {
 	i.updatePositions()
 }
 
+func (i *Inventory) GetSelected() int {
+	return i.selectedItem
+}
+
 func (i *Inventory) MoveMouse(x, y float32) {
 	itemWidth := itemHeight / i.aspectRatio
 	// moving object
 	j, _ := i.content.GetMoving()
 	i.updatePos(j, itemWidth, itemHeight, pos(x), pos(y))
+	i.selectedItem = i.getSelectedItem(x, y)
 }
 
 // pos goes from -1 to 1, so we need to multiply everything by 2
@@ -137,12 +144,38 @@ func (i *Inventory) updatePositions() {
 
 	// moving object
 	j, _ = i.content.GetMoving()
-	i.updatePos(j, itemWidth, itemHeight, 0, 0)
+	p := i.itemsBackgrounds[j].Position
+	i.updatePos(j, itemWidth, itemHeight, p.X(), p.Y())
 }
 
 func (i *Inventory) Resize(aspectRatio float32) {
 	i.aspectRatio = aspectRatio
 	i.updatePositions()
+}
+
+func abs(x float32) float32 {
+	if x > 0 {
+		return x
+	}
+	return -x
+}
+
+func (i *Inventory) getSelectedItem(x, y float32) int {
+	x = pos(x)
+	y = pos(y)
+	itemWidth := itemHeight / i.aspectRatio
+	w := pos(itemWidth)/2
+	h := pos(itemHeight)/2
+	movingIndex, _ := i.content.GetMoving()
+	for j, item := range i.itemsBackgrounds {
+		if j == movingIndex {
+			continue
+		}
+		if abs(item.Position.X() - x) < w && abs(item.Position.Y() - y) < h {
+			return j
+		}
+	}
+	return -1
 }
 
 // Render renders all objects on the screen
