@@ -12,9 +12,10 @@ const (
 	Craft = 4
 	CraftResult = 1
 	maxItems = 64
+	moving = 1
 )
 // mainItems + bottom bar + craft + craft result
-const inventorySize = MainItemsX * MainItemsY + BottomBar + Craft + CraftResult
+const inventorySize = MainItemsX * MainItemsY + BottomBar + Craft + CraftResult + moving
 
 type Item struct {
 	B block.Block `json:"block"`
@@ -23,14 +24,19 @@ type Item struct {
 
 type Inventory struct {
 	Items []Item `json:"items"`
+	mainItemsOffset int
+	bottomBarOffset int
+	craftOffset int
+	craftResultOffset int
+	movingOffset int
 }
 
 func (i *Inventory) BottomBar() []Item {
-	return i.Items[MainItemsX * MainItemsY: MainItemsX*MainItemsY+BottomBar]
+	return i.Items[i.bottomBarOffset: i.bottomBarOffset+BottomBar]
 }
 
 func (i *Inventory) MainItems() []Item {
-	return i.Items[:MainItemsX * MainItemsY]
+	return i.Items[i.mainItemsOffset:i.mainItemsOffset + MainItemsX * MainItemsY]
 }
 
 func (i *Inventory) RemoveBottomBar(j int) {
@@ -39,6 +45,10 @@ func (i *Inventory) RemoveBottomBar(j int) {
 	if bar[j].N == 0 {
 		bar[j].B = block.Air
 	}
+}
+
+func (i *Inventory) GetMoving() (index int, b block.Block) {
+	return i.movingOffset, i.Items[i.movingOffset].B
 }
 
 func (i *Inventory) Add(newB block.Block) {
@@ -81,6 +91,11 @@ func NewInventory() *Inventory {
 	i := &Inventory{
 		Items: make([]Item, inventorySize),
 	}
+	i.mainItemsOffset = 0
+	i.bottomBarOffset = i.mainItemsOffset + MainItemsX*MainItemsY
+	i.craftOffset = i.bottomBarOffset + BottomBar
+	i.craftResultOffset = i.craftOffset + Craft
+	i.movingOffset = i.craftResultOffset + 1
 	for j := 0; j < inventorySize; j++ {
 		i.Items[j] = Item{B: block.Air, N: 0}
 	}
@@ -93,5 +108,6 @@ func NewInventory() *Inventory {
 	bar[4] = Item{B: block.BirchLeaves, N: 1}
 	bar[5] = Item{B: block.Birch, N: 1}
 	bar[6] = Item{B: block.TallGrass, N: 1}
+	i.Items[i.movingOffset] = Item{B: block.Iron, N:2}
 	return i
 }

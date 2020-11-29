@@ -69,17 +69,24 @@ func (i *Inventory) ReBuild() {
 	i.updatePositions()
 }
 
+func (i *Inventory) MoveMouse(x, y float32) {
+	itemWidth := itemHeight / i.aspectRatio
+	// moving object
+	j, _ := i.content.GetMoving()
+	i.updatePos(j, itemWidth, itemHeight, pos(x), pos(y))
+}
+
 // pos goes from -1 to 1, so we need to multiply everything by 2
 func pos(x float32) float32 {
 	return x*2
 }
 
-func (i *Inventory) updatePos(item int, width, height, posX, posY, itemWidth float32) {
+func (i *Inventory) updatePos(item int, width, height, posX, posY float32) {
 	i.itemsBackgrounds[item].Scale = mgl32.Vec2{width, height}
 	i.itemsBackgrounds[item].Position = mgl32.Vec2{posX, posY}
 	i.items3D[item].Translation = mgl32.Vec2{posX, posY}
 	text := i.quantities[item]
-	i.quantities[item].Position = mgl32.Vec2{posX+pos(itemWidth/2-text.Width)+pos(0.007), posY+pos(itemHeight/2-text.GetLineHeight()+pos(0.005))}
+	i.quantities[item].Position = mgl32.Vec2{posX+pos(width/2-text.Width)+pos(0.007), posY+pos(itemHeight/2-text.GetLineHeight()+pos(0.005))}
 }
 
 func (i *Inventory) updatePositions() {
@@ -98,14 +105,14 @@ func (i *Inventory) updatePositions() {
 	for x := 0; x < 2; x++ {
 		for y := 0; y < 2; y++ {
 			j := world.MainItemsX*world.MainItemsY+bottomBarItems+y*2+x
-			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+ craftXOffset, pos(float32(y) * itemHeight) + craftYOffset, itemWidth)
+			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+ craftXOffset, pos(float32(y) * itemHeight) + craftYOffset)
 			i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 		}
 	}
 	craftResultX := craftXOffset + pos(2 * itemWidth + borderWidth)
 	craftResultY := craftYOffset + pos(itemHeight/2)
 	j := world.MainItemsX*world.MainItemsY+bottomBarItems+world.Craft
-	i.updatePos(j, itemWidth, itemHeight, craftResultX, craftResultY, itemWidth)
+	i.updatePos(j, itemWidth, itemHeight, craftResultX, craftResultY)
 	i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 
 	// main items
@@ -114,7 +121,7 @@ func (i *Inventory) updatePositions() {
 	for x := 0; x < world.MainItemsX; x++ {
 		for y := 0; y < world.MainItemsY; y++ {
 			j := y * world.MainItemsX + x
-			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+mainItemsXOffset, pos(float32(y) * itemHeight) + mainItemsYOffset, itemWidth)
+			i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth)+mainItemsXOffset, pos(float32(y) * itemHeight) + mainItemsYOffset)
 			i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 		}
 	}
@@ -124,9 +131,13 @@ func (i *Inventory) updatePositions() {
 	bottomBarXOffset := mainItemsXOffset + pos(float32(world.MainItemsX-world.BottomBar)*itemWidth/2)
 	for x := 0; x < bottomBarItems; x++ {
 		j := world.MainItemsX*world.MainItemsY+x
-		i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth) + bottomBarXOffset, bottomBarY, itemWidth)
+		i.updatePos(j, itemWidth, itemHeight, pos(float32(x) * itemWidth) + bottomBarXOffset, bottomBarY)
 		i.itemsBackgrounds[j].Id = i.itemBackgroundTextureID
 	}
+
+	// moving object
+	j, _ = i.content.GetMoving()
+	i.updatePos(j, itemWidth, itemHeight, 0, 0)
 }
 
 func (i *Inventory) Resize(aspectRatio float32) {
@@ -137,8 +148,12 @@ func (i *Inventory) Resize(aspectRatio float32) {
 // Render renders all objects on the screen
 func (i *Inventory) Render(renderer *render.MasterRenderer) {
 	renderer.ProcessGui(i.background)
-	for _, item := range i.itemsBackgrounds {
-			renderer.ProcessGui(item)
+	movingIndex, _ := i.content.GetMoving()
+	for j, item := range i.itemsBackgrounds {
+		if j == movingIndex {
+			continue
+		}
+		renderer.ProcessGui(item)
 	}
 	for j, item3D := range i.items3D {
 		if i.content.Items[j].B != block.Air {

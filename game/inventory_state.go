@@ -32,7 +32,8 @@ func (s *InventoryState) clickCallback(w *glfw.Window, button glfw.MouseButton, 
 }
 
 func (s *InventoryState) mouseMoveCallback(w *glfw.Window, xpos float64, ypos float64) {
-	// x, y := s.display.GLPos(xpos, ypos)
+	x, y := s.display.GLPos(xpos, ypos)
+	s.inventory.MoveMouse(x, y)
 }
 
 func (s *InventoryState) keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
